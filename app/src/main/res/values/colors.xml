@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 🌱 Verde principal -->
+    <color name="green_200">#A5D6A7</color>
+    <color name="green_500">#2E7D32</color>
+    <color name="green_700">#1B5E20</color>
+
+    <!-- 🌿 Verde secundário (mais vivo/destaque) -->
+    <color name="green_accent_200">#66BB6A</color>
+    <color name="green_accent_700">#388E3C</color>
+
+    <!-- 🔵 Azul da logo -->
+    <color name="blue_200">#90CAF9</color>  <!-- claro -->
+    <color name="blue_500">#42A5F5</color>  <!-- principal -->
+    <color name="blue_700">#1E88E5</color>  <!-- mais forte -->
+
+    <!-- 🌾 Neutros -->
+    <color name="black_soft">#1C1C1C</color>
+    <color name="white_soft">#F1F8E9</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="cinza_fundo">#F5F5F5</color>
+
+    <!-- 🍃 Cor de destaque -->
+    <color name="green">#43A047</color>
+
+</resources>

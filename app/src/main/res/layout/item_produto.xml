@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="10dp"
+    android:layout_margin="8dp"
+    android:background="@drawable/bg_card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/imgProduto"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/hortlink_logo"/>
+
+
+    <TextView
+        android:id="@+id/txtNome"
+        android:text="Produto"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:textStyle="bold"
+        android:textSize="16sp"/>
+
+    <TextView
+        android:id="@+id/txtPreco"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:text="R$ 0,00"
+        android:textColor="@color/green"/>
+
+    <TextView
+        android:id="@+id/txtDescricao"
+        android:text="Descrição"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:textStyle="bold"
+        android:textSize="16sp"/>
+
+</LinearLayout>
