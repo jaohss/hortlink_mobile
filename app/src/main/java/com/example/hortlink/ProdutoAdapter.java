@@ -28,7 +28,7 @@ public class ProdutoAdapter extends RecyclerView.Adapter<ProdutoAdapter.ViewHold
             nome = itemView.findViewById(R.id.txtNome);
             preco = itemView.findViewById(R.id.txtPreco);
             imagem = itemView.findViewById(R.id.imgProduto);
-            descricao = itemView.findViewById(R.id.txtDescricao);
+            //descricao = itemView.findViewById(R.id.txtDescricao);
         }
     }
 
@@ -44,7 +44,7 @@ public class ProdutoAdapter extends RecyclerView.Adapter<ProdutoAdapter.ViewHold
         holder.nome.setText(p.nome);
         holder.preco.setText("R$ "+ p.preco);
         holder.imagem.setImageResource(p.imagem);
-        holder.descricao.setText("Descrição: "+ p.descricao);
+       // holder.descricao.setText("Descrição: "+ p.descricao);
 
         holder.imagem.setImageResource(p.imagem);
         holder.itemView.setOnClickListener(v ->{

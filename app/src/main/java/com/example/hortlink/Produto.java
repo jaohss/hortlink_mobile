@@ -8,12 +8,14 @@ public class Produto {
     String categoria;
     int imagem;
     String descricao;
+    Produtor produtor;
 
-    public Produto(String nome, double preco, String categoria, int imagem, String descricao){
+    public Produto(String nome, double preco, String categoria, int imagem, String descricao, Produtor produtor){
         this.nome=nome;
         this.preco=preco;
         this.categoria=categoria;
         this.imagem=imagem;
         this.descricao=descricao;
+        this.produtor=produtor;
     }
 }

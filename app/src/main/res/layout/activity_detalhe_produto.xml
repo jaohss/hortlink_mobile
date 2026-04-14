@@ -41,7 +41,7 @@
         android:layout_marginHorizontal="20dp"
         android:layout_marginStart="20dp"
         android:layout_marginTop="8dp"
-        android:text="TextView"
+        android:text="preço"
         android:textColor="@color/green"
         android:textSize="17sp"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -90,5 +90,77 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/cardProdutor"
+        android:padding="10dp"
+        android:layout_marginHorizontal="20dp"
+       android:background="@drawable/bg_categoria"
+        app:layout_constraintTop_toBottomOf="@id/btnCarrinho"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="20dp">
+
+        <ImageView
+            android:id="@+id/fotoPerfil"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/bg_redondo"
+            android:scaleType="centerCrop"
+            android:clipToOutline="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:srcCompat="@tools:sample/avatars" />
+
+        <!-- mesma linha que o nome -->
+
+        <TextView
+            android:id="@+id/txtNomeProd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="nome"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/fotoPerfil"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/txtContatoProd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+
+            android:text="contato"
+            app:layout_constraintStart_toEndOf="@+id/fotoPerfil"
+            app:layout_constraintTop_toBottomOf="@+id/txtCidadeProd" />
+
+        <TextView
+            android:id="@+id/txtCidadeProd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="cidade"
+            app:layout_constraintStart_toEndOf="@+id/fotoPerfil"
+            app:layout_constraintTop_toBottomOf="@+id/txtNomeProd" />
+
+        <TextView
+            android:id="@+id/txtAvaliacao"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="avaliacao"
+            android:textSize="12dp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.082"
+            app:layout_constraintStart_toEndOf="@+id/txtNomeProd"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.024" />  <!-- abaixo do nome -->
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
+
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="10dp"
     android:layout_margin="8dp"
@@ -22,21 +24,23 @@
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:textStyle="bold"
-        android:textSize="16sp"/>
+        android:textSize="20sp"/>
 
     <TextView
         android:id="@+id/txtPreco"
-        android:layout_height="wrap_content"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="R$ 0,00"
-        android:textColor="@color/green"/>
+        android:textSize="17sp"
+        android:textColor="@color/green"
+        android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/txtDescricao"
-        android:text="Descrição"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:textStyle="bold"
-        android:textSize="16sp"/>
+    <ImageButton
+        android:id="@+id/imageButton2"
+        android:background="@drawable/bg_redondo"
+        android:src="@drawable/outline_add_24"
+        android:layout_width="30dp"
+        android:layout_height="32dp"/>
+
 
 </LinearLayout>

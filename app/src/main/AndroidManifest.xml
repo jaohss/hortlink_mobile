@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LoginScreen">
         <activity
+            android:name=".PerfilProdutorActivity"
+            android:exported="false" />
+        <activity
             android:name=".DetalheProdutoActivity"
             android:exported="false" />
         <activity
