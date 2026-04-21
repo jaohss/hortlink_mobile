@@ -1,8 +1,7 @@
-package com.example.hortlink;
+package com.example.hortlink.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -14,12 +13,17 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.hortlink.BancoHelper;
+import com.example.hortlink.R;
+
 public class MainActivity extends AppCompatActivity {
     //Tela de LOGIN
     EditText username;
     EditText password;
     TextView cadastroText;
     Button loginButton;
+    BancoHelper databaseHelper;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +40,29 @@ public class MainActivity extends AppCompatActivity {
         password = findViewById(R.id.password);
         loginButton = findViewById(R.id.loginButton);
         cadastroText = findViewById(R.id.cadastroText);
+        databaseHelper = new BancoHelper(this);
+
 
         loginButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, Homec.class);
+            String email = username.getText().toString();
+            String senha = password.getText().toString();
+            boolean autenticado = databaseHelper.autenticar(email, senha);
+
+            if (autenticado) {
+
+                // ir para próxima tela
+                Intent intent = new Intent(MainActivity.this, Homec.class);
+                startActivity(intent);
+                Toast.makeText(this, "Login realizado!", Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Toast.makeText(this, "Email ou senha inválidos!", Toast.LENGTH_SHORT).show();
+            }
+
+        });
+
+        cadastroText.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, Cadastro.class);
             startActivity(intent);
         });
 

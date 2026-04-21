@@ -12,16 +12,31 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LoginScreen">
         <activity
-            android:name=".PerfilProdutorActivity"
+            android:name=".PerfilActivity"
             android:exported="false" />
         <activity
-            android:name=".DetalheProdutoActivity"
+            android:name=".PedidosActivity"
             android:exported="false" />
         <activity
-            android:name=".Homec"
+            android:name=".BuscaActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".CarrinhoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.Cadastro"
+            android:exported="false" />
+        <activity
+            android:name=".activities.PerfilProdutorActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.DetalheProdutoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.Homec"
+            android:exported="false" />
+        <activity
+            android:name=".activities.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -1,39 +1,46 @@
-package com.example.hortlink;
+package com.example.hortlink.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import com.example.hortlink.R;
+import com.example.hortlink.adapters.CategoriaAdapter;
+import com.example.hortlink.adapters.ProdutoAdapter;
+import com.example.hortlink.entidades.Produto;
+import com.example.hortlink.entidades.Produtor;
+
 import java.util.ArrayList;
 import java.util.List;
 
-//Home do comprador
-public class Homec extends AppCompatActivity {
 
-    //Home do comprador
+public class HomeFragment extends Fragment {
+
+    public HomeFragment() {
+        // Required empty public constructor
+    }
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_homec);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_home, container, false);
+    }
 
-        RecyclerView recyclerProdutos = findViewById(R.id.recyclerProdutos);
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        RecyclerView recyclerProdutos = view.findViewById(R.id.recyclerProdutos);
 
         //layout em grid(2 colunas)
-        recyclerProdutos.setLayoutManager(new GridLayoutManager(this, 2));
+        recyclerProdutos.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
 
         //Criando dados mockados
@@ -50,8 +57,8 @@ public class Homec extends AppCompatActivity {
 
         //adapter
         List<Produto> produtosFiltrados = new ArrayList<>(produtos);
-        ProdutoAdapter adapter = new ProdutoAdapter(produtosFiltrados,produto ->{
-            Intent intent = new Intent(Homec.this, DetalheProdutoActivity.class);
+        ProdutoAdapter adapter = new ProdutoAdapter(produtosFiltrados, produto ->{
+            Intent intent = new Intent(getContext(), DetalheProdutoActivity.class);
             intent.putExtra("nome", produto.nome);
             intent.putExtra("preco", produto.preco);
             intent.putExtra("imagem",produto.imagem);
@@ -77,10 +84,10 @@ public class Homec extends AppCompatActivity {
         categorias.add("Legumes");
         categorias.add(0, "Todos");
 
-        RecyclerView recyclerCategorias = findViewById(R.id.recyclerCategorias);
+        RecyclerView recyclerCategorias = view.findViewById(R.id.recyclerCategorias);
 
         recyclerCategorias.setLayoutManager(
-                new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+                new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false)
         );
 
         CategoriaAdapter adapterCat = new CategoriaAdapter(categorias, categoriaSelecionada -> {

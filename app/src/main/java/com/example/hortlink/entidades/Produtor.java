@@ -1,4 +1,4 @@
-package com.example.hortlink;
+package com.example.hortlink.entidades;
 
 public class Produtor {
     public String nome;

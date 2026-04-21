@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.hortlink.activities.HomeFragment"
+        android:label="@string/home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_busca"
+        android:name="com.example.hortlink.activities.BuscarFragment"
+        android:label="@string/buscar"
+        tools:layout="@layout/fragment_buscar" />
+
+    <fragment
+        android:id="@+id/nav_carrinho"
+        android:name="com.example.hortlink.activities.CarrinhoFragment"
+        android:label="@string/carrinho"
+        tools:layout="@layout/fragment_carrinho" />
+
+    <fragment
+        android:id="@+id/nav_pedidos"
+        android:name="com.example.hortlink.activities.PedidosFragment"
+        android:label="@string/pedidos"
+        tools:layout="@layout/fragment_pedidos" />
+    <fragment
+        android:id="@+id/nav_perfil"
+        android:name="com.example.hortlink.activities.PerfilFragment"
+        android:label="@string/perfil"
+        tools:layout="@layout/fragment_perfil" />
+</navigation>
