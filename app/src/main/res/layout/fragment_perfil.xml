@@ -163,7 +163,7 @@
 
             <!-- Adicionar produto -->
             <LinearLayout
-                android:id="@+id/btnAdicionarProduto"
+                android:id="@+id/btnAddProduto"
                 android:orientation="horizontal"
                 android:layout_width="0dp"
                 android:layout_height="56dp"
@@ -176,11 +176,12 @@
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="29dp"
+                    android:layout_height="30dp"
+
+                    android:contentDescription="Adicionar produto"
                     android:src="@drawable/bg_redondo"
-                    app:tint="#2E7D32"
-                    android:contentDescription="Adicionar produto"/>
+                    app:tint="#2E7D32" />
 
                 <TextView
                     android:text="Adicionar\nproduto"
@@ -207,11 +208,11 @@
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="73dp"
+                    android:layout_height="40dp"
+                    android:contentDescription="Meus produtos"
                     android:src="@drawable/pedidos"
-                    app:tint="#2E7D32"
-                    android:contentDescription="Meus produtos"/>
+                    app:tint="#2E7D32" />
 
                 <TextView
                     android:text="Meus\nprodutos"
@@ -247,11 +248,11 @@
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="43dp"
+                    android:layout_height="39dp"
+                    android:contentDescription="Dashboard de vendas"
                     android:src="@drawable/home"
-                    app:tint="#2E7D32"
-                    android:contentDescription="Dashboard de vendas"/>
+                    app:tint="#2E7D32" />
 
                 <TextView
                     android:text="Dashboard\nde vendas"
@@ -278,11 +279,11 @@
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="48dp"
+                    android:layout_height="45dp"
+                    android:contentDescription="Editar perfil"
                     android:src="@drawable/baseline_person_24"
-                    app:tint="#2E7D32"
-                    android:contentDescription="Editar perfil"/>
+                    app:tint="#2E7D32" />
 
                 <TextView
                     android:text="Editar perfil"
@@ -414,6 +415,7 @@
 
                     <TextView
                         android:text="4,8"
+                        android:id="@+id/txtAvaliacao"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="#1A1A1A"
@@ -533,33 +535,7 @@
                 android:background="#F0F0F0"
                 android:layout_marginStart="46dp"/>
 
-            <!-- Opções de entrega -->
-            <LinearLayout
-                android:id="@+id/itemEntrega"
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="14dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/home"
-                    app:tint="#555555"
-                    android:contentDescription="Opções de entrega"/>
-
-                <TextView
-                    android:text="Opções de entrega"
-                    android:textSize="14sp"
-                    android:textColor="#1A1A1A"
-                    android:layout_marginStart="12dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
-            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"

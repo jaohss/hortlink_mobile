@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.hortlink.BancoHelper;
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.CategoriaAdapter;
 import com.example.hortlink.adapters.ProdutoAdapter;
@@ -38,44 +39,22 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         RecyclerView recyclerProdutos = view.findViewById(R.id.recyclerProdutos);
-
-        //layout em grid(2 colunas)
         recyclerProdutos.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
-
-        //Criando dados mockados
-        Produtor p1 = new Produtor("Fazenda Ipanema", "Sorocaba", "(15)99999-0000",R.drawable.fazenda, 4.8,R.drawable.fotocapa);
-
-        List<Produto> produtos = new ArrayList<>();
-        produtos.add(new Produto("Tomate", 5.99, "Legumes", R.drawable.hortlink_logo, "Fruta fresca e deliciosa",p1));
-        produtos.add(new Produto("Alface", 3.58, "Verduras", R.drawable.hortlink_logo, "Fruta fresca e deliciosa",p1));
-        produtos.add(new Produto("Banana", 4.26, "Frutas", R.drawable.hortlink_logo, "Fruta fresca e deliciosa",p1));
-        produtos.add(new Produto("Melancia", 5.99, "Frutas", R.drawable.hortlink_logo, "Fruta fresca e deliciosa",p1));
-        produtos.add(new Produto("Couve", 7.89, "Verduras", R.drawable.hortlink_logo, "Fruta fresca e deliciosa",p1));
-        produtos.add(new Produto("Batata", 1.87, "Legumes", R.drawable.hortlink_logo, "Fruta fresca e deliciosa",p1));
-
-
-        //adapter
+        // ✅ Busca do banco em vez de dados mockados
+        BancoHelper db = new BancoHelper(getContext());
+        List<Produto> produtos = db.listarProdutosComoObjetos();
         List<Produto> produtosFiltrados = new ArrayList<>(produtos);
-        ProdutoAdapter adapter = new ProdutoAdapter(produtosFiltrados, produto ->{
+
+        ProdutoAdapter adapter = new ProdutoAdapter(produtosFiltrados, produto -> {
             Intent intent = new Intent(getContext(), DetalheProdutoActivity.class);
             intent.putExtra("nome", produto.nome);
             intent.putExtra("preco", produto.preco);
-            intent.putExtra("imagem",produto.imagem);
-            intent.putExtra("descricao",produto.descricao);
-            intent.putExtra("produtor_nome", produto.produtor.nome);
-            intent.putExtra("produtor_contato", produto.produtor.contato);
-            intent.putExtra("produtor_cidade", produto.produtor.cidade);
-            intent.putExtra("produtor_foto", produto.produtor.fotoPerfil);
-            intent.putExtra("produtor_avaliacao", produto.produtor.avaliacao);
-            intent.putExtra("produtor_fotoC", produto.produtor.fotoCapa);
-
-
-
+            intent.putExtra("imagem_uri", produto.imagemUri); // ✅ manda URI
+            intent.putExtra("descricao", produto.descricao);
             startActivity(intent);
         });
         recyclerProdutos.setAdapter(adapter);
-
 
         //Lista de categorias
         List<String> categorias = new ArrayList<>();

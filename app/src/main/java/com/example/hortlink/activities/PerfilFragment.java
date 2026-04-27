@@ -1,12 +1,15 @@
 package com.example.hortlink.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import com.example.hortlink.R;
 
@@ -25,6 +28,9 @@ public class PerfilFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    LinearLayout btnAddProduto;
+    LinearLayout btnMeusProdutos;
+
 
     public PerfilFragment() {
         // Required empty public constructor
@@ -62,5 +68,27 @@ public class PerfilFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_perfil, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // ✅ Aqui a view já existe!
+        btnAddProduto = view.findViewById(R.id.btnAddProduto);
+
+        btnAddProduto.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), AdicionarProdutosActivity.class);
+            startActivity(intent);
+        });
+
+        btnMeusProdutos = view.findViewById(R.id.btnMeusProdutos);
+        btnMeusProdutos.setOnClickListener(v -> {
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container, new GerenciarProdutosFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
     }
 }

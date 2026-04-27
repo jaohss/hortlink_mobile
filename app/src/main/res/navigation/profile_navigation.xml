@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/profile_navigation"
+    app:startDestination="@id/gerenciarProdutosFragment">
+
+    <fragment
+        android:id="@+id/editarProdutosFragment"
+        android:name="com.example.hortlink.activities.EditarProdutosFragment"
+        android:label="fragment_editar_produtos"
+        tools:layout="@layout/fragment_editar_produtos" />
+    <fragment
+        android:id="@+id/gerenciarProdutosFragment"
+        android:name="com.example.hortlink.activities.GerenciarProdutosFragment"
+        android:label="fragment_gerenciar_produtos"
+        tools:layout="@layout/fragment_gerenciar_produtos" >
+        <action
+            android:id="@+id/action_gerenciarProdutosFragment_to_editarProdutosFragment"
+            app:destination="@id/editarProdutosFragment" />
+    </fragment>
+</navigation>

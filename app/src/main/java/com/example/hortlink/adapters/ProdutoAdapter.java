@@ -1,5 +1,6 @@
 package com.example.hortlink.adapters;
 
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,20 +41,24 @@ public class ProdutoAdapter extends RecyclerView.Adapter<ProdutoAdapter.ViewHold
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position){
+    public void onBindViewHolder(ViewHolder holder, int position) {
         Produto p = lista.get(position);
         holder.nome.setText(p.nome);
-        holder.preco.setText("R$ "+ p.preco);
-        holder.imagem.setImageResource(p.imagem);
-       // holder.descricao.setText("Descrição: "+ p.descricao);
+        holder.preco.setText("R$ " + p.preco);
 
-        holder.imagem.setImageResource(p.imagem);
-        holder.itemView.setOnClickListener(v ->{
-            //Toast.makeText(v.getContext(), "Item selecionado:"+p.nome, Toast.LENGTH_SHORT).show();
+        // ✅ Se veio do banco usa URI, senão usa drawable
+        if (p.imagemUri != null && !p.imagemUri.isEmpty()) {
+            try {
+                holder.imagem.setImageURI(Uri.parse(p.imagemUri));
+            } catch (SecurityException e) {
+                // URI expirou, mostra a logo padrão
+                holder.imagem.setImageResource(R.drawable.hortlink_logo);
+            }
+        } else {
+            holder.imagem.setImageResource(R.drawable.hortlink_logo);
+        }
 
-            produtoList.onClick(p);
-
-        });
+        holder.itemView.setOnClickListener(v -> produtoList.onClick(p));
     }
     @Override
     public int getItemCount(){

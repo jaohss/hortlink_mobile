@@ -10,11 +10,6 @@ import android.view.ViewGroup;
 
 import com.example.hortlink.R;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link CarrinhoFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class CarrinhoFragment extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
