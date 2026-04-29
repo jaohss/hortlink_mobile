@@ -11,6 +11,9 @@ public class Produto {
     public String descricao;
     public String imagemUri; // ✅ URI do banco
     public Produtor produtor;
+    public int produtorId; // ✅ ID vindo do banco
+
+    public Produto(){}
 
 
     public Produto(String nome, double preco, String categoria, int imagem, String descricao, Produtor produtor, String imagemUri){

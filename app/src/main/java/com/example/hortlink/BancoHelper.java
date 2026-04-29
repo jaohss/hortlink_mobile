@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.example.hortlink.entidades.Produto;
+import com.example.hortlink.entidades.Produtor;
 
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -50,17 +51,26 @@ public class BancoHelper extends SQLiteOpenHelper {
         String CREATE_PRODUTOS = "CREATE TABLE produtos ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "nome TEXT, categoria TEXT, preco REAL, "
-                + "unidade TEXT, descricao TEXT, foto TEXT)";
+                + "unidade TEXT, descricao TEXT, foto   TEXT, "
+                + "produtor_id INTEGER)";
+
         db.execSQL(CREATE_PRODUTOS);
+
+        db.execSQL("CREATE TABLE produtores ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "nome TEXT, cidade TEXT, contato TEXT, "
+                + "avaliacao REAL, foto TEXT)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS produtos");
+        db.execSQL("DROP TABLE IF EXISTS produtores");
         onCreate(db);
     }
 
+    //===================USUÁRIOS==================================================
     public long inserirUsuario(String nome, String email, String senha, String telefone)
     {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -93,7 +103,7 @@ public class BancoHelper extends SQLiteOpenHelper {
         return db.delete(TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
     }
 
-    //Produtos
+    //===================PRODUTOS==================================================
     public long inserirProduto(String nome, String categoria, double preco, String unidade, String descricao, String foto) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -135,13 +145,14 @@ public class BancoHelper extends SQLiteOpenHelper {
 
         if (cursor.moveToFirst()) {
             do {
-                String nome     = cursor.getString(cursor.getColumnIndexOrThrow("nome"));
-                String categoria     = cursor.getString(cursor.getColumnIndexOrThrow("categoria"));
-                double preco    = cursor.getDouble(cursor.getColumnIndexOrThrow("preco"));
-                String descricao = cursor.getString(cursor.getColumnIndexOrThrow("descricao"));
-                String foto     = cursor.getString(cursor.getColumnIndexOrThrow("foto"));
-
-                Produto p = new Produto(nome, preco, categoria, foto, descricao);
+                Produto p = new Produto();
+                p.id       = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                p.nome     = cursor.getString(cursor.getColumnIndexOrThrow("nome"));
+                p.categoria = cursor.getString(cursor.getColumnIndexOrThrow("categoria"));
+                p.preco    = cursor.getDouble(cursor.getColumnIndexOrThrow("preco"));
+                p.descricao = cursor.getString(cursor.getColumnIndexOrThrow("descricao"));
+                p.imagemUri = cursor.getString(cursor.getColumnIndexOrThrow("foto"));
+                p.produtorId = cursor.getInt(cursor.getColumnIndexOrThrow("produtor_id")); // ✅
                 lista.add(p);
             } while (cursor.moveToNext());
         }
@@ -149,6 +160,61 @@ public class BancoHelper extends SQLiteOpenHelper {
         cursor.close();
         return lista;
     }
+
+    public Produto buscarProdutoPorId(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("produtos", null, "id = ?",
+                new String[]{String.valueOf(id)}, null, null, null);
+
+        if (cursor.moveToFirst()) {
+            Produto p = new Produto();
+            p.id         = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+            p.nome       = cursor.getString(cursor.getColumnIndexOrThrow("nome"));
+            p.preco      = cursor.getDouble(cursor.getColumnIndexOrThrow("preco"));
+            p.descricao  = cursor.getString(cursor.getColumnIndexOrThrow("descricao"));
+            p.categoria  = cursor.getString(cursor.getColumnIndexOrThrow("categoria"));
+            p.imagemUri  = cursor.getString(cursor.getColumnIndexOrThrow("foto")); // ✅ só URI
+            p.produtorId = cursor.getInt(cursor.getColumnIndexOrThrow("produtor_id")); // ✅
+            cursor.close();
+            return p;
+        }
+        cursor.close();
+        return null;
+    }
+
+    //========================PRODUTORES=======================================
+
+    public long inserirProdutor(String nome, String cidade, String contato, double avaliacao, String foto) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("nome", nome);
+        values.put("cidade", cidade);
+        values.put("contato", contato);
+        values.put("avaliacao", avaliacao);
+        values.put("foto", foto);
+        return db.insert("produtores", null, values);
+    }
+
+    public Produtor buscarProdutorPorId(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("produtores", null, "id = ?",
+                new String[]{String.valueOf(id)}, null, null, null);
+
+        if (cursor.moveToFirst()) {
+            Produtor p = new Produtor();
+            p.id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+            p.nome = cursor.getString(cursor.getColumnIndexOrThrow("nome"));
+            p.cidade = cursor.getString(cursor.getColumnIndexOrThrow("cidade"));
+            p.contato  = cursor.getString(cursor.getColumnIndexOrThrow("contato"));
+            p.avaliacao = cursor.getDouble(cursor.getColumnIndexOrThrow("avaliacao"));
+            p.fotoPerfilUri = cursor.getString(cursor.getColumnIndexOrThrow("foto"));
+            cursor.close();
+            return p;
+        }
+        cursor.close();
+        return null;
+    }
+
 
     //SENHAS e autenticação
     public String hashSenha(String senha) {
@@ -180,4 +246,6 @@ public class BancoHelper extends SQLiteOpenHelper {
 
         return autenticado;
     }
+
+
 }

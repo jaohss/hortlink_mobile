@@ -48,10 +48,8 @@ public class HomeFragment extends Fragment {
 
         ProdutoAdapter adapter = new ProdutoAdapter(produtosFiltrados, produto -> {
             Intent intent = new Intent(getContext(), DetalheProdutoActivity.class);
-            intent.putExtra("nome", produto.nome);
-            intent.putExtra("preco", produto.preco);
-            intent.putExtra("imagem_uri", produto.imagemUri); // ✅ manda URI
-            intent.putExtra("descricao", produto.descricao);
+            intent.putExtra("produto_id", produto.id);
+            startActivity(intent);
             startActivity(intent);
         });
         recyclerProdutos.setAdapter(adapter);

@@ -13,7 +13,10 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.hortlink.BancoHelper;
 import com.example.hortlink.R;
+import com.example.hortlink.entidades.Produto;
+import com.example.hortlink.entidades.Produtor;
 
 public class DetalheProdutoActivity extends AppCompatActivity {
 
@@ -27,62 +30,76 @@ public class DetalheProdutoActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        //produto
-        String nome = getIntent().getStringExtra("nome");
-        double preco = getIntent().getDoubleExtra("preco", 0.0);
-        int imagem = getIntent().getIntExtra("imagem",0);
-        String descricao = getIntent().getStringExtra("descricao");
 
-        //produtor
-        String produtorNome = getIntent().getStringExtra("produtor_nome");
-        String produtorCidade = getIntent().getStringExtra("produtor_cidade");
-        String produtorContato = getIntent().getStringExtra("produtor_contato");
-        int fotoProd = getIntent().getIntExtra("produtor_foto",0);
-        int fotoCapa = getIntent().getIntExtra("produtor_fotoC",0);
-        double produtorAvaliacao = getIntent().getDoubleExtra("produtor_avaliaco",0.0);
+        // Busca produto no banco pelo ID
+        int produtoId = getIntent().getIntExtra("produto_id", -1);
+        BancoHelper db = new BancoHelper(this);
+        Produto produto = db.buscarProdutoPorId(produtoId);
 
-        //detalhes produto
+        if (produto == null) {
+            finish();
+            return;
+        }
+
+        // Views do produto
         TextView txtNome = findViewById(R.id.txtNome);
         TextView txtPreco = findViewById(R.id.txtPreco);
-        ImageView imageView = findViewById(R.id.imgProduto);
-        Button btnCarrinho = findViewById(R.id.btnCarrinho);
-        Button btnVoltar = findViewById(R.id.btnVoltar);
         TextView txtDescricao = findViewById(R.id.txtDescricao);
+        ImageView imgProduto = findViewById(R.id.imgProduto);
+        Button btnVoltar = findViewById(R.id.btnVoltar);
 
-        txtNome.setText(nome);
-        txtPreco.setText("R$"+preco);
-        imageView.setImageResource(imagem);
-        txtDescricao.setText(descricao);
+        txtNome.setText(produto.nome);
+        txtPreco.setText("R$ " + produto.preco);
+        txtDescricao.setText(produto.descricao);
 
-        //detalhes produtor
+        if (produto.imagemUri != null && !produto.imagemUri.isEmpty()) {
+            imgProduto.setImageURI(android.net.Uri.parse(produto.imagemUri));
+            if (imgProduto.getDrawable() == null) {
+                imgProduto.setImageResource(R.drawable.hortlink_logo);
+            }
+        } else {
+            imgProduto.setImageResource(R.drawable.hortlink_logo);
+        }
+
+
+        // Busca produtor no banco pelo ID
+        Produtor produtor = db.buscarProdutorPorId(produto.produtorId);
+
+        // Views do produtor
         TextView txtNomeProd = findViewById(R.id.txtNomeProd);
         TextView txtCidadeProd = findViewById(R.id.txtCidadeProd);
         TextView txtContatoProd = findViewById(R.id.txtContatoProd);
-        ImageView imgFotoProd = findViewById(R.id.fotoPerfil);
-        TextView txtAvaliaco = findViewById(R.id.txtAvaliacao);
+        TextView txtAvaliacao = findViewById(R.id.txtAvaliacao);
+        ImageView fotoPerfil = findViewById(R.id.fotoPerfil);
 
-        txtNomeProd.setText(produtorNome);
-        txtContatoProd.setText(produtorContato);
-        txtCidadeProd.setText(produtorCidade);
-        imgFotoProd.setImageResource(fotoProd);
-        txtAvaliaco.setText("Avaliação"+produtorAvaliacao);
 
-        btnVoltar.setOnClickListener(v ->{
-            finish();
-        });
 
-        ConstraintLayout cardProdutor;
-        cardProdutor = findViewById(R.id.cardProdutor);
+        if (produtor != null) {
+            txtNomeProd.setText(produtor.nome);
+            txtCidadeProd.setText(produtor.cidade);
+            txtContatoProd.setText(produtor.contato);
+            txtAvaliacao.setText("Avaliação: " + produtor.avaliacao);
 
-        //Ação ao clicar no card do produtor
+            if (produtor.fotoPerfilUri != null && !produtor.fotoPerfilUri.isEmpty()) {
+                fotoPerfil.setImageURI(android.net.Uri.parse(produtor.fotoPerfilUri));
+                if (fotoPerfil.getDrawable() == null) {
+                    fotoPerfil.setImageResource(R.drawable.hortlink_logo);
+                }
+            } else {
+                fotoPerfil.setImageResource(R.drawable.hortlink_logo);
+            }
+        }
+
+        btnVoltar.setOnClickListener(v -> finish());
+
+        // Navega para perfil do produtor
+        ConstraintLayout cardProdutor = findViewById(R.id.cardProdutor);
         cardProdutor.setOnClickListener(v -> {
-            Intent intent = new Intent(DetalheProdutoActivity.this, PerfilProdutorActivity.class);
-            intent.putExtra("produtor_nome", produtorNome);
-            intent.putExtra("produtor_cidade", produtorCidade);
-            intent.putExtra("produtor_contato", produtorContato);
-            intent.putExtra("produtor_foto", fotoProd);
-            intent.putExtra("produtor_avaliacao", produtorAvaliacao);
-            intent.putExtra("foto_capa", fotoCapa);
+            if (produtor == null) return;
+            Intent intent = new Intent(this, PerfilProdutorActivity.class);
+            intent.putExtra("produtor_id", produtor.id);
+
+
             startActivity(intent);
         });
 
