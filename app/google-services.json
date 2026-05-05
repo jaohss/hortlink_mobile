@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "853939962370",
+    "project_id": "hortlink-a8eca",
+    "storage_bucket": "hortlink-a8eca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853939962370:android:a1a57f0aba54e041b21d1b",
+        "android_client_info": {
+          "package_name": "com.example.hortlink"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzBFCvS7HPv2KcWhRw7eChzMIOGJmbgOo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

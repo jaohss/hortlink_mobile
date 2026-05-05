@@ -2,6 +2,8 @@ package com.example.hortlink.activities;
 
 import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.BancoHelper;
 import com.example.hortlink.R;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 
@@ -28,6 +31,7 @@ public class Cadastro extends AppCompatActivity {
     ArrayList<Integer> listaIds;
     ListView listViewUsuarios;
 
+    FirebaseAuth mAuth = FirebaseAuth.getInstance();
     BancoHelper databaseHelper;
 
     @Override
@@ -56,29 +60,44 @@ public class Cadastro extends AppCompatActivity {
                 String senha = passwordEdt.getText().toString();
                 String confirmaSenha = confirmPassEdt.getText().toString();
                 String telefone = telefoneEdt.getText().toString();
+
                 if (!nome.isEmpty() && !email.isEmpty() && !senha.isEmpty() && !confirmaSenha.isEmpty() && !telefone.isEmpty()) {
-                    //VALIDAÇÃO DAS SENHAS
+
                     if (!senha.equals(confirmaSenha)) {
                         Toast.makeText(this, "As senhas não coincidem!", Toast.LENGTH_SHORT).show();
-                        confirmPassEdt.setError("As senhas não coincidem");
-                        confirmPassEdt.requestFocus();
                         return;
-
                     }
 
-                    long resultado = databaseHelper.inserirUsuario(nome, email, senha, telefone);
-                    if (resultado != -1) {
-                        Toast.makeText(this, "Usuário salvo!", Toast.LENGTH_SHORT).show();
-                        nomeEdt.setText("");
-                        emailEdt.setText("");
-                        telefoneEdt.setText("");
-                        carregarUsuarios();
-                    } else {
-                        Toast.makeText(this, "Erro ao salvar!", Toast.LENGTH_SHORT).show();
+                    if (senha.length() < 6) {
+                        Toast.makeText(this, "Senha deve ter pelo menos 6 caracteres", Toast.LENGTH_SHORT).show();
+                        return;
                     }
+
+                    //FIREBASE
+                    mAuth.createUserWithEmailAndPassword(email, senha)
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+
+                                    // 🟢 SQLite só depois
+                                    long resultado = databaseHelper.inserirUsuario(nome, email, senha, telefone);
+
+                                    if (resultado != -1) {
+                                        Toast.makeText(this, "Usuário criado!", Toast.LENGTH_SHORT).show();
+                                        carregarUsuarios();
+                                    } else {
+                                        Toast.makeText(this, "Salvo no Firebase, mas erro local", Toast.LENGTH_SHORT).show();
+                                    }
+
+                                } else {
+                                    Toast.makeText(this, task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                            });
+
                 } else {
                     Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
                 }
+
+
             });
 
         }
@@ -86,7 +105,7 @@ public class Cadastro extends AppCompatActivity {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
-
+    //Carrega os usuarios no banco helper
     private void carregarUsuarios() {
         Cursor cursor = databaseHelper.listarUsuarios();
         listaUsuarios = new ArrayList<>();

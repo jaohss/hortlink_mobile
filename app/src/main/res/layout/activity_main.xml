@@ -71,15 +71,23 @@
                 android:textColorHighlight="@color/cardview_dark_background"
                 android:layout_marginTop="20dp"/>
 
+            <TextView
+                android:id="@+id/resetPass"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Esqueci minha senha"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
             <Button
+                android:id="@+id/loginButton"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:id="@+id/loginButton"
                 android:text="Entrar"
                 android:textSize="18sp"
-                android:layout_marginTop="30dp"
                 android:backgroundTint="@color/green"
-                app:cornerRadius = "20dp"/>
+                app:cornerRadius="20dp"/>
 
         </LinearLayout>
 
