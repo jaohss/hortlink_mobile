@@ -51,7 +51,15 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    //firebase
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation ("com.google.firebase:firebase-auth")
+    //glide
+    implementation("com.github.bumptech.glide:glide:5.0.5")
+
+    // Supabase via REST (OkHttp)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+// Para converter imagem Uri → InputStream
+    implementation("commons-io:commons-io:2.13.0")
 }

@@ -1,4 +1,4 @@
-package com.example.hortlink;
+//package com.example.hortlink.bd;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -13,8 +13,9 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BancoHelper extends SQLiteOpenHelper {
+//blic class BancoHelper extends SQLiteOpenHelper {
 
+    /*
     private static final String DATABASE_NAME = "hortlink.db";
     private static final int DATABASE_VERSION = 3;
 
@@ -247,5 +248,6 @@ public class BancoHelper extends SQLiteOpenHelper {
         return autenticado;
     }
 
+     */
 
-}
+//}

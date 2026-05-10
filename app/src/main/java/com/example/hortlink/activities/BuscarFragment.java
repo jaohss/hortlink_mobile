@@ -1,66 +1,102 @@
 package com.example.hortlink.activities;
 
-import android.os.Bundle;
-
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import com.example.hortlink.bd.SupabaseHelper;
 
-import com.example.hortlink.R;
+import java.util.List;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link BuscarFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class BuscarFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    // Itens populares
+    RecyclerView popularRec;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    SupabaseHelper sp;
 
-    public BuscarFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment BuscarFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static BuscarFragment newInstance(String param1, String param2) {
-        BuscarFragment fragment = new BuscarFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
+     /*
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_buscar, container, false);
+
+        View root = inflater.inflate(R.layout.fragment_buscar, container, false);
+        popularRec = root.findViewById(R.id.popularesR);
+
+        popularRec.setLayoutManager(new LinearLayoutManager(getActivity(), RecyclerView.HORIZONTAL, false));
+        popularModelList = new ArrayList<>();
+
+        // CORREÇÃO: A ordem dos parâmetros do adapter foi invertida para bater com o construtor (Lista primeiro, Contexto depois)
+        popularAdapter = new PopularAdapter(popularModelList, getActivity());
+        popularRec.setAdapter(popularAdapter);
+
+        String SUPABASE_URL = "https://dzfbtevidnfarlpnfysd.supabase.co";
+        String BUCKET_NAME = "produtos"; // Nome do seu bucket
+        String API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZmJ0ZXZpZG5mYXJscG5meXNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNTcwNzMsImV4cCI6MjA5MzgzMzA3M30.79uc9zT_T-HPoUhJMMyUMKsW4qS2kiCHuuBcpmv3sDQ";
+
+        OkHttpClient client = new OkHttpClient();
+
+        // O Supabase exige um JSON no corpo para listar arquivos de um bucket
+        String jsonBody = "{\"prefix\": \"\", \"limit\": 100, \"offset\": 0, \"sortBy\": {\"column\": \"name\", \"order\": \"asc\"}}";
+        RequestBody body = RequestBody.create(MediaType.parse("application/json"), jsonBody);
+
+        Request request = new Request.Builder()
+                .url(SUPABASE_URL + "/storage/v1/object/list/" + BUCKET_NAME)
+                .post(body) // Para listar no storage, a requisição é POST
+                .addHeader("apikey", API_KEY)
+                .addHeader("Authorization", "Bearer " + API_KEY)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e("SupabaseStorage", "Erro ao listar bucket", e);
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String jsonResposta = response.body().string();
+                        JSONArray jsonArray = new JSONArray(jsonResposta);
+
+                        popularModelList.clear();
+
+                        // CORREÇÃO: Este é o único loop for necessário, e ele fica dentro do try-catch
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject arquivo = jsonArray.getJSONObject(i);
+                            String nomeArquivo = arquivo.optString("name");
+
+                            // Ignora o arquivo oculto .emptyFolderPlaceholder se existir
+                            if (nomeArquivo.equals(".emptyFolderPlaceholder")) continue;
+
+                            // Monta a URL pública baseada no nome do arquivo que retornou
+                            String imgUrlPublica = SUPABASE_URL + "/storage/v1/object/public/" + BUCKET_NAME + "/" + nomeArquivo;
+
+                            Log.d("SupabaseStorage", "Arquivo encontrado: " + imgUrlPublica);
+
+                            // Cria o modelo e adiciona na lista
+                            PopularModel model = new PopularModel(nomeArquivo, "Descrição do produto", imgUrlPublica);
+                            popularModelList.add(model);
+                        }
+
+                        // Atualiza a tela na thread principal
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> popularAdapter.notifyDataSetChanged());
+                        }
+
+                    } catch (Exception e) {
+                        Log.e("SupabaseStorage", "Erro no Parse", e);
+                    }
+                } else {
+                    Log.w("SupabaseStorage", "Resposta da API não foi de sucesso: " + response.code());
+                }
+            }
+        });
+
+        return root;
+
+
     }
+    */
 }

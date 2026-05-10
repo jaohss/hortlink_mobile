@@ -1,12 +1,10 @@
 package com.example.hortlink.activities;
 
 import android.content.Intent;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.*;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -16,32 +14,33 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.hortlink.BancoHelper;
 import com.example.hortlink.R;
+import com.example.hortlink.bd.SupabaseHelper;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class AdicionarProdutosActivity extends AppCompatActivity {
 
     private TextInputEditText edtNome, edtPreco, edtDescricao;
     private AutoCompleteTextView spinnerCategoria, spinnerUnidade;
-    private android.widget.ImageView imgProduto;
-    private android.widget.LinearLayout layoutPlaceholder;
+    private ImageView imgProduto;
+    private LinearLayout layoutPlaceholder;
+    private CircularProgressIndicator progressBar; // adicione no seu XML
     private Uri imagemSelecionada;
-    BancoHelper database;
-    // Launcher para abrir a galeria
+
+    private SupabaseHelper supabase;
+
     private final ActivityResultLauncher<String> pickImage =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
-                    // Salva a permissão permanentemente
                     getContentResolver().takePersistableUriPermission(
-                            uri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    );
+                            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     imagemSelecionada = uri;
                     imgProduto.setImageURI(uri);
-                    imgProduto.setVisibility(android.view.View.VISIBLE);
-                    layoutPlaceholder.setVisibility(android.view.View.GONE);
+                    imgProduto.setVisibility(View.VISIBLE);
+                    layoutPlaceholder.setVisibility(View.GONE);
                 }
             });
 
@@ -51,55 +50,46 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_adicionar_produtos);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            Insets sb = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(sb.left, sb.top, sb.right, sb.bottom);
             return insets;
         });
 
-        database = new BancoHelper(this);
+        supabase = new SupabaseHelper(this);
 
-        // Toolbar com botão voltar
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Adicionar Produto");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        // Views
-        edtNome        = findViewById(R.id.edtNome);
-        edtPreco       = findViewById(R.id.edtPreco);
-        edtDescricao   = findViewById(R.id.edtDescricao);
-        spinnerCategoria    = findViewById(R.id.spnCategoria);
-        spinnerUnidade = findViewById(R.id.spinnerUnidade);
-        imgProduto     = findViewById(R.id.imgProduto);
+        edtNome          = findViewById(R.id.edtNome);
+        edtPreco         = findViewById(R.id.edtPreco);
+        edtDescricao     = findViewById(R.id.edtDescricao);
+        spinnerCategoria = findViewById(R.id.spnCategoria);
+        spinnerUnidade   = findViewById(R.id.spinnerUnidade);
+        imgProduto       = findViewById(R.id.imgProduto);
         layoutPlaceholder = findViewById(R.id.layoutPlaceholder);
+        // progressBar   = findViewById(R.id.progressBar); // descomente se tiver no XML
 
         configurarSpinners();
 
-        // Upload de foto
-        findViewById(R.id.frameUploadFoto).setOnClickListener(v ->
-                pickImage.launch("image/*"));
+        findViewById(R.id.frameUploadFoto).setOnClickListener(v -> pickImage.launch("image/*"));
 
-        // Salvar
-        MaterialButton btnSalvar = findViewById(R.id.btnSalvarProduto);
-        btnSalvar.setOnClickListener(v -> salvarProduto());
-
-        // Cancelar
+        MaterialButton btnSalvar   = findViewById(R.id.btnSalvarProduto);
         MaterialButton btnCancelar = findViewById(R.id.btnCancelar);
+
+        btnSalvar.setOnClickListener(v -> salvarProduto());
         btnCancelar.setOnClickListener(v -> finish());
     }
 
     private void configurarSpinners() {
-        // Tipos
         String[] categorias = {"Fruta", "Legume", "Verdura"};
-        ArrayAdapter<String> adapterCategoria = new ArrayAdapter<>(
-                this, android.R.layout.simple_dropdown_item_1line, categorias);
-        spinnerCategoria.setAdapter(adapterCategoria);
+        spinnerCategoria.setAdapter(new ArrayAdapter<>(
+                this, android.R.layout.simple_dropdown_item_1line, categorias));
 
-        // Unidades de medida
         String[] unidades = {"kg", "g", "un", "dúzia", "maço", "caixa"};
-        ArrayAdapter<String> adapterUnidade = new ArrayAdapter<>(
-                this, android.R.layout.simple_dropdown_item_1line, unidades);
-        spinnerUnidade.setAdapter(adapterUnidade);
+        spinnerUnidade.setAdapter(new ArrayAdapter<>(
+                this, android.R.layout.simple_dropdown_item_1line, unidades));
     }
 
     private void salvarProduto() {
@@ -108,24 +98,91 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
         String preco     = edtPreco.getText().toString().trim();
         String unidade   = spinnerUnidade.getText().toString().trim();
         String descricao = edtDescricao.getText().toString().trim();
-        String foto      = imagemSelecionada != null ? imagemSelecionada.toString() : "";
 
-        if (nome.isEmpty()) { edtNome.setError("Informe o nome"); return; }
+        // Validações
+        if (nome.isEmpty())      { edtNome.setError("Informe o nome"); return; }
         if (categoria.isEmpty()) { spinnerCategoria.setError("Selecione a categoria"); return; }
-        if (preco.isEmpty()) { edtPreco.setError("Informe o preço"); return; }
-        if (unidade.isEmpty()) { spinnerUnidade.setError("Selecione a unidade"); return; }
+        if (preco.isEmpty())     { edtPreco.setError("Informe o preço"); return; }
+        if (unidade.isEmpty())   { spinnerUnidade.setError("Selecione a unidade"); return; }
 
-        // ✅ Agora sim — passando Strings para o banco
         double precoDouble = Double.parseDouble(preco.replace(",", "."));
-        long resultado = database.inserirProduto(nome, categoria, precoDouble, unidade, descricao, foto);
 
-        if (resultado != -1) {
-            Toast.makeText(this, "Produto salvo com sucesso!", Toast.LENGTH_SHORT).show();
-            setResult(RESULT_OK);
-            finish();
+        // UID do vendedor logado via Firebase
+        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid()
+                : "anonimo";
+
+        setCarregando(true);
+
+        if (imagemSelecionada != null) {
+            // 1º: faz upload da imagem, depois salva o produto com a URL
+            String nomeArquivo = uid + "_" + System.currentTimeMillis() + ".jpg";
+
+            supabase.uploadImagem(imagemSelecionada, nomeArquivo, new SupabaseHelper.SupabaseCallback() {
+                @Override
+                public void onSuccess(String fotoUrl) {
+                    // Imagem enviada → agora salva o produto com a URL
+                    supabase.inserirProduto(nome, categoria, precoDouble, unidade,
+                            descricao, fotoUrl, uid, new SupabaseHelper.SupabaseCallback() {
+                                @Override
+                                public void onSuccess(String r) {
+                                    runOnUiThread(() -> {
+                                        setCarregando(false);
+                                        Toast.makeText(AdicionarProdutosActivity.this,
+                                                "Produto salvo!", Toast.LENGTH_SHORT).show();
+                                        setResult(RESULT_OK);
+                                        finish();
+                                    });
+                                }
+                                @Override
+                                public void onError(String erro) {
+                                    runOnUiThread(() -> {
+                                        setCarregando(false);
+                                        Toast.makeText(AdicionarProdutosActivity.this,
+                                                "Erro ao salvar: " + erro, Toast.LENGTH_LONG).show();
+                                    });
+                                }
+                            });
+                }
+                @Override
+                public void onError(String erro) {
+                    runOnUiThread(() -> {
+                        setCarregando(false);
+                        Toast.makeText(AdicionarProdutosActivity.this,
+                                "Erro no upload da imagem: " + erro, Toast.LENGTH_LONG).show();
+                    });
+                }
+            });
+
         } else {
-            Toast.makeText(this, "Erro ao salvar produto!", Toast.LENGTH_SHORT).show();
+            // Sem imagem — salva direto
+            supabase.inserirProduto(nome, categoria, precoDouble, unidade,
+                    descricao, "", uid, new SupabaseHelper.SupabaseCallback() {
+                        @Override
+                        public void onSuccess(String r) {
+                            runOnUiThread(() -> {
+                                setCarregando(false);
+                                Toast.makeText(AdicionarProdutosActivity.this,
+                                        "Produto salvo!", Toast.LENGTH_SHORT).show();
+                                setResult(RESULT_OK);
+                                finish();
+                            });
+                        }
+                        @Override
+                        public void onError(String erro) {
+                            runOnUiThread(() -> {
+                                setCarregando(false);
+                                Toast.makeText(AdicionarProdutosActivity.this,
+                                        "Erro: " + erro, Toast.LENGTH_LONG).show();
+                            });
+                        }
+                    });
         }
+    }
+
+    private void setCarregando(boolean carregando) {
+        // if (progressBar != null) progressBar.setVisibility(carregando ? View.VISIBLE : View.GONE);
+        findViewById(R.id.btnSalvarProduto).setEnabled(!carregando);
     }
 
     @Override

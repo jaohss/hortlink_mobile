@@ -2,10 +2,10 @@ package com.example.hortlink.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,7 +15,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.hortlink.BancoHelper;
 import com.example.hortlink.R;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -25,7 +24,8 @@ public class MainActivity extends AppCompatActivity {
     EditText password;
     TextView cadastroText, resetPass;
     Button loginButton;
-    BancoHelper databaseHelper;
+    ProgressBar progressBar;
+
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
 
@@ -44,14 +44,16 @@ public class MainActivity extends AppCompatActivity {
         password = findViewById(R.id.password);
         loginButton = findViewById(R.id.loginButton);
         cadastroText = findViewById(R.id.cadastroText);
-        databaseHelper = new BancoHelper(this);
         resetPass = findViewById(R.id.resetPass);
+        progressBar = findViewById(R.id.progressBar2);
+        progressBar.setVisibility(View.GONE);
 
 
         loginButton.setOnClickListener(v -> {
             String email = username.getText().toString().trim();
             String senha = password.getText().toString().trim();
 
+            progressBar.setVisibility(View.VISIBLE);
             mAuth.signInWithEmailAndPassword(email, senha)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {

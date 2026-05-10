@@ -1,25 +1,26 @@
 package com.example.hortlink.activities;
 
 import android.app.AlertDialog;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.hortlink.BancoHelper;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.GerenciarAdapter;
+import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.entidades.Produto;
+import com.google.firebase.auth.FirebaseAuth;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +29,9 @@ public class GerenciarProdutosFragment extends Fragment {
 
     private RecyclerView recyclerGerenciar;
     private TextView txtListaVazia;
-    private BancoHelper database;
-    private List<Produto> listaProdutos;
+    private List<Produto> listaProdutos = new ArrayList<>();
     private GerenciarAdapter adapter;
+    private SupabaseHelper supabase;
 
     public GerenciarProdutosFragment() {}
 
@@ -44,58 +45,30 @@ public class GerenciarProdutosFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        database = new BancoHelper(getContext());
+        supabase = new SupabaseHelper(requireContext());
         recyclerGerenciar = view.findViewById(R.id.recyclerGerenciar);
-        txtListaVazia = view.findViewById(R.id.txtListaVazia);
+        txtListaVazia     = view.findViewById(R.id.txtListaVazia);
 
         recyclerGerenciar.setLayoutManager(new LinearLayoutManager(getContext()));
-
+        configurarAdapter();
         carregarProdutos();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        carregarProdutos();
+        carregarProdutos(); // recarrega ao voltar do EditarProdutosFragment
     }
 
-    private void carregarProdutos() {
-        listaProdutos = new ArrayList<>();
-
-        SQLiteDatabase db = database.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM produtos", null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                int id           = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
-                String nome      = cursor.getString(cursor.getColumnIndexOrThrow("nome"));
-                String categoria      = cursor.getString(cursor.getColumnIndexOrThrow("categoria"));
-                double preco     = cursor.getDouble(cursor.getColumnIndexOrThrow("preco"));
-                String descricao = cursor.getString(cursor.getColumnIndexOrThrow("descricao"));
-                String foto      = cursor.getString(cursor.getColumnIndexOrThrow("foto"));
-
-                Produto p = new Produto(nome, preco, categoria, foto, descricao);
-                p.id = id;
-                listaProdutos.add(p);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-
-        if (listaProdutos.isEmpty()) {
-            txtListaVazia.setVisibility(View.VISIBLE);
-            recyclerGerenciar.setVisibility(View.GONE);
-        } else {
-            txtListaVazia.setVisibility(View.GONE);
-            recyclerGerenciar.setVisibility(View.VISIBLE);
-        }
-
-        // ✅ Adapter separado com as duas ações
+    // ─── Configura adapter com as ações de editar e deletar ──────
+    private void configurarAdapter() {
         adapter = new GerenciarAdapter(
                 listaProdutos,
 
-                // Editar
+                // Editar → abre EditarProdutosFragment passando UUID
                 produto -> {
-                    EditarProdutosFragment fragment = EditarProdutosFragment.newInstance(produto.id);
+                    EditarProdutosFragment fragment =
+                            EditarProdutosFragment.newInstance(produto.id); // String UUID
                     requireActivity().getSupportFragmentManager()
                             .beginTransaction()
                             .replace(R.id.container, fragment)
@@ -103,28 +76,102 @@ public class GerenciarProdutosFragment extends Fragment {
                             .commit();
                 },
 
-                // Deletar
+                // Deletar → confirma e remove do Supabase
                 (produto, position) -> {
-                    new AlertDialog.Builder(getContext())
+                    new AlertDialog.Builder(requireContext())
                             .setTitle("Deletar produto")
                             .setMessage("Tem certeza que quer deletar \"" + produto.nome + "\"?")
-                            .setPositiveButton("Deletar", (dialog, which) -> {
-                                database.excluirProduto(produto.id);
-                                listaProdutos.remove(position);
-                                adapter.notifyItemRemoved(position);
-                                adapter.notifyItemRangeChanged(position, listaProdutos.size());
-                                Toast.makeText(getContext(), "Produto deletado!", Toast.LENGTH_SHORT).show();
-
-                                if (listaProdutos.isEmpty()) {
-                                    txtListaVazia.setVisibility(View.VISIBLE);
-                                    recyclerGerenciar.setVisibility(View.GONE);
-                                }
-                            })
+                            .setPositiveButton("Deletar", (dialog, which) -> deletarProduto(produto, position))
                             .setNegativeButton("Cancelar", null)
                             .show();
                 }
         );
 
         recyclerGerenciar.setAdapter(adapter);
+    }
+
+    // ─── Busca só os produtos do produtor logado ─────────────────
+    private void carregarProdutos() {
+        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid()
+                : null;
+
+        if (uid == null) {
+            Toast.makeText(getContext(), "Usuário não autenticado", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        supabase.listarProdutosPorProdutor(uid, new SupabaseHelper.SupabaseCallback() {
+            @Override
+            public void onSuccess(String json) {
+                List<Produto> lista = parseProdutos(json);
+
+                requireActivity().runOnUiThread(() -> {
+                    listaProdutos.clear();
+                    listaProdutos.addAll(lista);
+                    adapter.notifyDataSetChanged();
+
+                    boolean vazia = listaProdutos.isEmpty();
+                    txtListaVazia.setVisibility(vazia ? View.VISIBLE : View.GONE);
+                    recyclerGerenciar.setVisibility(vazia ? View.GONE : View.VISIBLE);
+                });
+            }
+
+            @Override
+            public void onError(String erro) {
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(getContext(),
+                                "Erro ao carregar: " + erro, Toast.LENGTH_LONG).show());
+            }
+        });
+    }
+
+    // ─── Deleta e remove da lista localmente ─────────────────────
+    private void deletarProduto(Produto produto, int position) {
+        supabase.deletarProduto(produto.id, new SupabaseHelper.SupabaseCallback() {
+            @Override
+            public void onSuccess(String r) {
+                requireActivity().runOnUiThread(() -> {
+                    listaProdutos.remove(position);
+                    adapter.notifyItemRemoved(position);
+                    adapter.notifyItemRangeChanged(position, listaProdutos.size());
+                    Toast.makeText(getContext(), "Produto deletado!", Toast.LENGTH_SHORT).show();
+
+                    if (listaProdutos.isEmpty()) {
+                        txtListaVazia.setVisibility(View.VISIBLE);
+                        recyclerGerenciar.setVisibility(View.GONE);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String erro) {
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(getContext(),
+                                "Erro ao deletar: " + erro, Toast.LENGTH_LONG).show());
+            }
+        });
+    }
+
+    // ─── Parse JSON → List<Produto> ──────────────────────────────
+    private List<Produto> parseProdutos(String json) {
+        List<Produto> lista = new ArrayList<>();
+        try {
+            JSONArray array = new JSONArray(json);
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject obj = array.getJSONObject(i);
+                Produto p = new Produto(
+                        obj.optString("id"),
+                        obj.optString("nome"),
+                        obj.optDouble("preco", 0.0),
+                        obj.optString("categoria"),
+                        obj.optString("foto_url"),
+                        obj.optString("descricao"),
+                        obj.optString("unidade")
+                );
+                lista.add(p);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return lista;
     }
 }

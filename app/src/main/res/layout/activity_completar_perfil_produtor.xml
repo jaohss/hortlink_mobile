@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/backgroundhort">
+
+    <!-- Ícone / logo -->
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginBottom="8dp"
+        app:srcCompat="@drawable/hortlink_logo" />
+
+    <!-- Card principal -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="30dp"
+        app:cardCornerRadius="30dp"
+        app:cardElevation="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Título -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Perfil do produtor"
+                android:textAlignment="center"
+                android:textColor="@color/green"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp"/>
+
+            <!-- Subtítulo -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Conte mais sobre sua produção"
+                android:textAlignment="center"
+                android:textColor="#888"
+                android:textSize="13sp"
+                android:layout_marginBottom="24dp"/>
+
+            <!-- ── LOCALIZAÇÃO ── -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="LOCALIZAÇÃO"
+                android:textColor="#AAAAAA"
+                android:textSize="11sp"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/edtCidade"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@drawable/custom_edittext"
+                android:drawableLeft="@drawable/baseline_person_24"
+                android:drawablePadding="8dp"
+                android:hint="Cidade, Estado (ex: Sorocaba, SP)"
+                android:inputType="textCapWords"
+                android:padding="8dp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="20dp"/>
+
+            <!-- ── CONTATO ── -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="CONTATO"
+                android:textColor="#AAAAAA"
+                android:textSize="11sp"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/edtContato"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@drawable/custom_edittext"
+                android:drawableLeft="@drawable/telephone"
+                android:drawablePadding="8dp"
+                android:hint="WhatsApp ou telefone"
+                android:inputType="phone"
+                android:padding="8dp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="20dp"/>
+
+            <!-- ── DESCRIÇÃO ── -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="SOBRE A PRODUÇÃO"
+                android:textColor="#AAAAAA"
+                android:textSize="11sp"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/edtDescricaoProd"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:background="@drawable/custom_edittext"
+                android:hint="Fale sobre o que você produz..."
+                android:inputType="textMultiLine"
+                android:gravity="top"
+                android:padding="10dp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="24dp"/>
+
+            <!-- Botão concluir -->
+            <Button
+                android:id="@+id/btnConcluir"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:backgroundTint="@color/green"
+                android:text="Concluir cadastro"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                app:cornerRadius="20dp"
+                android:layout_marginBottom="10dp"/>
+
+            <!-- Botão pular -->
+            <Button
+                android:id="@+id/btnPular"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:backgroundTint="@android:color/transparent"
+                android:text="Pular por agora"
+                android:textColor="@color/green"
+                android:textSize="13sp"
+                style="@style/Widget.Material3.Button.TextButton"/>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
+
+</LinearLayout>

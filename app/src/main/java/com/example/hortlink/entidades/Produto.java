@@ -1,39 +1,41 @@
 package com.example.hortlink.entidades;
 
-//Molde do produto
-//Isso representa um item do app (tipo tomate, alface, etc).
 public class Produto {
-    public int id;
+    public String id;        // era int (SQLite), agora String (UUID do Supabase)
     public String nome;
     public double preco;
     public String categoria;
-    public int imagem;
     public String descricao;
-    public String imagemUri; // ✅ URI do banco
-    public Produtor produtor;
-    public int produtorId; // ✅ ID vindo do banco
+    public String imagemUri; // mantido — agora recebe a URL pública do Supabase Storage
+    public String unidade;
+    public String vendedorUid;
 
-    public Produto(){}
+    // campos legados — mantidos para não quebrar outras telas
+    public int imagem = 0;
+    public Produtor produtor = null;
+    public int produtorId = 0;
 
+    public Produto() {}
 
-    public Produto(String nome, double preco, String categoria, int imagem, String descricao, Produtor produtor, String imagemUri){
-        this.nome=nome;
-        this.preco=preco;
-        this.categoria=categoria;
-        this.imagem=imagem;
-        this.descricao=descricao;
-        this.produtor=produtor;
-        this.imagemUri = imagemUri;
-    }
-
-    // ✅ Construtor do banco (sem drawable, sem produtor)
-    public Produto(String nome, double preco, String categoria, String imagemUri, String descricao) {
-        this.nome = nome;
-        this.preco = preco;
+    // Construtor do Supabase
+    public Produto(String id, String nome, double preco, String categoria,
+                   String imagemUri, String descricao, String unidade) {
+        this.id        = id;
+        this.nome      = nome;
+        this.preco     = preco;
         this.categoria = categoria;
         this.imagemUri = imagemUri;
         this.descricao = descricao;
-        this.imagem = 0;       // sem drawable
-        this.produtor = null;  // sem produtor
+        this.unidade   = unidade;
+    }
+
+    // Construtor legado — mantido para não quebrar nada que já usa
+    public Produto(String nome, double preco, String categoria,
+                   String imagemUri, String descricao) {
+        this.nome      = nome;
+        this.preco     = preco;
+        this.categoria = categoria;
+        this.imagemUri = imagemUri;
+        this.descricao = descricao;
     }
 }

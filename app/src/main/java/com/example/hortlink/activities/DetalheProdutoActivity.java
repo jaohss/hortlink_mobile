@@ -2,9 +2,12 @@ package com.example.hortlink.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,12 +16,27 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.hortlink.BancoHelper;
+import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
+import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.entidades.Produto;
 import com.example.hortlink.entidades.Produtor;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class DetalheProdutoActivity extends AppCompatActivity {
+
+    private SupabaseHelper supabase;
+
+    // Views do produto
+    private TextView  txtNome, txtPreco, txtDescricao;
+    private ImageView imgProduto;
+
+    // Views do produtor
+    private TextView  txtNomeProd, txtCidadeProd, txtContatoProd, txtAvaliacao;
+    private ImageView fotoPerfil;
+    private ConstraintLayout cardProdutor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,82 +44,133 @@ public class DetalheProdutoActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_detalhe_produto);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            Insets sb = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(sb.left, sb.top, sb.right, sb.bottom);
             return insets;
         });
 
-        // Busca produto no banco pelo ID
-        int produtoId = getIntent().getIntExtra("produto_id", -1);
-        BancoHelper db = new BancoHelper(this);
-        Produto produto = db.buscarProdutoPorId(produtoId);
+        supabase = new SupabaseHelper(this);
 
-        if (produto == null) {
-            finish();
-            return;
-        }
+        // Views
+        txtNome      = findViewById(R.id.txtNome);
+        txtPreco     = findViewById(R.id.txtPreco);
+        txtDescricao = findViewById(R.id.txtDescricao);
+        imgProduto   = findViewById(R.id.imgProduto);
+        txtNomeProd  = findViewById(R.id.txtNomeProd);
+        txtCidadeProd   = findViewById(R.id.txtCidadeProd);
+        txtContatoProd  = findViewById(R.id.txtContatoProd);
+        txtAvaliacao    = findViewById(R.id.txtAvaliacao);
+        fotoPerfil      = findViewById(R.id.fotoPerfil);
+        cardProdutor    = findViewById(R.id.cardProdutor);
 
-        // Views do produto
-        TextView txtNome = findViewById(R.id.txtNome);
-        TextView txtPreco = findViewById(R.id.txtPreco);
-        TextView txtDescricao = findViewById(R.id.txtDescricao);
-        ImageView imgProduto = findViewById(R.id.imgProduto);
-        Button btnVoltar = findViewById(R.id.btnVoltar);
+        findViewById(R.id.btnVoltar).setOnClickListener(v -> finish());
 
-        txtNome.setText(produto.nome);
-        txtPreco.setText("R$ " + produto.preco);
-        txtDescricao.setText(produto.descricao);
+        // ID vindo do HomeFragment (agora String UUID)
+        String produtoId = getIntent().getStringExtra("produto_id");
+        if (produtoId == null) { finish(); return; }
 
-        if (produto.imagemUri != null && !produto.imagemUri.isEmpty()) {
-            imgProduto.setImageURI(android.net.Uri.parse(produto.imagemUri));
-            if (imgProduto.getDrawable() == null) {
-                imgProduto.setImageResource(R.drawable.hortlink_logo);
-            }
-        } else {
-            imgProduto.setImageResource(R.drawable.hortlink_logo);
-        }
+        carregarProduto(produtoId);
+    }
 
+    // ─── 1. Busca o produto ──────────────────────────────────────
+    private void carregarProduto(String produtoId) {
+        supabase.buscarProdutoPorId(produtoId, new SupabaseHelper.SupabaseCallback() {
+            @Override
+            public void onSuccess(String json) {
+                try {
+                    JSONArray array  = new JSONArray(json);
+                    if (array.length() == 0) {
+                        runOnUiThread(() -> { Toast.makeText(DetalheProdutoActivity.this,
+                                "Produto não encontrado", Toast.LENGTH_SHORT).show(); finish(); });
+                        return;
+                    }
+                    JSONObject obj = array.getJSONObject(0);
 
-        // Busca produtor no banco pelo ID
-        Produtor produtor = db.buscarProdutorPorId(produto.produtorId);
+                    String nome       = obj.optString("nome");
+                    double preco      = obj.optDouble("preco", 0.0);
+                    String descricao  = obj.optString("descricao");
+                    String fotoUrl    = obj.optString("foto_url");
+                    String produtorId = obj.optString("produtor_id"); // UID do Firebase
 
-        // Views do produtor
-        TextView txtNomeProd = findViewById(R.id.txtNomeProd);
-        TextView txtCidadeProd = findViewById(R.id.txtCidadeProd);
-        TextView txtContatoProd = findViewById(R.id.txtContatoProd);
-        TextView txtAvaliacao = findViewById(R.id.txtAvaliacao);
-        ImageView fotoPerfil = findViewById(R.id.fotoPerfil);
+                    runOnUiThread(() -> {
+                        txtNome.setText(nome);
+                        txtPreco.setText(String.format("R$ %.2f", preco));
+                        txtDescricao.setText(descricao);
 
+                        Glide.with(DetalheProdutoActivity.this)
+                                .load(fotoUrl.isEmpty() ? null : fotoUrl)
+                                .placeholder(R.drawable.hortlink_logo)
+                                .error(R.drawable.hortlink_logo)
+                                .centerCrop()
+                                .into(imgProduto);
+                    });
 
+                    // 2. Com o produtorId em mãos, busca o produtor
+                    if (!produtorId.isEmpty()) {
+                        carregarProdutor(produtorId);
+                    }
 
-        if (produtor != null) {
-            txtNomeProd.setText(produtor.nome);
-            txtCidadeProd.setText(produtor.cidade);
-            txtContatoProd.setText(produtor.contato);
-            txtAvaliacao.setText("Avaliação: " + produtor.avaliacao);
-
-            if (produtor.fotoPerfilUri != null && !produtor.fotoPerfilUri.isEmpty()) {
-                fotoPerfil.setImageURI(android.net.Uri.parse(produtor.fotoPerfilUri));
-                if (fotoPerfil.getDrawable() == null) {
-                    fotoPerfil.setImageResource(R.drawable.hortlink_logo);
+                } catch (Exception e) {
+                    runOnUiThread(() -> Toast.makeText(DetalheProdutoActivity.this,
+                            "Erro ao processar produto", Toast.LENGTH_SHORT).show());
                 }
-            } else {
-                fotoPerfil.setImageResource(R.drawable.hortlink_logo);
             }
-        }
 
-        btnVoltar.setOnClickListener(v -> finish());
-
-        // Navega para perfil do produtor
-        ConstraintLayout cardProdutor = findViewById(R.id.cardProdutor);
-        cardProdutor.setOnClickListener(v -> {
-            if (produtor == null) return;
-            Intent intent = new Intent(this, PerfilProdutorActivity.class);
-            intent.putExtra("produtor_id", produtor.id);
-
-
-            startActivity(intent);
+            @Override
+            public void onError(String erro) {
+                runOnUiThread(() -> Toast.makeText(DetalheProdutoActivity.this,
+                        "Erro: " + erro, Toast.LENGTH_LONG).show());
+            }
         });
+    }
 
+    // ─── 2. Busca o produtor depois que o produto carregou ───────
+    private void carregarProdutor(String produtorId) {
+        supabase.buscarProdutorPorId(produtorId, new SupabaseHelper.SupabaseCallback() {
+            @Override
+            public void onSuccess(String json) {
+                try {
+                    JSONArray array = new JSONArray(json);
+                    if (array.length() == 0) return;
+
+                    JSONObject obj   = array.getJSONObject(0);
+                    String nome      = obj.optString("nome");
+                    String cidade    = obj.optString("cidade");
+                    String contato   = obj.optString("contato");
+                    double avaliacao = obj.optDouble("avaliacao", 0.0);
+                    String fotoUrl   = obj.optString("foto_url");
+                    String uid       = obj.optString("id");
+
+                    runOnUiThread(() -> {
+                        txtNomeProd.setText(nome);
+                        txtCidadeProd.setText(cidade);
+                        txtContatoProd.setText(contato);
+                        txtAvaliacao.setText("Avaliação: " + avaliacao);
+
+                        Glide.with(DetalheProdutoActivity.this)
+                                .load(fotoUrl.isEmpty() ? null : fotoUrl)
+                                .placeholder(R.drawable.hortlink_logo)
+                                .error(R.drawable.hortlink_logo)
+                                .circleCrop() // foto de perfil fica redonda
+                                .into(fotoPerfil);
+
+                        cardProdutor.setOnClickListener(v -> {
+                            Intent intent = new Intent(DetalheProdutoActivity.this,
+                                    PerfilProdutorActivity.class);
+                            intent.putExtra("produtor_id", uid);
+                            startActivity(intent);
+                        });
+                    });
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onError(String erro) {
+                // Falhou silenciosamente — produto já está visível
+            }
+        });
     }
 }
