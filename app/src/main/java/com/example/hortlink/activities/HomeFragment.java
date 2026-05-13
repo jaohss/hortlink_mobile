@@ -70,10 +70,12 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onSuccess(String json) {
+                if (!isAdded() || getActivity() == null) return; // ← proteção
+
                 List<Produto> lista = parseProdutos(json);
 
-                // Volta para a UI thread para atualizar o adapter
                 requireActivity().runOnUiThread(() -> {
+                    if (!isAdded()) return; // ← proteção extra dentro do runOnUiThread
                     setCarregando(false);
                     todosProdutos.clear();
                     todosProdutos.addAll(lista);
@@ -85,7 +87,10 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onError(String erro) {
+                if (!isAdded() || getActivity() == null) return; // ← proteção
+
                 requireActivity().runOnUiThread(() -> {
+                    if (!isAdded()) return; // ← proteção extra
                     setCarregando(false);
                     Toast.makeText(getContext(),
                             "Erro ao carregar produtos: " + erro, Toast.LENGTH_LONG).show();

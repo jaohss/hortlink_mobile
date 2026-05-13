@@ -28,7 +28,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="24dp"
+            android:background="@color/white_soft">
 
             <!-- Título -->
             <TextView
@@ -92,6 +93,7 @@
                 android:drawableLeft="@drawable/telephone"
                 android:drawablePadding="8dp"
                 android:hint="WhatsApp ou telefone"
+                android:textColorHint="@color/black_soft"
                 android:inputType="phone"
                 android:padding="8dp"
                 android:textColor="@color/black"
@@ -113,6 +115,7 @@
                 android:layout_height="100dp"
                 android:background="@drawable/custom_edittext"
                 android:hint="Fale sobre o que você produz..."
+                android:textColorHint="@color/black_soft"
                 android:inputType="textMultiLine"
                 android:gravity="top"
                 android:padding="10dp"

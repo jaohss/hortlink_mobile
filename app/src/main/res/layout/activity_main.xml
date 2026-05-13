@@ -31,7 +31,9 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_gravity="center_horizontal"
-            android:padding="24dp">
+            android:padding="24dp"
+            android:background="@color/white_soft">
+
 
 
             <TextView
@@ -52,6 +54,7 @@
                 android:drawableLeft="@drawable/baseline_person_24"
                 android:drawablePadding="8dp"
                 android:hint="Usuario"
+                android:textColorHint="@color/black_soft"
                 android:padding="8dp"
                 android:textColor="@color/black"
                 android:textColorHighlight="@color/cardview_dark_background"
@@ -66,6 +69,7 @@
                 android:drawablePadding="8dp"
                 android:inputType="textPassword"
                 android:hint="Senha"
+                android:textColorHint="@color/black_soft"
                 android:padding="8dp"
                 android:textColor="@color/black"
                 android:textColorHighlight="@color/cardview_dark_background"
@@ -76,6 +80,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Esqueci minha senha"
+                android:textColor="@color/black_soft"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp"/>

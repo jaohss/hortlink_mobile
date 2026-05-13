@@ -34,7 +34,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
     private ImageView imgProduto;
 
     // Views do produtor
-    private TextView  txtNomeProd, txtCidadeProd, txtContatoProd, txtAvaliacao;
+    private TextView  txtNomeProd, txtCidadeProd, txtContatoProd;
     private ImageView fotoPerfil;
     private ConstraintLayout cardProdutor;
 
@@ -59,7 +59,6 @@ public class DetalheProdutoActivity extends AppCompatActivity {
         txtNomeProd  = findViewById(R.id.txtNomeProd);
         txtCidadeProd   = findViewById(R.id.txtCidadeProd);
         txtContatoProd  = findViewById(R.id.txtContatoProd);
-        txtAvaliacao    = findViewById(R.id.txtAvaliacao);
         fotoPerfil      = findViewById(R.id.fotoPerfil);
         cardProdutor    = findViewById(R.id.cardProdutor);
 
@@ -137,7 +136,6 @@ public class DetalheProdutoActivity extends AppCompatActivity {
                     String nome      = obj.optString("nome");
                     String cidade    = obj.optString("cidade");
                     String contato   = obj.optString("contato");
-                    double avaliacao = obj.optDouble("avaliacao", 0.0);
                     String fotoUrl   = obj.optString("foto_url");
                     String uid       = obj.optString("id");
 
@@ -145,8 +143,6 @@ public class DetalheProdutoActivity extends AppCompatActivity {
                         txtNomeProd.setText(nome);
                         txtCidadeProd.setText(cidade);
                         txtContatoProd.setText(contato);
-                        txtAvaliacao.setText("Avaliação: " + avaliacao);
-
                         Glide.with(DetalheProdutoActivity.this)
                                 .load(fotoUrl.isEmpty() ? null : fotoUrl)
                                 .placeholder(R.drawable.hortlink_logo)

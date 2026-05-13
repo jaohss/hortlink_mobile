@@ -31,7 +31,9 @@
             android:layout_height="527dp"
             android:layout_gravity="center_horizontal"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="24dp"
+            android:background="@color/white_soft">
+
 
 
             <TextView
@@ -53,6 +55,7 @@
                 android:drawableLeft="@drawable/nome"
                 android:drawablePadding="8dp"
                 android:hint="Digite seu nome"
+                android:textColorHint="@color/black_soft"
                 android:padding="8dp"
                 android:textColor="@color/black"
                 android:textColorHighlight="@color/cardview_dark_background" />
@@ -66,6 +69,7 @@
                 android:drawableLeft="@drawable/baseline_person_24"
                 android:drawablePadding="8dp"
                 android:hint="Digite seu e-mail"
+                android:textColorHint="@color/black_soft"
                 android:inputType="textEmailAddress"
                 android:padding="8dp"
                 android:textColor="@color/black"
@@ -80,6 +84,7 @@
                 android:drawableLeft="@drawable/blacklock"
                 android:drawablePadding="8dp"
                 android:hint="Inserir senha"
+                android:textColorHint="@color/black_soft"
                 android:inputType="textPassword"
                 android:padding="8dp"
                 android:textColor="@color/black"
@@ -94,6 +99,7 @@
                 android:drawableLeft="@drawable/blacklock"
                 android:drawablePadding="8dp"
                 android:hint="Confirmar senha"
+                android:textColorHint="@color/black_soft"
                 android:inputType="textPassword"
                 android:padding="8dp"
                 android:textColor="@color/black"
@@ -108,6 +114,7 @@
                 android:drawableLeft="@drawable/telephone"
                 android:drawablePadding="8dp"
                 android:hint="Inserir telefone"
+                android:textColorHint="@color/black_soft"
                 android:inputType="phone"
                 android:padding="8dp"
                 android:textColor="@color/black"

@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="15dp"
+    android:background="@color/white"
     tools:context=".activities.DetalheProdutoActivity">
 
     <ImageView
@@ -51,6 +52,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="0"
+        android:textColor="@color/black_soft"
         android:textStyle="bold"
         android:textSize="30sp"
         app:layout_constraintStart_toEndOf="@+id/additem"
@@ -92,7 +94,8 @@
         android:layout_marginLeft="20dp"
         android:layout_marginTop="16dp"
 
-        android:text="TextView"
+        android:textColor="@color/black_soft"
+        android:text="Nome do produto"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -106,7 +109,7 @@
         android:layout_marginStart="20dp"
         android:layout_marginTop="24dp"
         android:text="Descrição"
-
+        android:textColor="@color/black_soft"
         android:textSize="17sp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -158,7 +161,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="nome"
+            android:text="Nome do produtor"
+            android:textColor="@color/black_soft"
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@id/fotoPerfil"
             app:layout_constraintTop_toTopOf="parent" />
@@ -168,8 +172,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-
-            android:text="contato"
+            android:textColor="@color/black_soft"
+            android:text="Telefone"
             app:layout_constraintStart_toEndOf="@+id/fotoPerfil"
             app:layout_constraintTop_toBottomOf="@+id/txtCidadeProd" />
 
@@ -177,24 +181,13 @@
             android:id="@+id/txtCidadeProd"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@color/black_soft"
             android:layout_marginStart="8dp"
-            android:text="cidade"
+            android:text="Cidade, UF"
             app:layout_constraintStart_toEndOf="@+id/fotoPerfil"
             app:layout_constraintTop_toBottomOf="@+id/txtNomeProd" />
 
-        <TextView
-            android:id="@+id/txtAvaliacao"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="avaliacao"
-            android:textSize="12dp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.082"
-            app:layout_constraintStart_toEndOf="@+id/txtNomeProd"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.024" />  <!-- abaixo do nome -->
+         <!-- abaixo do nome -->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

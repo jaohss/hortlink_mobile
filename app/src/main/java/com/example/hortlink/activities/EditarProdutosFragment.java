@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.bd.SupabaseHelper;
+import com.google.android.material.button.MaterialButton;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -30,7 +31,6 @@ public class EditarProdutosFragment extends Fragment {
     private EditText edtNome, edtDescricao, edtPreco;
     private ImageView imgProduto;
     private ProgressBar progressBar;
-
     private String produtoId;           // agora String (UUID do Supabase)
     private String fotoUrlAtual = "";   // URL já salva no Supabase
     private Uri imagemNova = null;      // nova imagem escolhida pelo usuário
@@ -76,6 +76,7 @@ public class EditarProdutosFragment extends Fragment {
         edtDescricao = view.findViewById(R.id.edtDescricao);
         edtPreco     = view.findViewById(R.id.edtPreco);
         imgProduto   = view.findViewById(R.id.imgProduto);
+        MaterialButton btnCancelar = view.findViewById(R.id.btnCancelar);
         // progressBar = view.findViewById(R.id.progressBar); // descomente se tiver no XML
 
         if (getArguments() != null) {
@@ -92,6 +93,8 @@ public class EditarProdutosFragment extends Fragment {
         view.findViewById(R.id.btnAtualizar).setOnClickListener(v -> atualizarProduto());
 
         carregarProduto();
+
+        btnCancelar.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
     }
 
     // ─── 1. Carrega dados do produto ─────────────────────────────

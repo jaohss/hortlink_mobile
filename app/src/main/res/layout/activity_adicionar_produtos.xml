@@ -88,7 +88,10 @@
                 android:id="@+id/edtNome"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/white"
                 android:hint="Ex: Tomate, Alface, Laranja..."
+                android:textColorHint="@color/black_soft"
+                android:textColor="@color/black_soft"
                 android:inputType="textCapWords"
                 android:maxLines="1"/>
 
@@ -115,7 +118,11 @@
                 android:id="@+id/spnCategoria"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/white"
+
                 android:hint="Selecione a categoria"
+                android:textColorHint="@color/black_soft"
+                android:textColor="@color/black_soft"
                 android:inputType="none"
                 android:focusable="false"/>
 
@@ -156,7 +163,10 @@
                         android:id="@+id/edtPreco"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:background="@color/white"
                         android:hint="0,00"
+                        android:textColorHint="@color/black_soft"
+                        android:textColor="@color/black_soft"
                         android:inputType="numberDecimal"
                         android:maxLines="1"/>
 
@@ -191,7 +201,10 @@
                         android:id="@+id/spinnerUnidade"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:background="@color/white"
                         android:hint="Ex: kg, un"
+                        android:textColorHint="@color/black_soft"
+                        android:textColor="@color/black_soft"
                         android:inputType="none"
                         android:focusable="false"/>
 
@@ -224,7 +237,10 @@
                 android:id="@+id/edtDescricao"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/white"
                 android:hint="Descreva o produto, origem, qualidade..."
+                android:textColorHint="@color/black_soft"
+                android:textColor="@color/black_soft"
                 android:inputType="textMultiLine"
                 android:minLines="3"
                 android:maxLines="5"
