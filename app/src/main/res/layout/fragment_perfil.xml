@@ -173,7 +173,7 @@
                     android:layout_height="wrap_content"/>
 
                 <TextView
-                    android:text="4.8 ⭐"
+                    android:text="0.0 ⭐"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="#1A1A1A"
@@ -224,7 +224,7 @@
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/pedidos"
+                        android:src="@drawable/mesu_produtos"
                         app:tint="#3B6D11"/>
                 </LinearLayout>
 
@@ -278,7 +278,7 @@
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/baseline_person_24"
+                        android:src="@drawable/add_green700"
                         app:tint="#3B6D11"/>
                 </LinearLayout>
 
@@ -331,7 +331,7 @@
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/home"
+                        android:src="@drawable/pedidos"
                         app:tint="#3B6D11"/>
                 </LinearLayout>
 
@@ -397,7 +397,7 @@
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/baseline_person_24"
+                    android:src="@drawable/editar_perfil"
                     app:tint="#555555"/>
                 <TextView
                     android:text="Editar perfil"
@@ -430,7 +430,7 @@
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/home"
+                    android:src="@drawable/dashboard_vendas_cinza"
                     app:tint="#555555"/>
                 <TextView
                     android:text="Dashboard de vendas"
@@ -464,7 +464,7 @@
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/home"
+                    android:src="@drawable/settings_cinza"
                     app:tint="#555555"/>
                 <TextView
                     android:text="Configurações"
@@ -473,14 +473,7 @@
                     android:layout_marginStart="12dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switchStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
 
-                    app:thumbTint="#FFFFFF"
-                    app:trackTint="@color/green"/>
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="0.5dp"
@@ -499,7 +492,7 @@
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/hortlink_logo"
+                    android:src="@drawable/logout_red"
                     app:tint="#E53935"/>
                 <TextView
                     android:text="Sair"

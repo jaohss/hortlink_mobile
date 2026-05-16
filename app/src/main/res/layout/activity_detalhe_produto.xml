@@ -39,13 +39,13 @@
         android:id="@+id/additem"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:src="@drawable/bg_redondo"
+        android:src="@drawable/remove_white"
+        android:background="@drawable/bg_redondo"
         app:layout_constraintBottom_toTopOf="@+id/cardProdutor"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/quantidade"
         app:layout_constraintTop_toBottomOf="@+id/txtDescricao"
-        app:layout_constraintVertical_bias="0.542"
-        app:layout_constraintHorizontal_bias="0.133" />
+         />
 
     <TextView
         android:id="@+id/quantidade"
@@ -64,12 +64,13 @@
         android:id="@+id/removeitem"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:src="@drawable/bg_redondo"
+        android:src="@drawable/add_white"
+        android:background="@drawable/bg_redondo"
         app:layout_constraintBottom_toTopOf="@+id/cardProdutor"
         app:layout_constraintStart_toEndOf="@+id/quantidade"
         app:layout_constraintEnd_toStartOf="@+id/btnCarrinho"
         app:layout_constraintTop_toBottomOf="@+id/txtDescricao"
-        app:layout_constraintVertical_bias="0.542" />
+         />
 
 
     <TextView
@@ -79,7 +80,7 @@
         android:layout_marginHorizontal="20dp"
         android:layout_marginStart="20dp"
         android:layout_marginTop="8dp"
-        android:text="preço"
+        android:text="R$ 0,00"
         android:textColor="@color/green"
         android:textSize="17sp"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -115,20 +116,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtPreco" />
 
-    <Button
+    <ImageButton
         android:id="@+id/btnVoltar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Voltar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+
         android:layout_marginTop="12dp"
         android:layout_marginHorizontal="15dp"
+
+        android:src="@drawable/back_white"
         android:background="@drawable/shape_btn_voltar"
-        android:textColor="#FFFFFF"
+        android:backgroundTint="@color/green_700"
+
+        android:padding="12dp"
+
         app:layout_constraintBottom_toTopOf="@+id/imgProduto"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="0dp"

@@ -3,6 +3,7 @@ package com.example.hortlink.bd;
 import android.content.Context;
 import android.net.Uri;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import okhttp3.Call;
@@ -53,6 +54,7 @@ public class SupabaseHelper {
                         .addHeader("Authorization", "Bearer " + SUPABASE_KEY)
                         .addHeader("apikey", SUPABASE_KEY)
                         .addHeader("Content-Type", "image/jpeg")
+                        .addHeader("x-upsert", "true")   // ← adicionar esta linha
                         .post(body)
                         .build();
 
@@ -287,6 +289,146 @@ public class SupabaseHelper {
                 String body = response.body().string();
                 if (response.isSuccessful()) callback.onSuccess(body);
                 else callback.onError("Erro " + response.code() + ": " + body);
+
+            } catch (Exception e) { callback.onError(e.getMessage()); }
+        }).start();
+    }
+
+    //--------------------------Métodos para o carrinho-------------------------------------------------
+    // ─── INSERT em pedidos (retorna o objeto com id) ─────────────────────
+    public void inserirPedido(JSONObject pedido, SupabaseCallback callback) {
+        new Thread(() -> {
+            try {
+                // Wrap em array — Supabase aceita array ou objeto único
+                RequestBody body = RequestBody.create(
+                        pedido.toString(), MediaType.parse("application/json"));
+
+                Request request = new Request.Builder()
+                        .url(SUPABASE_URL + "/rest/v1/pedidos")
+                        .addHeader("Authorization", "Bearer " + SUPABASE_KEY)
+                        .addHeader("apikey", SUPABASE_KEY)
+                        .addHeader("Content-Type", "application/json")
+                        .addHeader("Prefer", "return=representation") // devolve o id gerado
+                        .post(body)
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                String respBody   = response.body().string();
+
+                if (response.isSuccessful()) callback.onSuccess(respBody);
+                else callback.onError("Erro " + response.code() + ": " + respBody);
+
+            } catch (Exception e) { callback.onError(e.getMessage()); }
+        }).start();
+    }
+
+    // ─── INSERT batch em pedido_itens ────────────────────────────────────
+    public void inserirItensPedido(JSONArray itens, SupabaseCallback callback) {
+        new Thread(() -> {
+            try {
+                RequestBody body = RequestBody.create(
+                        itens.toString(), MediaType.parse("application/json"));
+
+                Request request = new Request.Builder()
+                        .url(SUPABASE_URL + "/rest/v1/pedido_itens")
+                        .addHeader("Authorization", "Bearer " + SUPABASE_KEY)
+                        .addHeader("apikey", SUPABASE_KEY)
+                        .addHeader("Content-Type", "application/json")
+                        .addHeader("Prefer", "return=minimal") // não precisa do retorno
+                        .post(body)
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                if (response.isSuccessful()) callback.onSuccess("ok");
+                else callback.onError("Erro " + response.code() + ": " + response.body().string());
+
+            } catch (Exception e) { callback.onError(e.getMessage()); }
+        }).start();
+    }
+
+    // ─── GET genérico (para queries com filtros customizados) ────────────
+    public void get(String path, SupabaseCallback callback) {
+        new Thread(() -> {
+            try {
+                Request request = new Request.Builder()
+                        .url(SUPABASE_URL + path)
+                        .addHeader("Authorization", "Bearer " + SUPABASE_KEY)
+                        .addHeader("apikey", SUPABASE_KEY)
+                        .get()
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                String body = response.body().string();
+
+                if (response.isSuccessful()) callback.onSuccess(body);
+                else callback.onError("Erro " + response.code() + ": " + body);
+
+            } catch (Exception e) { callback.onError(e.getMessage()); }
+        }).start();
+    }
+
+    // ─── PATCH genérico (para updates parciais) ──────────────────────────
+    public void patch(String path, JSONObject body, SupabaseCallback callback) {
+        new Thread(() -> {
+            try {
+                RequestBody reqBody = RequestBody.create(
+                        body.toString(), MediaType.parse("application/json"));
+
+                Request request = new Request.Builder()
+                        .url(SUPABASE_URL + path)
+                        .addHeader("Authorization", "Bearer " + SUPABASE_KEY)
+                        .addHeader("apikey", SUPABASE_KEY)
+                        .addHeader("Content-Type", "application/json")
+                        .addHeader("Prefer", "return=minimal")
+                        .patch(reqBody)
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                if (response.isSuccessful()) callback.onSuccess("ok");
+                else callback.onError("Erro " + response.code() + ": " + response.body().string());
+
+            } catch (Exception e) { callback.onError(e.getMessage()); }
+        }).start();
+    }
+
+    // ─── DELETE genérico ─────────────────────────────────────────────────
+    public void delete(String path, SupabaseCallback callback) {
+        new Thread(() -> {
+            try {
+                Request request = new Request.Builder()
+                        .url(SUPABASE_URL + path)
+                        .addHeader("Authorization", "Bearer " + SUPABASE_KEY)
+                        .addHeader("apikey", SUPABASE_KEY)
+                        .delete()
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                if (response.isSuccessful()) callback.onSuccess("ok");
+                else callback.onError("Erro " + response.code());
+
+            } catch (Exception e) { callback.onError(e.getMessage()); }
+        }).start();
+    }
+
+    // ─── POST genérico ────────────────────────────────────────────────────
+    public void post(String path, JSONObject body, SupabaseCallback callback) {
+        new Thread(() -> {
+            try {
+                RequestBody reqBody = RequestBody.create(
+                        body.toString(), MediaType.parse("application/json"));
+
+                Request request = new Request.Builder()
+                        .url(SUPABASE_URL + path)
+                        .addHeader("Authorization", "Bearer " + SUPABASE_KEY)
+                        .addHeader("apikey", SUPABASE_KEY)
+                        .addHeader("Content-Type", "application/json")
+                        .addHeader("Prefer", "return=minimal")
+                        .post(reqBody)
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                if (response.isSuccessful()) callback.onSuccess("ok");
+                else callback.onError("Erro " + response.code() + ": " + response.body().string());
 
             } catch (Exception e) { callback.onError(e.getMessage()); }
         }).start();

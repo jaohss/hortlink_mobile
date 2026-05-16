@@ -62,4 +62,5 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 // Para converter imagem Uri → InputStream
     implementation("commons-io:commons-io:2.13.0")
+    implementation("com.google.code.gson:gson:2.14.0")
 }
