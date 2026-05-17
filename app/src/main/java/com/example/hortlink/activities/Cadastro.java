@@ -15,19 +15,20 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
-import com.example.hortlink.bd.SupabaseHelper;
+import com.example.hortlink.data.model.Usuario;
+import com.example.hortlink.data.repository.UsuarioRepository;
+import com.example.hortlink.util.SessionManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class Cadastro extends AppCompatActivity {
 
-    EditText emailEdt, nomeEdt, passwordEdt, confirmPassEdt, telefoneEdt;
+    EditText emailEdt, nomeEdt, passwordEdt, confirmPassEdt;
     Button registerButton;
     ProgressBar progressBar;
 
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    SupabaseHelper supabase;
-
+    private UsuarioRepository usuarioRepository = new UsuarioRepository();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,13 +40,11 @@ public class Cadastro extends AppCompatActivity {
             return insets;
         });
 
-        supabase = new SupabaseHelper(this);
 
         emailEdt       = findViewById(R.id.email);
         nomeEdt        = findViewById(R.id.nomeText);
         passwordEdt    = findViewById(R.id.password);
         confirmPassEdt = findViewById(R.id.confirmPass);
-        telefoneEdt    = findViewById(R.id.telefone);
         registerButton = findViewById(R.id.registerButton);
         progressBar    = findViewById(R.id.progressBar);
         progressBar.setVisibility(View.GONE);
@@ -58,11 +57,10 @@ public class Cadastro extends AppCompatActivity {
         String email   = emailEdt.getText().toString().trim();
         String senha   = passwordEdt.getText().toString();
         String confirma = confirmPassEdt.getText().toString();
-        String telefone = telefoneEdt.getText().toString().trim();
 
         // Validações
         if (nome.isEmpty() || email.isEmpty() || senha.isEmpty()
-                || confirma.isEmpty() || telefone.isEmpty()) {
+                || confirma.isEmpty()) {
             Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -80,71 +78,56 @@ public class Cadastro extends AppCompatActivity {
                 .setTitle("Tipo de conta")
                 .setMessage("Como você vai usar o HortLink?")
                 .setPositiveButton("🛒 Sou comprador", (d, w) ->
-                        criarConta(nome, email, senha, telefone, "comprador"))
+                        criarConta(nome, email, senha, Usuario.TIPO_COMPRADOR))
                 .setNegativeButton("🌱 Sou produtor", (d, w) ->
-                        criarConta(nome, email, senha, telefone, "produtor"))
+                        criarConta(nome, email, senha, Usuario.TIPO_PRODUTOR))
                 .setCancelable(false)
                 .show();
     }
 
-    private void criarConta(String nome, String email, String senha,
-                            String telefone, String tipo) {
-        progressBar.setVisibility(View.VISIBLE);
-        registerButton.setEnabled(false);
+    private void criarConta(String nome, String email, String senha, String tipo) {
+        setCarregando(true);
 
-        // 1º — cria no Firebase Auth
-        mAuth.createUserWithEmailAndPassword(email, senha)
-                .addOnCompleteListener(task -> {
-                    if (!task.isSuccessful()) {
-                        progressBar.setVisibility(View.GONE);
-                        registerButton.setEnabled(true);
-                        Toast.makeText(this,
-                                task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                        return;
+        usuarioRepository.cadastrar(nome, email, senha, tipo, new UsuarioRepository.Callback() {
+            @Override
+            public void onSuccess(Usuario usuario) {
+                // Salva na sessão imediatamente após cadastro
+                SessionManager.getInstance().setUsuario(usuario);
+
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    Toast.makeText(Cadastro.this,
+                                    "Conta criada com sucesso!", Toast.LENGTH_SHORT).show();
+
+                    Intent intent;
+                    if (usuario.isProdutor()) {
+                                // Produtor completa o perfil antes de entrar na home
+                         intent = new Intent(Cadastro.this, CompletarPerfilProdutorActivity.class);
+                    } else {
+                         intent = new Intent(Cadastro.this, CompletarPerfilCompradorActivity.class);
                     }
 
-                    String uid = task.getResult().getUser().getUid();
-
-                    // 2º — salva perfil no Supabase
-                    supabase.salvarUsuario(uid, nome, email, telefone, tipo,
-                            new SupabaseHelper.SupabaseCallback() {
-
-                                @Override
-                                public void onSuccess(String r) {
-                                    runOnUiThread(() -> {
-                                        progressBar.setVisibility(View.GONE);
-                                        Toast.makeText(Cadastro.this,
-                                                "Conta criada com sucesso!", Toast.LENGTH_SHORT).show();
-
-                                        if (tipo.equals("produtor")) {
-                                            // Produtor completa o perfil na próxima tela
-                                            Intent intent = new Intent(Cadastro.this,
-                                                    CompletarPerfilProdutorActivity.class);
-                                            intent.putExtra("uid", uid);
-                                            intent.putExtra("nome", nome);
-                                            startActivity(intent);
-                                        } else {
-                                            // Comprador vai direto para a home
-                                            startActivity(new Intent(Cadastro.this, MainActivity.class));
-                                        }
-                                        finish();
-                                    });
-                                }
-
-                                @Override
-                                public void onError(String erro) {
-                                    runOnUiThread(() -> {
-                                        progressBar.setVisibility(View.GONE);
-                                        registerButton.setEnabled(true);
-                                        // Firebase criou mas Supabase falhou — avisa mas deixa continuar
-                                        Toast.makeText(Cadastro.this,
-                                                "Conta criada, mas erro ao salvar perfil: " + erro,
-                                                Toast.LENGTH_LONG).show();
-                                        startActivity(new Intent(Cadastro.this, MainActivity.class));
-                                        finish();
-                                    });
-                                }
-                            });
+                    // uid passado explicitamente — a Activity não deve depender
+                    // do SessionManager para uma informação que já temos aqui
+                    intent.putExtra("uid", usuario.id);
+                    startActivity(intent);
+                    finish();
                 });
+            }
+
+            @Override
+            public void onError(String erro) {
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    Toast.makeText(Cadastro.this, "Erro ao criar conta: " + erro, Toast.LENGTH_LONG).show();
+                });
+            }
+        });
     }
+
+    private void setCarregando(boolean carregando) {
+        progressBar.setVisibility(carregando ? View.VISIBLE : View.GONE);
+        registerButton.setEnabled(!carregando);
+    }
+
 }

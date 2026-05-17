@@ -17,17 +17,28 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.bd.SupabaseHelper;
+import com.example.hortlink.data.model.Usuario;
+import com.example.hortlink.data.repository.UsuarioRepository;
 import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+/**
+ * Fragment de perfil do produtor logado.
+ * é o próprio usuário consultando o próprio perfil, não um produtor
+ * público, por isso usamos UsuarioRepository e não ProdutorRepository.
+ */
 public class PerfilFragment extends Fragment {
 
-    private TextView txtNome, txtAvaliacao, txtCidade;
+    private TextView txtNome, txtCidade;
     private ImageView imgFazenda;
     private RecyclerView recyclerProdutosPerfil;
     private SupabaseHelper supabase;
+
+
+    // ─── Dependências ─────────────────────────────────────────────────
+    private final UsuarioRepository usuarioRepository = new UsuarioRepository();
 
     public PerfilFragment() {}
 
@@ -41,20 +52,35 @@ public class PerfilFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        supabase = new SupabaseHelper(requireContext());
+        bindViews(view);
+        configurarBotoes(view);
 
-        // ── Views do perfil ─────────────────────────────────────
+        String uid = getUidAtual();
+        if (uid != null) carregarPerfil(uid);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Recarrega ao voltar da tela de edição de perfil
+        String uid = getUidAtual();
+        if (uid != null) carregarPerfil(uid);
+    }
+
+    // ─── Bind de views ────────────────────────────────────────────────
+
+    private void bindViews(View view) {
         txtNome      = view.findViewById(R.id.txtNomeProd);
         txtCidade    = view.findViewById(R.id.txtCidadeProd);
-        txtAvaliacao = view.findViewById(R.id.txtAvaliacao);
         imgFazenda   = view.findViewById(R.id.imgFazenda);
 
-        // ── RecyclerView horizontal de produtos ─────────────────
-        // O novo XML não tem recyclerProdutosPerfil no fragment_perfil,
-        // pois os produtos ficam no GerenciarProdutosFragment.
-        // Se quiser reativar, adicione o RecyclerView no XML.
+    }
 
-        // ── Seção: Gerenciar loja ───────────────────────────────
+    // ─── Configuração de botões ───────────────────────────────────────
+
+    private void configurarBotoes(View view) {
+
+        // Meus produtos
         LinearLayout btnMeusProdutos = view.findViewById(R.id.btnMeusProdutos);
         btnMeusProdutos.setOnClickListener(v ->
                 requireActivity().getSupportFragmentManager()
@@ -63,89 +89,87 @@ public class PerfilFragment extends Fragment {
                         .addToBackStack(null)
                         .commit());
 
+        // Adicionar produto
         LinearLayout btnAddProduto = view.findViewById(R.id.btnAddProduto);
         btnAddProduto.setOnClickListener(v ->
                 startActivity(new Intent(getActivity(), AdicionarProdutosActivity.class)));
 
+        // Pedidos — em breve
         LinearLayout btnPedidos = view.findViewById(R.id.btnPedidos);
         btnPedidos.setOnClickListener(v ->
                 Toast.makeText(getContext(), "Em breve: pedidos", Toast.LENGTH_SHORT).show());
 
-        // ── Seção: Conta ────────────────────────────────────────
+        // Editar perfil — reaproveita CompletarPerfilProdutorActivity em modo edição
         LinearLayout btnEditarPerfil = view.findViewById(R.id.btnEditarPerfil);
         btnEditarPerfil.setOnClickListener(v -> {
-            String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            String uid = getUidAtual();
+            if (uid == null) return;
             Intent intent = new Intent(getActivity(), CompletarPerfilProdutorActivity.class);
             intent.putExtra("uid", uid);
             intent.putExtra("modo_edicao", true);
             startActivity(intent);
         });
 
+        // Dashboard — em breve
         LinearLayout btnDashboard = view.findViewById(R.id.btnDashboard);
         btnDashboard.setOnClickListener(v ->
                 Toast.makeText(getContext(), "Em breve: dashboard", Toast.LENGTH_SHORT).show());
 
+        // Configurações — em breve
         view.findViewById(R.id.itemConfiguracoes).setOnClickListener(v ->
                 Toast.makeText(getContext(), "Em breve: configurações", Toast.LENGTH_SHORT).show());
 
+        // Sair
         view.findViewById(R.id.itemSair).setOnClickListener(v -> {
-            FirebaseAuth.getInstance().signOut();
+            usuarioRepository.logout();
             Intent intent = new Intent(getActivity(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         });
-
-        // ── Carrega dados do produtor logado ────────────────────
-        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
-
-        if (uid != null) {
-            carregarPerfil(uid);
-        }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
-        if (uid != null) carregarPerfil(uid);
-    }
 
-    // ─── Busca e preenche dados do produtor ──────────────────────
+
+    // ─── Carregamento do perfil ───────────────────────────────────────
+
     private void carregarPerfil(String uid) {
-        supabase.buscarProdutorPorId(uid, new SupabaseHelper.SupabaseCallback() {
+        usuarioRepository.buscarPorId(uid, new UsuarioRepository.Callback() {
+
             @Override
-            public void onSuccess(String json) {
-                try {
-                    JSONArray array = new JSONArray(json);
-                    if (array.length() == 0) return;
+            public void onSuccess(Usuario usuario) {
+                if (!isAdded()) return; // fragment pode ter sido destacado
 
-                    JSONObject obj   = array.getJSONObject(0);
-                    String nome      = obj.optString("nome", "");
-                    String cidade    = obj.optString("cidade", "Cidade não informada");
-                    double avaliacao = obj.optDouble("avaliacao", 0.0);
-                    String fotoUrl   = obj.optString("foto_url", "");
+                requireActivity().runOnUiThread(() -> {
+                    txtNome.setText(usuario.nome);
 
-                    requireActivity().runOnUiThread(() -> {
-                        txtNome.setText(nome);
-                        txtCidade.setText(cidade);
-                        txtAvaliacao.setText(String.format("⭐ %.1f", avaliacao));
+                    // Cidade + estado juntos, com fallback
+                    String cidade = usuario.cidade  != null ? usuario.cidade  : "";
+                    String estado = usuario.estado  != null ? usuario.estado  : "";
+                    String local  = (!cidade.isEmpty() && !estado.isEmpty())
+                            ? cidade + ", " + estado
+                            : !cidade.isEmpty() ? cidade : "Localização não informada";
+                    txtCidade.setText(local);
 
-                        if (!fotoUrl.isEmpty()) {
-                            Glide.with(requireContext())
-                                    .load(fotoUrl)
-                                    .placeholder(R.drawable.hortlink_logo)
-                                    .circleCrop()
-                                    .into(imgFazenda);
-                        }
-                    });
-
-                } catch (Exception e) { e.printStackTrace(); }
+                    // Foto de perfil
+                    if (usuario.fotoUrl != null && !usuario.fotoUrl.isEmpty() && !usuario.fotoUrl.equals("null")) {
+                        Glide.with(requireContext())
+                                .load(usuario.fotoUrl)
+                                .placeholder(R.drawable.hortlink_logo)
+                                .circleCrop()
+                                .into(imgFazenda);
+                    }
+                });
             }
 
             @Override
-            public void onError(String erro) { /* silencioso */ }
+            public void onError(String erro) {
+                // Falha silenciosa — não bloqueia a tela de perfil
+            }
         });
+    }
+
+    private String getUidAtual() {
+        var user = FirebaseAuth.getInstance().getCurrentUser();
+        return user != null ? user.getUid() : null;
     }
 }

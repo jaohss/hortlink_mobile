@@ -2,6 +2,7 @@ package com.example.hortlink.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,17 +17,22 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
+import com.example.hortlink.data.model.Usuario;
+import com.example.hortlink.data.repository.UsuarioRepository;
+import com.example.hortlink.util.SessionManager;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
     //Tela de LOGIN
-    EditText username;
-    EditText password;
+    EditText username,password;
     TextView cadastroText, resetPass;
     Button loginButton;
     ProgressBar progressBar;
 
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
+
+    //Dependências
+    private UsuarioRepository usuarioRepository;
 
 
     @Override
@@ -40,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        usuarioRepository = new UsuarioRepository();
+
         username = findViewById(R.id.username);
         password = findViewById(R.id.password);
         loginButton = findViewById(R.id.loginButton);
@@ -49,45 +57,72 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setVisibility(View.GONE);
 
 
-        loginButton.setOnClickListener(v -> {
-            String email = username.getText().toString().trim();
-            String senha = password.getText().toString().trim();
+        loginButton.setOnClickListener(v -> realizarLogin());
 
-            progressBar.setVisibility(View.VISIBLE);
-            mAuth.signInWithEmailAndPassword(email, senha)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
+        resetPass.setOnClickListener(v -> enviarResetSenha());
 
-                            Intent intent = new Intent(MainActivity.this, Homec.class);
-                            Toast.makeText(this, "Login realizado com Sucesso", Toast.LENGTH_SHORT).show();
-                            startActivity(intent);
-                            finish();
-
-                        } else {
-                            Toast.makeText(this, task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    });
-        });
-
-        resetPass.setOnClickListener(v -> {
-            String email = username.getText().toString().trim();
-
-            if (!email.isEmpty()) {
-                FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                Toast.makeText(this, "Verifique seu email", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(this, "Erro ao enviar email", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-            }
-        });
-
-        cadastroText.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, Cadastro.class);
-            startActivity(intent);
-        });
+        cadastroText.setOnClickListener(v -> startActivity(new Intent(this, Cadastro.class)));
 
     }
+
+    private void realizarLogin(){
+        String email = username.getText().toString().trim();
+        String senha = password.getText().toString().trim();
+
+        Log.d("LOGIN", "email: '" + email + "' | senha length: " + senha.length());
+        // ...
+
+        if(email.isEmpty() || senha.isEmpty()){
+            Toast.makeText(this, "Preencha email e senha", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        setCarregando(true);
+
+        usuarioRepository.login(email, senha, new UsuarioRepository.Callback() {
+            @Override
+            public void onSuccess(Usuario usuario) {
+                SessionManager.getInstance().setUsuario(usuario);
+
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    Toast.makeText(MainActivity.this, "Bem-vindo, " + usuario.nome + " !", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(MainActivity.this, Homec.class));
+                    finish();
+                });
+            }
+
+            @Override
+            public void onError(String erro) {
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    Toast.makeText(MainActivity.this, erro, Toast.LENGTH_SHORT).show();
+                });
+
+            }
+        });
+    }
+
+    private void enviarResetSenha(){
+        String email = username.getText().toString().trim();
+        if (email.isEmpty()) {
+            Toast.makeText(this, "Digite seu email primeiro", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(this, "Verifique seu email", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Erro ao enviar email", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void setCarregando(boolean carregando) {
+        progressBar.setVisibility(carregando ? View.VISIBLE : View.GONE);
+        loginButton.setEnabled(!carregando);
+    }
+
+
 }

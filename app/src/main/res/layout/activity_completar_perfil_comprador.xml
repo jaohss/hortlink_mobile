@@ -42,7 +42,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Perfil do produtor"
+                    android:text="Perfil do cliente"
                     android:textAlignment="center"
                     android:textColor="@color/green"
                     android:textSize="28sp"
@@ -53,7 +53,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Conte mais sobre sua produção"
+                    android:text="Nos conte onde você está"
                     android:textAlignment="center"
                     android:textColor="#888"
                     android:textSize="13sp"
@@ -90,7 +90,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="20dp">
+                    android:layout_marginBottom="10dp">
 
                     <EditText
                         android:id="@+id/edtCidade"
@@ -119,6 +119,8 @@
                         android:textColorHint="@color/black_soft"/>
 
                 </LinearLayout>
+
+                <!-- Bairro -->
                 <EditText
                     android:id="@+id/edtBairro"
                     android:layout_width="match_parent"
@@ -132,6 +134,21 @@
                     android:textColor="@color/black"
                     android:textColorHint="@color/black_soft"
                     android:layout_marginBottom="10dp"/>
+
+                <!-- Referência -->
+                <EditText
+                    android:id="@+id/edtReferencia"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:background="@drawable/custom_edittext"
+                    android:drawableLeft="@drawable/baseline_person_24"
+                    android:drawablePadding="8dp"
+                    android:hint="Ponto de referência (opcional)"
+                    android:inputType="textCapSentences"
+                    android:padding="8dp"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/black_soft"
+                    android:layout_marginBottom="20dp"/>
 
                 <!-- ── CONTATO ── -->
                 <TextView
@@ -157,27 +174,26 @@
                     android:textColor="@color/black"
                     android:layout_marginBottom="20dp"/>
 
-                <!-- ── DESCRIÇÃO ── -->
+                <!-- ── GÊNERO ── -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="SOBRE A PRODUÇÃO"
+                    android:text="GÊNERO"
                     android:textColor="#AAAAAA"
                     android:textSize="11sp"
                     android:letterSpacing="0.1"
                     android:layout_marginBottom="8dp"/>
 
-                <EditText
-                    android:id="@+id/edtDescricaoProd"
+                <!--
+                    Spinner com fundo custom_edittext para manter consistência visual.
+                    O adapter é configurado na Activity com os valores de Usuario.GENERO_*.
+                -->
+                <Spinner
+                    android:id="@+id/spinnerGenero"
                     android:layout_width="match_parent"
-                    android:layout_height="100dp"
+                    android:layout_height="50dp"
                     android:background="@drawable/custom_edittext"
-                    android:hint="Fale sobre o que você produz..."
-                    android:textColorHint="@color/black_soft"
-                    android:inputType="textMultiLine"
-                    android:gravity="top"
-                    android:padding="10dp"
-                    android:textColor="@color/black"
+                    android:padding="8dp"
                     android:layout_marginBottom="24dp"/>
 
                 <!-- Botão concluir -->

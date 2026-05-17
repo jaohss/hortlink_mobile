@@ -1,5 +1,6 @@
 package com.example.hortlink.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -18,7 +19,9 @@ import com.example.hortlink.R;
 import com.example.hortlink.adapters.ProdutoAdapter;
 import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.model.Produto;
+import com.example.hortlink.data.model.Produtor;
 import com.example.hortlink.data.repository.ProdutoRepository;
+import com.example.hortlink.data.repository.ProdutorRepository;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,13 +29,24 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Tela pública do produtor — aberta quando o comprador clica num produtor.
+ *
+ * Sem SupabaseHelper aqui. Dados chegam via:
+ *  - ProdutorRepository.buscarPorId()  → cabeçalho do perfil
+ *  - ProdutoRepository.listarProdutosPorProdutor() → lista horizontal de produtos
+ */
+
 public class PerfilProdutorActivity extends AppCompatActivity {
 
-    private TextView txtNome, txtAvaliacao, txtCidade, txtContato;
+    private TextView txtNome, txtCidade, txtContato, txtDescricao;
     private ImageView imgFazenda;
     private RecyclerView recyclerProdutosPerfil;
     private SupabaseHelper supabase;
+
+    //Dependências
     private final ProdutoRepository produtoRepository = new ProdutoRepository();
+    private final ProdutorRepository produtorRepository = new ProdutorRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,78 +59,96 @@ public class PerfilProdutorActivity extends AppCompatActivity {
             return insets;
         });
 
-        supabase = new SupabaseHelper(this);
+        bindViews();
 
+        String produtorId = getIntent().getStringExtra("produtor_id");
+        if (produtorId == null) {
+            finish();
+            return;
+        }
+
+        carregarPerfil(produtorId);
+        carregarProdutos(produtorId);
+    }
+
+    // ─── Dados do produtor ───────────────────────────────────────
+    // ─── Bind de views ────────────────────────────────────────────────
+
+    private void bindViews() {
         txtNome      = findViewById(R.id.txtNomeProd);
-        txtAvaliacao = findViewById(R.id.txtAvaliacao);
         txtCidade    = findViewById(R.id.txtCidadeProd);
         txtContato   = findViewById(R.id.txtContatoProd);
+        txtDescricao = findViewById(R.id.txtDescricao);
         imgFazenda   = findViewById(R.id.imgFazenda);
-        recyclerProdutosPerfil = findViewById(R.id.recyclerProdutosPerfil);
 
+        recyclerProdutosPerfil = findViewById(R.id.recyclerProdutosPerfil);
         recyclerProdutosPerfil.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
 
         findViewById(R.id.btnVoltar).setOnClickListener(v -> finish());
-
-        String produtorId = getIntent().getStringExtra("produtor_id");
-        if (produtorId == null) { finish(); return; }
-
-        carregarPerfilProdutor(produtorId);
-        carregarProdutosDoProdutor(produtorId);
     }
 
-    // ─── Dados do produtor ───────────────────────────────────────
-    private void carregarPerfilProdutor(String uid) {
-        supabase.buscarProdutorPorId(uid, new SupabaseHelper.SupabaseCallback() {
+    // ─── Dados do produtor ────────────────────────────────────────────
+
+    private void carregarPerfil(String produtorId) {
+        produtorRepository.buscarPorId(produtorId, new ProdutorRepository.CallbackUnico() {
+
             @Override
-            public void onSuccess(String json) {
-                try {
-                    JSONArray array = new JSONArray(json);
-                    if (array.length() == 0) return;
+            public void onSuccess(Produtor produtor) {
+                runOnUiThread(() -> {
+                    txtNome.setText(produtor.getNome());
 
-                    JSONObject obj   = array.getJSONObject(0);
-                    String nome      = obj.optString("nome", "");
-                    String cidade    = obj.optString("cidade", "Cidade não informada");
-                    String contato   = obj.optString("contato", "Sem contato");
-                    double avaliacao = obj.optDouble("avaliacao", 0.0);
-                    String fotoUrl   = obj.optString("foto_url", "");
+                    // Cidade + estado juntos, com fallback
+                    String cidade  = produtor.getCidade();
+                    String estado  = produtor.getUsuario().estado;
+                    String local   = (!cidade.isEmpty() && !estado.isEmpty())
+                            ? cidade + ", " + estado
+                            : !cidade.isEmpty() ? cidade : "Localização não informada";
+                    txtCidade.setText(local);
 
-                    runOnUiThread(() -> {
-                        txtNome.setText(nome);
-                        txtCidade.setText(cidade);
-                        txtContato.setText(contato);
-                        txtAvaliacao.setText(String.valueOf(avaliacao));
+                    // Telefone com fallback
+                    String tel = produtor.getTelefone();
+                    txtContato.setText(!tel.isEmpty() ? tel : "Sem contato");
 
-                        if (!fotoUrl.isEmpty()) {
-                            Glide.with(PerfilProdutorActivity.this)
-                                    .load(fotoUrl)
-                                    .placeholder(R.drawable.hortlink_logo)
-                                    .circleCrop()
-                                    .into(imgFazenda);
-                        }
-                    });
+                    // Descrição com fallback
+                    String desc = produtor.getDescricao();
+                    txtDescricao.setText(!desc.isEmpty() ? desc : "");
 
-                } catch (Exception e) { e.printStackTrace(); }
+
+                    // Foto de perfil
+                    String fotoUrl = produtor.getFotoUrl();
+                    if (fotoUrl != null && !fotoUrl.isEmpty()) {
+                        Glide.with(PerfilProdutorActivity.this)
+                                .load(fotoUrl)
+                                .placeholder(R.drawable.hortlink_logo)
+                                .circleCrop()
+                                .into(imgFazenda);
+                    }
+                });
             }
 
             @Override
             public void onError(String erro) {
-                runOnUiThread(() -> Toast.makeText(PerfilProdutorActivity.this,
-                        "Erro ao carregar perfil", Toast.LENGTH_SHORT).show());
+                runOnUiThread(() ->
+                        Toast.makeText(PerfilProdutorActivity.this,
+                                "Erro ao carregar perfil", Toast.LENGTH_SHORT).show());
             }
         });
     }
 
-    // ─── Produtos do produtor na lista horizontal ────────────────
-    private void carregarProdutosDoProdutor(String uid) {
-        produtoRepository.listarProdutosPorProdutor(uid, new ProdutoRepository.Callback() {
+    // ─── Produtos do produtor ─────────────────────────────────────────
+
+    private void carregarProdutos(String produtorId) {
+        produtoRepository.listarProdutosPorProdutor(produtorId, new ProdutoRepository.Callback() {
+
             @Override
             public void onSuccess(String json) {
+                // ProdutoRepository já retorna JSON string — parse feito aqui
+                // para não criar dependência desnecessária
                 List<Produto> lista = parseProdutos(json);
                 runOnUiThread(() -> {
                     ProdutoAdapter adapter = new ProdutoAdapter(lista, produto -> {
-                        android.content.Intent intent = new android.content.Intent(
+                        Intent intent = new Intent(
                                 PerfilProdutorActivity.this, DetalheProdutoActivity.class);
                         intent.putExtra("produto_id", produto.id);
                         startActivity(intent);
@@ -126,9 +158,12 @@ public class PerfilProdutorActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(String erro) { /* falha silenciosa */ }
+            public void onError(String erro) {
+                // Falha silenciosa — perfil ainda é útil sem a lista de produtos
+            }
         });
     }
+
 
     private List<Produto> parseProdutos(String json) {
         List<Produto> lista = new ArrayList<>();
@@ -147,7 +182,9 @@ public class PerfilProdutorActivity extends AppCompatActivity {
                 );
                 lista.add(p);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return lista;
     }
 }

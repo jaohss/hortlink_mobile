@@ -2,6 +2,8 @@ package com.example.hortlink.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,6 +18,9 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
 import com.example.hortlink.bd.SupabaseHelper;
+import com.example.hortlink.data.repository.ProdutoRepository;
+import com.example.hortlink.data.repository.ProdutorRepository;
+import com.example.hortlink.services.ViacepService;
 
 import org.json.JSONObject;
 
@@ -27,11 +32,13 @@ import okhttp3.Response;
 
 public class CompletarPerfilProdutorActivity extends AppCompatActivity {
 
-    EditText edtCidade, edtContato, edtDescricao;
+    EditText edtCidade, edtTelefone, edtDescricao, edtEstado, edtCep, edtBairro;
     Button btnConcluir, btnPular;
     ProgressBar progressBar;
     SupabaseHelper supabase;
-    String uid;
+    private String uid;
+
+    private ProdutorRepository produtorRepository = new ProdutorRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,83 +51,170 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
             return insets;
         });
 
-        uid      = getIntent().getStringExtra("uid");
-        supabase = new SupabaseHelper(this);
+        uid = getIntent().getStringExtra("uid");
 
-        edtCidade   = findViewById(R.id.edtCidade);
-        edtContato  = findViewById(R.id.edtContato);
+        bindViews();
+        configurarViaCep();
+        configurarBotoes();
+    }
+
+    private void bindViews(){
+        edtCep = findViewById(R.id.edtCep);
+        edtEstado = findViewById(R.id.edtEstado);
+        edtCidade = findViewById(R.id.edtCidade);
+        edtTelefone = findViewById(R.id.edtTelefone);
         edtDescricao = findViewById(R.id.edtDescricaoProd);
+        edtBairro = findViewById(R.id.edtBairro);
         btnConcluir = findViewById(R.id.btnConcluir);
         btnPular = findViewById(R.id.btnPular);
         progressBar = findViewById(R.id.progressBar);
+
         progressBar.setVisibility(View.GONE);
 
-        btnConcluir.setOnClickListener(v -> salvarPerfilProdutor());
+        // Cidade e estado são preenchidos pelo ViaCEP, mas o usuário
+        // pode editar manualmente caso a API falhe ou o dado venha errado.
+        edtCidade.setEnabled(true);
+        edtEstado.setEnabled(true);
+    }
 
-        btnPular.setOnClickListener(v -> {
-            startActivity(new Intent(this, MainActivity.class));
-            finish();
+    private void configurarViaCep(){
+        edtCep.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                // Remove tudo que não for dígito para comparar o tamanho real
+                String cepLimpo = s.toString().replaceAll("[^0-9]", "");
+                if (cepLimpo.length() == 8) {
+                    buscarCep(cepLimpo);
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
         });
     }
 
-    private void salvarPerfilProdutor() {
-        String cidade   = edtCidade.getText().toString().trim();
-        String contato  = edtContato.getText().toString().trim();
+    private void buscarCep(String cep){
+        setCarregando(true);
+
+        ViacepService.buscar(cep, new ViacepService.Callback() {
+            @Override
+            public void onSuccess(String bairro, String cidade, String estado) {
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    edtCidade.setText(cidade);
+                    edtEstado.setText(estado);
+
+                    if (!bairro.isEmpty()) {
+                        edtBairro.setText(bairro);
+                        edtTelefone.requestFocus();
+                    } else {
+                        edtBairro.requestFocus();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String motivo) {
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    // Avisa o usuário mas não bloqueia — ele pode preencher manualmente
+                    Toast.makeText(
+                            CompletarPerfilProdutorActivity.this,
+                            motivo + "\nPreencha cidade e estado manualmente.",
+                            Toast.LENGTH_LONG
+                    ).show();
+                    edtCidade.requestFocus();
+                });
+            }
+        });
+    }
+
+    private void configurarBotoes() {
+        btnConcluir.setOnClickListener(v -> tentarSalvar());
+
+        btnPular.setOnClickListener(v -> irParaHome());
+    }
+
+    private void tentarSalvar() {
+        String bairro = edtBairro.getText().toString().trim();
+        String cep = edtCep.getText().toString().trim();
+        String cidade = edtCidade.getText().toString().trim();
+        String estado = edtEstado.getText().toString().trim();
+        String telefone = edtTelefone.getText().toString().trim();
         String descricao = edtDescricao.getText().toString().trim();
 
-        if (cidade.isEmpty() || contato.isEmpty()) {
-            Toast.makeText(this, "Preencha cidade e contato", Toast.LENGTH_SHORT).show();
+        // Campos obrigatórios: telefone, cidade e estado.
+        // CEP e descrição são complementares — não bloqueiam o cadastro.
+        if (telefone.isEmpty()) {
+            edtTelefone.setError("Informe seu telefone");
+            edtTelefone.requestFocus();
             return;
         }
 
-        progressBar.setVisibility(View.VISIBLE);
-        btnConcluir.setEnabled(false);
+        if (cidade.isEmpty()) {
+            edtCidade.setError("Informe sua cidade");
+            edtCidade.requestFocus();
+            return;
+        }
 
-        // PATCH — atualiza apenas os campos do produtor
-        new Thread(() -> {
-            try {
-                JSONObject json = new JSONObject();
-                json.put("cidade",    cidade);
-                json.put("contato",   contato);
-                json.put("descricao", descricao);
+        if (estado.isEmpty()) {
+            edtEstado.setError("Informe seu estado");
+            edtEstado.requestFocus();
+            return;
+        }
 
-                OkHttpClient client = new OkHttpClient();
-                RequestBody body = RequestBody.create(
-                        json.toString(), MediaType.parse("application/json"));
+        setCarregando(true);
 
-                // Pega a URL e key do seu SupabaseHelper
-                String url = "https://dzfbtevidnfarlpnfysd.supabase.co/rest/v1/usuarios?id=eq." + uid;
-                String key  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZmJ0ZXZpZG5mYXJscG5meXNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNTcwNzMsImV4cCI6MjA5MzgzMzA3M30.79uc9zT_T-HPoUhJMMyUMKsW4qS2kiCHuuBcpmv3sDQ";
-
-                Request request = new Request.Builder()
-                        .url(url)
-                        .addHeader("Authorization", "Bearer " + key)
-                        .addHeader("apikey", key)
-                        .addHeader("Content-Type", "application/json")
-                        .patch(body)
-                        .build();
-
-                Response response = client.newCall(request).execute();
-
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    if (response.isSuccessful()) {
-                        Toast.makeText(this, "Perfil completo!", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(this, MainActivity.class));
-                        finish();
-                    } else {
-                        btnConcluir.setEnabled(true);
-                        Toast.makeText(this, "Erro ao salvar perfil", Toast.LENGTH_SHORT).show();
+        produtorRepository.completarPerfil(uid, telefone, cep, bairro, cidade, estado, descricao, new ProdutorRepository.CallbackSimples() {
+                    @Override
+                    public void onSuccess() {
+                        runOnUiThread(() -> {
+                            setCarregando(false);
+                            Toast.makeText(
+                                    CompletarPerfilProdutorActivity.this,
+                                    "Perfil completo! Bem-vindo ao Hortlink 🌱",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                            irParaHome();
+                        });
                     }
-                });
 
-            } catch (Exception e) {
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    btnConcluir.setEnabled(true);
-                    Toast.makeText(this, "Erro: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        }).start();
+                    @Override
+                    public void onError(String erro) {
+                        runOnUiThread(() -> {
+                            setCarregando(false);
+                            Toast.makeText(
+                                    CompletarPerfilProdutorActivity.this,
+                                    "Erro ao salvar perfil: " + erro,
+                                    Toast.LENGTH_LONG
+                            ).show();
+                        });
+                    }
+                }
+        );
     }
+
+
+    // ─── Helpers de UI ────────────────────────────────────────────────
+
+    /**
+     * Alterna entre estado de carregamento e estado interativo.
+     * Centralizado aqui para não repetir em cada callback.
+     */
+    private void setCarregando(boolean carregando) {
+        progressBar.setVisibility(carregando ? View.VISIBLE : View.GONE);
+        btnConcluir.setEnabled(!carregando);
+        btnPular.setEnabled(!carregando);
+        edtCep.setEnabled(!carregando);
+    }
+
+    private void irParaHome() {
+        startActivity(new Intent(this, MainActivity.class));
+        finish();
+    }
+
 }
