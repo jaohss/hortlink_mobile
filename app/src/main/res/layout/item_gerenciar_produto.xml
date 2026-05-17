@@ -74,16 +74,19 @@
                 android:layout_marginBottom="6dp"/>
 
             <Button
-                android:id="@+id/btnDeletar"
+                android:id="@+id/btnStatus"
                 android:layout_width="80dp"
                 android:layout_height="36dp"
-                android:text="Deletar"
+                android:text="Ativo"
                 android:textAllCaps="false"
                 android:textSize="12sp"
-                android:backgroundTint="#C62828"
+                android:backgroundTint="#2E7D32"
                 android:textColor="#FFFFFF"/>
 
+
+
         </LinearLayout>
+
 
     </LinearLayout>
 

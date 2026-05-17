@@ -18,7 +18,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
 import com.example.hortlink.bd.SupabaseHelper;
-import com.example.hortlink.entidades.CartItem;
+import com.example.hortlink.data.model.CartItem;
 import com.example.hortlink.entidades.CartManager;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -26,9 +26,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CheckoutActivity extends AppCompatActivity {
     private List<CartItem> cartItems;
@@ -58,14 +58,109 @@ public class CheckoutActivity extends AppCompatActivity {
         tvMsg   = findViewById(R.id.tv_msg);
         btnPay  = findViewById(R.id.btn_pagar);
 
-        btnPay.setOnClickListener(v -> iniciarPagamento());
+        btnPay.setOnClickListener(v -> validarItensAntesDeComprar());
+    }
+
+    // ─── 0. Valida cada produto individualmente antes de cobrar ─────
+    //
+    // Uma requisição por produto — sem encoding de URL, sem query
+    // malformada. Array vazio na resposta = produto inativo.
+    //
+    // AtomicInteger coordena os N callbacks paralelos: só avança
+    // quando todos chegarem (pendentes chega a 0).
+    private void validarItensAntesDeComprar() {
+        if (cartItems == null || cartItems.isEmpty()) {
+            Toast.makeText(this, "Carrinho vazio", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        btnPay.setEnabled(false);
+        spinner.setVisibility(View.VISIBLE);
+        tvMsg.setText("Verificando disponibilidade...");
+
+        List<CartItem> inativos = new ArrayList<>();
+        AtomicInteger pendentes = new AtomicInteger(cartItems.size());
+
+        for (CartItem item : cartItems) {
+            // UUID vai direto na URL sem vírgulas nem parênteses — sem problema de encoding
+            String url = "/rest/v1/produtos"
+                    + "?select=id"
+                    + "&id=eq." + item.getProdutoId()
+                    + "&ativo=eq.true";
+
+            supabase.get(url, new SupabaseHelper.SupabaseCallback() {
+                @Override
+                public void onSuccess(String resultado) {
+                    try {
+                        if (new JSONArray(resultado).length() == 0) {
+                            // Array vazio: produto inativo ou removido
+                            synchronized (inativos) { inativos.add(item); }
+                        }
+                    } catch (Exception e) {
+                        // JSON malformado — bloqueia por segurança
+                        synchronized (inativos) { inativos.add(item); }
+                    }
+                    onRespostaChegou(pendentes, inativos);
+                }
+
+                @Override
+                public void onError(String erro) {
+                    // Erro de rede — bloqueia por segurança
+                    synchronized (inativos) { inativos.add(item); }
+                    onRespostaChegou(pendentes, inativos);
+                }
+            });
+        }
+    }
+
+    // Chamado após cada resposta — age só quando a última chegar
+    private void onRespostaChegou(AtomicInteger pendentes, List<CartItem> inativos) {
+        if (pendentes.decrementAndGet() != 0) return;
+
+        runOnUiThread(() -> {
+            if (!inativos.isEmpty()) {
+                removerItensInativosEAvisar(inativos);
+            } else {
+                iniciarPagamento();
+            }
+        });
+    }
+
+    // ─── Remove inativos do carrinho e avisa o usuário ────────────────
+    private void removerItensInativosEAvisar(List<CartItem> itensInativos) {
+        StringBuilder nomes = new StringBuilder();
+
+        for (CartItem item : itensInativos) {
+            nomes.append("\n• ").append(item.getNomeProduto());
+            cartItems.remove(item);
+            CartManager.getInstance(this).removeItem(item.getProdutoId());
+
+            supabase.delete(
+                    "/rest/v1/carrinho?id=eq." + item.getCarrinhoId(),
+                    new SupabaseHelper.SupabaseCallback() {
+                        @Override public void onSuccess(String r) {}
+                        @Override public void onError(String e) {}
+                    });
+        }
+
+        spinner.setVisibility(View.GONE);
+        btnPay.setEnabled(true);
+        tvMsg.setText("");
+
+        Toast.makeText(
+                this,
+                "Produto(s) indisponível(is):" + nomes
+                        + "\n\nRevise o carrinho e tente novamente.",
+                Toast.LENGTH_LONG
+        ).show();
+
+        finish();
     }
 
     // ─── 1. Simula pagamento (2 s) e depois cria o pedido ───────────
     private void iniciarPagamento() {
-        btnPay.setEnabled(false);
-        spinner.setVisibility(View.VISIBLE);
-        tvMsg.setText("Processando pagamento...");
+        // Aqui o spinner já está visível desde validarItensAntesDeComprar()
+        runOnUiThread(() -> tvMsg.setText("Processando pagamento..."));
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             tvMsg.setText("Pagamento aprovado ✅");

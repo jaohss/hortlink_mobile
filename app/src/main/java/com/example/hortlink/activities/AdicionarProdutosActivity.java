@@ -16,6 +16,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
 import com.example.hortlink.bd.SupabaseHelper;
+import com.example.hortlink.data.remote.StorageHelper;
+import com.example.hortlink.data.repository.ProdutoRepository;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
@@ -31,6 +33,9 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
     private Uri imagemSelecionada;
 
     private SupabaseHelper supabase;
+    private final ProdutoRepository produtoRepository = new ProdutoRepository();
+    //private final StorageHelper storageHelper = new StorageHelper(this);
+
 
     private final ActivityResultLauncher<String> pickImage =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -122,8 +127,8 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(String fotoUrl) {
                     // Imagem enviada → agora salva o produto com a URL
-                    supabase.inserirProduto(nome, categoria, precoDouble, unidade,
-                            descricao, fotoUrl, uid, new SupabaseHelper.SupabaseCallback() {
+                    produtoRepository.inserirProduto(nome, categoria, precoDouble, unidade,
+                            descricao, fotoUrl, uid, new ProdutoRepository.Callback() {
                                 @Override
                                 public void onSuccess(String r) {
                                     runOnUiThread(() -> {
@@ -156,8 +161,8 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
 
         } else {
             // Sem imagem — salva direto
-            supabase.inserirProduto(nome, categoria, precoDouble, unidade,
-                    descricao, "", uid, new SupabaseHelper.SupabaseCallback() {
+            produtoRepository.inserirProduto(nome, categoria, precoDouble, unidade,
+                    descricao, "", uid, new ProdutoRepository.Callback() {
                         @Override
                         public void onSuccess(String r) {
                             runOnUiThread(() -> {
@@ -177,11 +182,10 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
                             });
                         }
                     });
+            }
         }
-    }
 
     private void setCarregando(boolean carregando) {
-        // if (progressBar != null) progressBar.setVisibility(carregando ? View.VISIBLE : View.GONE);
         findViewById(R.id.btnSalvarProduto).setEnabled(!carregando);
     }
 

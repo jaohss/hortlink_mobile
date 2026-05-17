@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
-import com.example.hortlink.entidades.Produto;
+import com.example.hortlink.data.model.Produto;
 
 import java.util.List;
 

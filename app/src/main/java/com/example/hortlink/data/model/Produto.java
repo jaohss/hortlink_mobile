@@ -1,4 +1,4 @@
-package com.example.hortlink.entidades;
+package com.example.hortlink.data.model;
 
 public class Produto {
     public String id;        // era int (SQLite), agora String (UUID do Supabase)
@@ -9,6 +9,7 @@ public class Produto {
     public String imagemUri; // mantido — agora recebe a URL pública do Supabase Storage
     public String unidade;
     public String vendedorUid;
+    public boolean status = true;
 
     // campos legados — mantidos para não quebrar outras telas
     public int imagem = 0;
@@ -125,5 +126,13 @@ public class Produto {
 
     public void setProdutorId(String produtorId) {
         this.produtorId = produtorId;
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
     }
 }

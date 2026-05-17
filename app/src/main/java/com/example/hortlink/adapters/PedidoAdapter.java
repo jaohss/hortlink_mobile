@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.hortlink.R;
-import com.example.hortlink.entidades.Pedido;
+import com.example.hortlink.data.model.Pedido;
 
 import java.util.List;
 

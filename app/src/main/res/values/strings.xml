@@ -7,4 +7,6 @@
     <string name="carrinho">carrinho</string>
     <string name="pedidos">pedidos</string>
     <string name="perfil">perfil</string>
+    <string name="status_ativo">Ativo</string>
+    <string name="status_inativo">Inativo</string>
 </resources>

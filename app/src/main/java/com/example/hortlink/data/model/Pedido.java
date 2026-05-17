@@ -1,4 +1,4 @@
-package com.example.hortlink.entidades;
+package com.example.hortlink.data.model;
 
 public class Pedido {
 

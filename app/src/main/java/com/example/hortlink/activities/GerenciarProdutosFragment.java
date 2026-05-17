@@ -16,7 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.GerenciarAdapter;
 import com.example.hortlink.bd.SupabaseHelper;
-import com.example.hortlink.entidades.Produto;
+import com.example.hortlink.data.model.Produto;
+import com.example.hortlink.data.repository.ProdutoRepository;
 import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONArray;
@@ -31,7 +32,8 @@ public class GerenciarProdutosFragment extends Fragment {
     private TextView txtListaVazia;
     private List<Produto> listaProdutos = new ArrayList<>();
     private GerenciarAdapter adapter;
-    private SupabaseHelper supabase;
+    //private SupabaseHelper supabase;
+    private ProdutoRepository produtoRepository = new ProdutoRepository();
 
     public GerenciarProdutosFragment() {}
 
@@ -45,7 +47,7 @@ public class GerenciarProdutosFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        supabase = new SupabaseHelper(requireContext());
+        //supabase = new SupabaseHelper(requireContext());
         recyclerGerenciar = view.findViewById(R.id.recyclerGerenciar);
         txtListaVazia     = view.findViewById(R.id.txtListaVazia);
 
@@ -64,29 +66,16 @@ public class GerenciarProdutosFragment extends Fragment {
     private void configurarAdapter() {
         adapter = new GerenciarAdapter(
                 listaProdutos,
-
-                // Editar → abre EditarProdutosFragment passando UUID
                 produto -> {
                     EditarProdutosFragment fragment =
-                            EditarProdutosFragment.newInstance(produto.id); // String UUID
+                            EditarProdutosFragment.newInstance(produto.id);
                     requireActivity().getSupportFragmentManager()
                             .beginTransaction()
                             .replace(R.id.container, fragment)
                             .addToBackStack(null)
                             .commit();
-                },
-
-                // Deletar → confirma e remove do Supabase
-                (produto, position) -> {
-                    new AlertDialog.Builder(requireContext())
-                            .setTitle("Deletar produto")
-                            .setMessage("Tem certeza que quer deletar \"" + produto.nome + "\"?")
-                            .setPositiveButton("Deletar", (dialog, which) -> deletarProduto(produto, position))
-                            .setNegativeButton("Cancelar", null)
-                            .show();
                 }
         );
-
         recyclerGerenciar.setAdapter(adapter);
     }
 
@@ -101,7 +90,7 @@ public class GerenciarProdutosFragment extends Fragment {
             return;
         }
 
-        supabase.listarProdutosPorProdutor(uid, new SupabaseHelper.SupabaseCallback() {
+        produtoRepository.listarProdutosPorProdutor(uid, new ProdutoRepository.Callback()  {
             @Override
             public void onSuccess(String json) {
                 List<Produto> lista = parseProdutos(json);
@@ -126,32 +115,6 @@ public class GerenciarProdutosFragment extends Fragment {
         });
     }
 
-    // ─── Deleta e remove da lista localmente ─────────────────────
-    private void deletarProduto(Produto produto, int position) {
-        supabase.deletarProduto(produto.id, new SupabaseHelper.SupabaseCallback() {
-            @Override
-            public void onSuccess(String r) {
-                requireActivity().runOnUiThread(() -> {
-                    listaProdutos.remove(position);
-                    adapter.notifyItemRemoved(position);
-                    adapter.notifyItemRangeChanged(position, listaProdutos.size());
-                    Toast.makeText(getContext(), "Produto deletado!", Toast.LENGTH_SHORT).show();
-
-                    if (listaProdutos.isEmpty()) {
-                        txtListaVazia.setVisibility(View.VISIBLE);
-                        recyclerGerenciar.setVisibility(View.GONE);
-                    }
-                });
-            }
-
-            @Override
-            public void onError(String erro) {
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(getContext(),
-                                "Erro ao deletar: " + erro, Toast.LENGTH_LONG).show());
-            }
-        });
-    }
 
     // ─── Parse JSON → List<Produto> ──────────────────────────────
     private List<Produto> parseProdutos(String json) {
@@ -169,6 +132,7 @@ public class GerenciarProdutosFragment extends Fragment {
                         obj.optString("descricao"),
                         obj.optString("unidade")
                 );
+                p.status = obj.optBoolean("status", true);
                 lista.add(p);
             }
         } catch (Exception e) { e.printStackTrace(); }

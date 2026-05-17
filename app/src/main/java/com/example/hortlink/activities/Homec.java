@@ -1,6 +1,5 @@
 package com.example.hortlink.activities;
 
-import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -9,20 +8,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.hortlink.adapters.CategoriaAdapter;
-import com.example.hortlink.entidades.Produto;
-import com.example.hortlink.adapters.ProdutoAdapter;
-import com.example.hortlink.entidades.Produtor;
 import com.example.hortlink.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.navigation.NavigationView;
-
-import java.util.ArrayList;
-import java.util.List;
 
 //Home do comprador
 public class Homec extends AppCompatActivity {

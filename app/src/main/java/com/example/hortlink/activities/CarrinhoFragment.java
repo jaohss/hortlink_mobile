@@ -19,7 +19,7 @@ import android.widget.Toast;
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.CarrinhoAdapter;
 import com.example.hortlink.bd.SupabaseHelper;
-import com.example.hortlink.entidades.CartItem;
+import com.example.hortlink.data.model.CartItem;
 import com.example.hortlink.entidades.CartManager;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -28,7 +28,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class CarrinhoFragment extends Fragment {
     private List<CartItem> cartItems = new ArrayList<>();

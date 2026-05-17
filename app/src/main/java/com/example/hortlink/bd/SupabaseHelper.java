@@ -13,6 +13,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +36,19 @@ public class SupabaseHelper {
     public interface SupabaseCallback {
         void onSuccess(String resultado);
         void onError(String erro);
+    }
+
+    // ─── Helper interno: lê body sem NPE ─────────────────────────────
+    // response.body() pode ser null em respostas 204 ou em erros de rede.
+    // Centraliza o tratamento para não repetir em cada método.
+    private String lerBody(Response response) {
+        ResponseBody body = response.body();
+        if (body == null) return "[]"; // retorna array vazio seguro para JSON parsing
+        try {
+            return body.string();
+        } catch (IOException e) {
+            return "[]";
+        }
     }
 
     // ─── 1. UPLOAD de imagem no Storage ─────────────────────────
@@ -347,6 +362,10 @@ public class SupabaseHelper {
     }
 
     // ─── GET genérico (para queries com filtros customizados) ────────────
+    // ─── GET genérico ─────────────────────────────────────────────────
+    // CORREÇÃO: adicionado Accept: application/json.
+    // Sem esse header o PostgREST retorna 204 No Content em vez de
+    // JSON, fazendo response.body() vir null e quebrando todo parsing.
     public void get(String path, SupabaseCallback callback) {
         new Thread(() -> {
             try {
@@ -354,16 +373,19 @@ public class SupabaseHelper {
                         .url(SUPABASE_URL + path)
                         .addHeader("Authorization", "Bearer " + SUPABASE_KEY)
                         .addHeader("apikey", SUPABASE_KEY)
+                        .addHeader("Accept", "application/json") // ← era ausente
                         .get()
                         .build();
 
                 Response response = client.newCall(request).execute();
-                String body = response.body().string();
+                String body = lerBody(response); // ← sem NPE mesmo com body null
 
                 if (response.isSuccessful()) callback.onSuccess(body);
                 else callback.onError("Erro " + response.code() + ": " + body);
 
-            } catch (Exception e) { callback.onError(e.getMessage()); }
+            } catch (Exception e) {
+                callback.onError("Exceção: " + e.getMessage());
+            }
         }).start();
     }
 

@@ -3,6 +3,7 @@ package com.example.hortlink.entidades;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.example.hortlink.data.model.CartItem;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 

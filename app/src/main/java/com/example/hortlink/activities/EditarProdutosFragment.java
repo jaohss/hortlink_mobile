@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.bd.SupabaseHelper;
+import com.example.hortlink.data.repository.ProdutoRepository;
 import com.google.android.material.button.MaterialButton;
 
 import org.json.JSONArray;
@@ -36,6 +37,7 @@ public class EditarProdutosFragment extends Fragment {
     private Uri imagemNova = null;      // nova imagem escolhida pelo usuário
 
     private SupabaseHelper supabase;
+    private ProdutoRepository produtoRepository = new ProdutoRepository();
 
     // ─── Galeria ─────────────────────────────────────────────────
     private final ActivityResultLauncher<String> pickImage =
@@ -107,7 +109,7 @@ public class EditarProdutosFragment extends Fragment {
     private void carregarProduto() {
         setCarregando(true);
 
-        supabase.buscarProdutoPorId(produtoId, new SupabaseHelper.SupabaseCallback() {
+        produtoRepository.buscarProdutoPorId(produtoId, new ProdutoRepository.Callback() {
             @Override
             public void onSuccess(String json) {
                 try {
@@ -215,8 +217,8 @@ public class EditarProdutosFragment extends Fragment {
     private void salvarNoSupabase(String nome, String descricao,
                                   double preco, String fotoUrl) {
         android.util.Log.d("EDITAR", "Salvando no banco. foto_url: " + fotoUrl);
-        supabase.atualizarProduto(produtoId, nome, descricao, preco, fotoUrl,
-                new SupabaseHelper.SupabaseCallback() {
+        produtoRepository.atualizarProduto(produtoId, nome, descricao, preco, fotoUrl,
+                new ProdutoRepository.Callback() {
                     @Override
                     public void onSuccess(String r) {
                         android.util.Log.d("EDITAR", "Produto atualizado. Resposta: " + r);

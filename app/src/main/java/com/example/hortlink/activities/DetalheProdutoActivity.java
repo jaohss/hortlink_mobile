@@ -2,10 +2,8 @@ package com.example.hortlink.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,15 +17,12 @@ import androidx.core.view.WindowInsetsCompat;
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.bd.SupabaseHelper;
-import com.example.hortlink.entidades.Produto;
-import com.example.hortlink.entidades.Produtor;
+import com.example.hortlink.data.model.Produto;
+import com.example.hortlink.data.repository.ProdutoRepository;
 import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class DetalheProdutoActivity extends AppCompatActivity {
 
@@ -41,6 +36,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
     private ImageView     fotoPerfil;
     private Button        btnCarrinho;
     private ConstraintLayout cardProdutor;
+    private ProdutoRepository produtoRepository = new ProdutoRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +73,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
 
     // ─── 1. Busca produto ────────────────────────────────────────────
     private void carregarProduto(String produtoId) {
-        supabase.buscarProdutoPorId(produtoId, new SupabaseHelper.SupabaseCallback() {
+        produtoRepository.buscarProdutoPorId(produtoId, new ProdutoRepository.Callback() {
             @Override
             public void onSuccess(String json) {
                 try {

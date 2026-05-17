@@ -1,7 +1,6 @@
 package com.example.hortlink.activities;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,7 +17,8 @@ import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.ProdutoAdapter;
 import com.example.hortlink.bd.SupabaseHelper;
-import com.example.hortlink.entidades.Produto;
+import com.example.hortlink.data.model.Produto;
+import com.example.hortlink.data.repository.ProdutoRepository;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,6 +32,7 @@ public class PerfilProdutorActivity extends AppCompatActivity {
     private ImageView imgFazenda;
     private RecyclerView recyclerProdutosPerfil;
     private SupabaseHelper supabase;
+    private final ProdutoRepository produtoRepository = new ProdutoRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,7 +110,7 @@ public class PerfilProdutorActivity extends AppCompatActivity {
 
     // ─── Produtos do produtor na lista horizontal ────────────────
     private void carregarProdutosDoProdutor(String uid) {
-        supabase.listarProdutosPorProdutor(uid, new SupabaseHelper.SupabaseCallback() {
+        produtoRepository.listarProdutosPorProdutor(uid, new ProdutoRepository.Callback() {
             @Override
             public void onSuccess(String json) {
                 List<Produto> lista = parseProdutos(json);

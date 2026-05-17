@@ -14,7 +14,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.hortlink.R;
-import com.example.hortlink.entidades.CartItem;
+import com.example.hortlink.data.model.CartItem;
 
 import java.util.List;
 

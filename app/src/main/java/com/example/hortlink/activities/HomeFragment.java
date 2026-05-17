@@ -15,8 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.CategoriaAdapter;
 import com.example.hortlink.adapters.ProdutoAdapter;
-import com.example.hortlink.bd.SupabaseHelper;
-import com.example.hortlink.entidades.Produto;
+import com.example.hortlink.data.model.Produto;
+import com.example.hortlink.data.repository.ProdutoRepository;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -61,12 +61,12 @@ public class HomeFragment extends Fragment {
         carregarProdutos();
     }
 
-    // ─── Busca produtos no Supabase ──────────────────────────────
+    // ─── Busca produtos no ProdutoRepository/Supabase ──────────────────────────────
     private void carregarProdutos() {
         setCarregando(true);
 
-        SupabaseHelper supabase = new SupabaseHelper(requireContext());
-        supabase.listarProdutos(new SupabaseHelper.SupabaseCallback() {
+        ProdutoRepository produtoRepository = new ProdutoRepository();
+        produtoRepository.listarProdutos(new ProdutoRepository.Callback() {
 
             @Override
             public void onSuccess(String json) {

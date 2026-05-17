@@ -2,8 +2,6 @@ package com.example.hortlink.activities;
 
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -14,7 +12,7 @@ import android.view.ViewGroup;
 
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.PedidoAdapter;
-import com.example.hortlink.entidades.Pedido;
+import com.example.hortlink.data.model.Pedido;
 
 import java.util.ArrayList;
 import java.util.List;
