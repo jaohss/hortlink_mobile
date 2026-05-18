@@ -8,7 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -18,7 +17,7 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
-import com.example.hortlink.bd.SupabaseHelper;
+import com.example.hortlink.data.remote.StorageHelper;
 import com.example.hortlink.data.repository.ProdutoRepository;
 import com.google.android.material.button.MaterialButton;
 
@@ -28,38 +27,31 @@ import org.json.JSONObject;
 public class EditarProdutosFragment extends Fragment {
 
     private static final String ARG_PRODUTO_ID = "produto_id";
-
     private EditText edtNome, edtDescricao, edtPreco;
     private ImageView imgProduto;
-    private ProgressBar progressBar;
-    private String produtoId;           // agora String (UUID do Supabase)
-    private String fotoUrlAtual = "";   // URL já salva no Supabase
-    private Uri imagemNova = null;      // nova imagem escolhida pelo usuário
+    private String produtoId;
+    private String fotoUrlAtual = "";
+    private Uri imagemNova = null;
 
-    private SupabaseHelper supabase;
-    private ProdutoRepository produtoRepository = new ProdutoRepository();
+    private StorageHelper storageHelper;
+    private final ProdutoRepository produtoRepository = new ProdutoRepository();
 
-    // ─── Galeria ─────────────────────────────────────────────────
     private final ActivityResultLauncher<String> pickImage =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
                     requireContext().getContentResolver().takePersistableUriPermission(
                             uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     imagemNova = uri;
-
-                    // Mostra a foto e esconde o placeholder
                     imgProduto.setVisibility(View.VISIBLE);
-                    requireView().findViewById(R.id.layoutPlaceholder)
-                            .setVisibility(View.GONE);
+                    requireView().findViewById(R.id.layoutPlaceholder).setVisibility(View.GONE);
                     imgProduto.setImageURI(uri);
                 }
             });
 
-    // ─── Factory ─────────────────────────────────────────────────
     public static EditarProdutosFragment newInstance(String produtoId) {
         EditarProdutosFragment fragment = new EditarProdutosFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PRODUTO_ID, produtoId); // String agora
+        args.putString(ARG_PRODUTO_ID, produtoId);
         fragment.setArguments(args);
         return fragment;
     }
@@ -76,16 +68,12 @@ public class EditarProdutosFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        supabase = new SupabaseHelper(requireContext());
+        storageHelper = new StorageHelper(requireContext());
 
         edtNome      = view.findViewById(R.id.edtNome);
         edtDescricao = view.findViewById(R.id.edtDescricao);
         edtPreco     = view.findViewById(R.id.edtPreco);
         imgProduto   = view.findViewById(R.id.imgProduto);
-        View layoutPlaceholder = view.findViewById(R.id.layoutPlaceholder);
-        View frameUploadFoto   = view.findViewById(R.id.frameUploadFoto);
-        MaterialButton btnCancelar = view.findViewById(R.id.btnCancelar);
-        // progressBar = view.findViewById(R.id.progressBar); // descomente se tiver no XML
 
         if (getArguments() != null) {
             produtoId = getArguments().getString(ARG_PRODUTO_ID);
@@ -97,15 +85,16 @@ public class EditarProdutosFragment extends Fragment {
             return;
         }
 
-        frameUploadFoto.setOnClickListener(v -> pickImage.launch("image/*"));
+        view.findViewById(R.id.frameUploadFoto).setOnClickListener(v -> pickImage.launch("image/*"));
         view.findViewById(R.id.btnAtualizar).setOnClickListener(v -> atualizarProduto());
 
-        carregarProduto();
+        MaterialButton btnCancelar = view.findViewById(R.id.btnCancelar);
+        btnCancelar.setOnClickListener(v ->
+                requireActivity().getSupportFragmentManager().popBackStack());
 
-        btnCancelar.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+        carregarProduto();
     }
 
-    // ─── 1. Carrega dados do produto ─────────────────────────────
     private void carregarProduto() {
         setCarregando(true);
 
@@ -135,10 +124,10 @@ public class EditarProdutosFragment extends Fragment {
                         edtDescricao.setText(descricao);
                         edtPreco.setText(String.valueOf(preco));
 
-                        // Carrega foto atual via Glide
                         if (!fotoUrlAtual.isEmpty()) {
                             imgProduto.setVisibility(View.VISIBLE);
-                            requireView().findViewById(R.id.layoutPlaceholder).setVisibility(View.GONE);
+                            requireView().findViewById(R.id.layoutPlaceholder)
+                                    .setVisibility(View.GONE);
                             Glide.with(requireContext())
                                     .load(fotoUrlAtual)
                                     .placeholder(R.drawable.hortlink_logo)
@@ -147,8 +136,8 @@ public class EditarProdutosFragment extends Fragment {
                                     .into(imgProduto);
                         } else {
                             imgProduto.setVisibility(View.GONE);
-                            requireView().findViewById(R.id.layoutPlaceholder).setVisibility(View.VISIBLE);
-                            imgProduto.setImageResource(R.drawable.hortlink_logo);
+                            requireView().findViewById(R.id.layoutPlaceholder)
+                                    .setVisibility(View.VISIBLE);
                         }
                     });
 
@@ -171,57 +160,47 @@ public class EditarProdutosFragment extends Fragment {
         });
     }
 
-    // ─── 2. Atualiza — com ou sem nova imagem ────────────────────
     private void atualizarProduto() {
-        String nome     = edtNome.getText().toString().trim();
+        String nome      = edtNome.getText().toString().trim();
         String descricao = edtDescricao.getText().toString().trim();
-        String precoStr = edtPreco.getText().toString().trim();
+        String precoStr  = edtPreco.getText().toString().trim();
 
-        if (nome.isEmpty())    { edtNome.setError("Informe o nome"); return; }
+        if (nome.isEmpty())     { edtNome.setError("Informe o nome"); return; }
         if (precoStr.isEmpty()) { edtPreco.setError("Informe o preço"); return; }
 
         double preco = Double.parseDouble(precoStr.replace(",", "."));
-
         setCarregando(true);
 
         if (imagemNova != null) {
-            // Tem imagem nova → faz upload primeiro, depois atualiza
             String nomeArquivo = produtoId + "_" + System.currentTimeMillis() + ".jpg";
-            android.util.Log.d("EDITAR", "Iniciando upload: " + nomeArquivo);
 
-            supabase.uploadImagem(imagemNova, nomeArquivo, new SupabaseHelper.SupabaseCallback() {
+            storageHelper.uploadImagem(imagemNova, nomeArquivo, new StorageHelper.Callback() {
                 @Override
                 public void onSuccess(String novaUrl) {
-                    android.util.Log.d("EDITAR", "Upload ok, URL: " + novaUrl);
                     salvarNoSupabase(nome, descricao, preco, novaUrl);
                 }
 
                 @Override
                 public void onError(String erro) {
-                    android.util.Log.e("EDITAR", "Erro upload: " + erro);
                     requireActivity().runOnUiThread(() -> {
                         setCarregando(false);
                         Toast.makeText(getContext(),
-                                "Erro no upload da imagem: " + erro, Toast.LENGTH_LONG).show();
+                                "Erro no upload: " + erro, Toast.LENGTH_LONG).show();
                     });
                 }
             });
 
         } else {
-            // Sem imagem nova → mantém a URL atual
             salvarNoSupabase(nome, descricao, preco, fotoUrlAtual);
         }
     }
 
-    // ─── 3. PATCH no Supabase ────────────────────────────────────
     private void salvarNoSupabase(String nome, String descricao,
                                   double preco, String fotoUrl) {
-        android.util.Log.d("EDITAR", "Salvando no banco. foto_url: " + fotoUrl);
         produtoRepository.atualizarProduto(produtoId, nome, descricao, preco, fotoUrl,
                 new ProdutoRepository.Callback() {
                     @Override
                     public void onSuccess(String r) {
-                        android.util.Log.d("EDITAR", "Produto atualizado. Resposta: " + r);
                         requireActivity().runOnUiThread(() -> {
                             setCarregando(false);
                             Toast.makeText(getContext(),
@@ -232,7 +211,6 @@ public class EditarProdutosFragment extends Fragment {
 
                     @Override
                     public void onError(String erro) {
-                        android.util.Log.e("EDITAR", "Erro ao atualizar: " + erro);
                         requireActivity().runOnUiThread(() -> {
                             setCarregando(false);
                             Toast.makeText(getContext(),
@@ -243,11 +221,8 @@ public class EditarProdutosFragment extends Fragment {
     }
 
     private void setCarregando(boolean carregando) {
-        // if (progressBar != null)
-        //     progressBar.setVisibility(carregando ? View.VISIBLE : View.GONE);
         if (getView() != null) {
-            getView().findViewById(R.id.btnAtualizar)
-                    .setEnabled(!carregando);
+            getView().findViewById(R.id.btnAtualizar).setEnabled(!carregando);
         }
     }
 }

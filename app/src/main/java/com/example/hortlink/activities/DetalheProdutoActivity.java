@@ -18,7 +18,9 @@ import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.model.Produto;
+import com.example.hortlink.data.model.Produtor;
 import com.example.hortlink.data.repository.ProdutoRepository;
+import com.example.hortlink.data.repository.ProdutorRepository;
 import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONArray;
@@ -37,6 +39,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
     private Button        btnCarrinho;
     private ConstraintLayout cardProdutor;
     private ProdutoRepository produtoRepository = new ProdutoRepository();
+    private ProdutorRepository produtorRepository = new ProdutorRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,43 +135,28 @@ public class DetalheProdutoActivity extends AppCompatActivity {
 
     // ─── 2. Busca produtor ───────────────────────────────────────────
     private void carregarProdutor(String produtorId) {
-        supabase.buscarProdutorPorId(produtorId, new SupabaseHelper.SupabaseCallback() {
+        produtorRepository.buscarPorId(produtorId, new ProdutorRepository.CallbackUnico() {
             @Override
-            public void onSuccess(String json) {
-                try {
-                    JSONArray array = new JSONArray(json);
-                    if (array.length() == 0) return;
+            public void onSuccess(Produtor produtor) {
+                runOnUiThread(() -> {
+                    txtNomeProd.setText(produtor.getNome());
+                    txtCidadeProd.setText(produtor.getCidade());
+                    txtContatoProd.setText(produtor.getTelefone());
 
-                    JSONObject obj = array.getJSONObject(0);
-                    String nome    = obj.optString("nome");
-                    String cidade  = obj.optString("cidade");
-                    String contato = obj.optString("contato");
-                    String fotoUrl = obj.optString("foto_url");
-                    String uid     = obj.optString("id");
+                    Glide.with(DetalheProdutoActivity.this)
+                            .load(produtor.getFotoUrl().isEmpty() ? null : produtor.getFotoUrl())
+                            .placeholder(R.drawable.hortlink_logo)
+                            .error(R.drawable.hortlink_logo)
+                            .circleCrop()
+                            .into(fotoPerfil);
 
-                    runOnUiThread(() -> {
-                        txtNomeProd.setText(nome);
-                        txtCidadeProd.setText(cidade);
-                        txtContatoProd.setText(contato);
-
-                        Glide.with(DetalheProdutoActivity.this)
-                                .load(fotoUrl.isEmpty() ? null : fotoUrl)
-                                .placeholder(R.drawable.hortlink_logo)
-                                .error(R.drawable.hortlink_logo)
-                                .circleCrop()
-                                .into(fotoPerfil);
-
-                        cardProdutor.setOnClickListener(v -> {
-                            Intent intent = new Intent(DetalheProdutoActivity.this,
-                                    PerfilProdutorActivity.class);
-                            intent.putExtra("produtor_id", uid);
-                            startActivity(intent);
-                        });
+                    cardProdutor.setOnClickListener(v -> {
+                        Intent intent = new Intent(DetalheProdutoActivity.this,
+                                PerfilProdutorActivity.class);
+                        intent.putExtra("produtor_id", produtor.getId());
+                        startActivity(intent);
                     });
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                });
             }
 
             @Override

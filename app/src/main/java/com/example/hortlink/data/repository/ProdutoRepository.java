@@ -180,4 +180,28 @@ public class ProdutoRepository {
             }
         }).start();
     }
+
+    // Adicione no ProdutoRepository existente
+    public void verificarStatus(String produtoId, Callback callback) {
+        new Thread(() -> {
+            try {
+                String path = "/rest/v1/produtos"
+                        + "?select=id"
+                        + "&id=eq." + produtoId
+                        + "&status=eq.true";
+
+                Request request = client.baseRequest(path)
+                        .addHeader("Accept", "application/json")
+                        .get()
+                        .build();
+
+                Response response = client.getHttp().newCall(request).execute();
+                String body = response.body().string();
+
+                if (response.isSuccessful()) callback.onSuccess(body);
+                else callback.onError("Erro " + response.code());
+
+            } catch (Exception e) { callback.onError(e.getMessage()); }
+        }).start();
+    }
 }

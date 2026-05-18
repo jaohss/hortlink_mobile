@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
-import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.model.Usuario;
 import com.example.hortlink.data.repository.UsuarioRepository;
 import com.google.firebase.auth.FirebaseAuth;
@@ -34,8 +33,6 @@ public class PerfilFragment extends Fragment {
     private TextView txtNome, txtCidade;
     private ImageView imgFazenda;
     private RecyclerView recyclerProdutosPerfil;
-    private SupabaseHelper supabase;
-
 
     // ─── Dependências ─────────────────────────────────────────────────
     private final UsuarioRepository usuarioRepository = new UsuarioRepository();

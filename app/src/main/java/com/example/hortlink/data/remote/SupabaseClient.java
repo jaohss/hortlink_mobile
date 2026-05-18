@@ -27,5 +27,6 @@ public class SupabaseClient {
 
     public OkHttpClient getHttp() { return http; }
     public String getStorageUrl() { return URL + "/storage/v1"; }
+    public String getKey() { return KEY; }
 }
 

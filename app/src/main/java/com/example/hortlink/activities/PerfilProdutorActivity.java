@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.ProdutoAdapter;
-import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.model.Produto;
 import com.example.hortlink.data.model.Produtor;
 import com.example.hortlink.data.repository.ProdutoRepository;
@@ -32,7 +31,6 @@ import java.util.List;
 /**
  * Tela pública do produtor — aberta quando o comprador clica num produtor.
  *
- * Sem SupabaseHelper aqui. Dados chegam via:
  *  - ProdutorRepository.buscarPorId()  → cabeçalho do perfil
  *  - ProdutoRepository.listarProdutosPorProdutor() → lista horizontal de produtos
  */
@@ -42,7 +40,6 @@ public class PerfilProdutorActivity extends AppCompatActivity {
     private TextView txtNome, txtCidade, txtContato, txtDescricao;
     private ImageView imgFazenda;
     private RecyclerView recyclerProdutosPerfil;
-    private SupabaseHelper supabase;
 
     //Dependências
     private final ProdutoRepository produtoRepository = new ProdutoRepository();

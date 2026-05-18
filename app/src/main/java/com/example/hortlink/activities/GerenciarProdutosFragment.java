@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.GerenciarAdapter;
-import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.model.Produto;
 import com.example.hortlink.data.repository.ProdutoRepository;
 import com.google.firebase.auth.FirebaseAuth;
@@ -32,7 +31,6 @@ public class GerenciarProdutosFragment extends Fragment {
     private TextView txtListaVazia;
     private List<Produto> listaProdutos = new ArrayList<>();
     private GerenciarAdapter adapter;
-    //private SupabaseHelper supabase;
     private ProdutoRepository produtoRepository = new ProdutoRepository();
 
     public GerenciarProdutosFragment() {}
@@ -47,7 +45,6 @@ public class GerenciarProdutosFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        //supabase = new SupabaseHelper(requireContext());
         recyclerGerenciar = view.findViewById(R.id.recyclerGerenciar);
         txtListaVazia     = view.findViewById(R.id.txtListaVazia);
 

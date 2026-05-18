@@ -17,8 +17,10 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
-import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.model.CartItem;
+import com.example.hortlink.data.repository.CarrinhoRepository;
+import com.example.hortlink.data.repository.PedidoRepository;
+import com.example.hortlink.data.repository.ProdutoRepository;
 import com.example.hortlink.entidades.CartManager;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -31,9 +33,13 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CheckoutActivity extends AppCompatActivity {
+
     private List<CartItem> cartItems;
     private String usuarioId;
-    private SupabaseHelper supabase;
+
+    private final ProdutoRepository  produtoRepository  = new ProdutoRepository();
+    private final CarrinhoRepository carrinhoRepository = new CarrinhoRepository();
+    private final PedidoRepository   pedidoRepository   = new PedidoRepository();
 
     private ProgressBar spinner;
     private TextView tvMsg;
@@ -52,7 +58,6 @@ public class CheckoutActivity extends AppCompatActivity {
 
         usuarioId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         cartItems = CartManager.getInstance(this).getItems();
-        supabase  = new SupabaseHelper(this);
 
         spinner = findViewById(R.id.spinner);
         tvMsg   = findViewById(R.id.tv_msg);
@@ -61,13 +66,7 @@ public class CheckoutActivity extends AppCompatActivity {
         btnPay.setOnClickListener(v -> validarItensAntesDeComprar());
     }
 
-    // ─── 0. Valida cada produto individualmente antes de cobrar ─────
-    //
-    // Uma requisição por produto — sem encoding de URL, sem query
-    // malformada. Array vazio na resposta = produto inativo.
-    //
-    // AtomicInteger coordena os N callbacks paralelos: só avança
-    // quando todos chegarem (pendentes chega a 0).
+    // ─── 0. Valida cada produto antes de cobrar ──────────────────────
     private void validarItensAntesDeComprar() {
         if (cartItems == null || cartItems.isEmpty()) {
             Toast.makeText(this, "Carrinho vazio", Toast.LENGTH_SHORT).show();
@@ -82,22 +81,14 @@ public class CheckoutActivity extends AppCompatActivity {
         AtomicInteger pendentes = new AtomicInteger(cartItems.size());
 
         for (CartItem item : cartItems) {
-            // UUID vai direto na URL sem vírgulas nem parênteses — sem problema de encoding
-            String url = "/rest/v1/produtos"
-                    + "?select=id"
-                    + "&id=eq." + item.getProdutoId()
-                    + "&ativo=eq.true";
-
-            supabase.get(url, new SupabaseHelper.SupabaseCallback() {
+            produtoRepository.verificarStatus(item.getProdutoId(), new ProdutoRepository.Callback() {
                 @Override
                 public void onSuccess(String resultado) {
                     try {
                         if (new JSONArray(resultado).length() == 0) {
-                            // Array vazio: produto inativo ou removido
                             synchronized (inativos) { inativos.add(item); }
                         }
                     } catch (Exception e) {
-                        // JSON malformado — bloqueia por segurança
                         synchronized (inativos) { inativos.add(item); }
                     }
                     onRespostaChegou(pendentes, inativos);
@@ -105,7 +96,6 @@ public class CheckoutActivity extends AppCompatActivity {
 
                 @Override
                 public void onError(String erro) {
-                    // Erro de rede — bloqueia por segurança
                     synchronized (inativos) { inativos.add(item); }
                     onRespostaChegou(pendentes, inativos);
                 }
@@ -113,20 +103,15 @@ public class CheckoutActivity extends AppCompatActivity {
         }
     }
 
-    // Chamado após cada resposta — age só quando a última chegar
     private void onRespostaChegou(AtomicInteger pendentes, List<CartItem> inativos) {
         if (pendentes.decrementAndGet() != 0) return;
-
         runOnUiThread(() -> {
-            if (!inativos.isEmpty()) {
-                removerItensInativosEAvisar(inativos);
-            } else {
-                iniciarPagamento();
-            }
+            if (!inativos.isEmpty()) removerItensInativosEAvisar(inativos);
+            else iniciarPagamento();
         });
     }
 
-    // ─── Remove inativos do carrinho e avisa o usuário ────────────────
+    // ─── Remove inativos do carrinho e avisa ─────────────────────────
     private void removerItensInativosEAvisar(List<CartItem> itensInativos) {
         StringBuilder nomes = new StringBuilder();
 
@@ -135,31 +120,25 @@ public class CheckoutActivity extends AppCompatActivity {
             cartItems.remove(item);
             CartManager.getInstance(this).removeItem(item.getProdutoId());
 
-            supabase.delete(
-                    "/rest/v1/carrinho?id=eq." + item.getCarrinhoId(),
-                    new SupabaseHelper.SupabaseCallback() {
-                        @Override public void onSuccess(String r) {}
-                        @Override public void onError(String e) {}
-                    });
+            carrinhoRepository.removerItem(item.getCarrinhoId(), new CarrinhoRepository.Callback() {
+                @Override public void onSuccess(String r) {}
+                @Override public void onError(String e) {}
+            });
         }
 
         spinner.setVisibility(View.GONE);
         btnPay.setEnabled(true);
         tvMsg.setText("");
 
-        Toast.makeText(
-                this,
-                "Produto(s) indisponível(is):" + nomes
-                        + "\n\nRevise o carrinho e tente novamente.",
-                Toast.LENGTH_LONG
-        ).show();
+        Toast.makeText(this,
+                "Produto(s) indisponível(is):" + nomes + "\n\nRevise o carrinho e tente novamente.",
+                Toast.LENGTH_LONG).show();
 
         finish();
     }
 
-    // ─── 1. Simula pagamento (2 s) e depois cria o pedido ───────────
+    // ─── 1. Simula pagamento e cria o pedido ─────────────────────────
     private void iniciarPagamento() {
-        // Aqui o spinner já está visível desde validarItensAntesDeComprar()
         runOnUiThread(() -> tvMsg.setText("Processando pagamento..."));
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -171,40 +150,26 @@ public class CheckoutActivity extends AppCompatActivity {
 
     // ─── 2. INSERT em pedidos ────────────────────────────────────────
     private void criarPedido() {
-        String producerId = cartItems.get(0).getProducerId();
+        String produtorId = cartItems.get(0).getProducerId();
         double total = 0;
         for (CartItem i : cartItems) total += i.getSubtotal();
 
-        try {
-            JSONObject json = new JSONObject();
-            json.put("comprador_id", usuarioId);
-            json.put("produtor_id",  producerId);
-            json.put("valor_total",  total);
-            json.put("status",       "pago");
-
-            supabase.inserirPedido(json, new SupabaseHelper.SupabaseCallback() {
-                @Override
-                public void onSuccess(String resultado) {
-                    try {
-                        // Supabase retorna array com o objeto inserido
-                        String pedidoId = new JSONArray(resultado)
-                                .getJSONObject(0)
-                                .getString("id");
-                        inserirItensPedido(pedidoId);
-                    } catch (JSONException e) {
-                        logError("Erro ao ler id do pedido: " + e.getMessage());
-                    }
+        pedidoRepository.inserirPedido(usuarioId, produtorId, total, new PedidoRepository.Callback() {
+            @Override
+            public void onSuccess(String resultado) {
+                try {
+                    String pedidoId = new JSONArray(resultado)
+                            .getJSONObject(0)
+                            .getString("id");
+                    inserirItensPedido(pedidoId);
+                } catch (JSONException e) {
+                    logError("Erro ao ler id do pedido: " + e.getMessage());
                 }
+            }
 
-                @Override
-                public void onError(String erro) {
-                    logError(erro);
-                }
-            });
-
-        } catch (JSONException e) {
-            logError("Erro ao montar pedido: " + e.getMessage());
-        }
+            @Override
+            public void onError(String erro) { logError(erro); }
+        });
     }
 
     // ─── 3. INSERT batch em pedido_itens ────────────────────────────
@@ -220,16 +185,12 @@ public class CheckoutActivity extends AppCompatActivity {
                 batch.put(obj);
             }
 
-            supabase.inserirItensPedido(batch, new SupabaseHelper.SupabaseCallback() {
+            pedidoRepository.inserirItensPedido(batch, new PedidoRepository.Callback() {
                 @Override
-                public void onSuccess(String resultado) {
-                    limparCarrinho();
-                }
+                public void onSuccess(String resultado) { limparCarrinho(); }
 
                 @Override
-                public void onError(String erro) {
-                    logError(erro);
-                }
+                public void onError(String erro) { logError(erro); }
             });
 
         } catch (JSONException e) {
@@ -237,40 +198,33 @@ public class CheckoutActivity extends AppCompatActivity {
         }
     }
 
-    // ─── 4. Limpa carrinho local e navega para Home ──────────────────
+    // ─── 4. Limpa carrinho e navega para Home ───────────────────────
     private void limparCarrinho() {
-        String usuarioId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        carrinhoRepository.limparCarrinho(usuarioId, new CarrinhoRepository.Callback() {
+            @Override
+            public void onSuccess(String resultado) {
+                CartManager.getInstance(CheckoutActivity.this).clearCart();
+                navegarParaHome();
+                runOnUiThread(() -> Toast.makeText(CheckoutActivity.this,
+                        "Pedido realizado com sucesso!", Toast.LENGTH_LONG).show());
+            }
 
-        supabase.delete(
-                "/rest/v1/carrinho?usuario_id=eq." + usuarioId,
-                new SupabaseHelper.SupabaseCallback() {
-                    @Override
-                    public void onSuccess(String resultado) {
-                        CartManager.getInstance(CheckoutActivity.this).clearCart();
+            @Override
+            public void onError(String erro) {
+                // Pedido já foi criado — navega mesmo assim
+                CartManager.getInstance(CheckoutActivity.this).clearCart();
+                navegarParaHome();
+            }
+        });
+    }
 
-                        runOnUiThread(() -> {
-                            Intent intent = new Intent(CheckoutActivity.this, Homec.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            startActivity(intent);
-                            Toast.makeText(CheckoutActivity.this,
-                                    "Pedido realizado com sucesso!", Toast.LENGTH_LONG).show();
-                            finish();
-                        });
-                    }
-
-                    @Override
-                    public void onError(String erro) {
-                        // Mesmo com erro no delete, navega — o pedido já foi criado
-                        CartManager.getInstance(CheckoutActivity.this).clearCart();
-                        runOnUiThread(() -> {
-                            Intent intent = new Intent(CheckoutActivity.this, Homec.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            startActivity(intent);
-                            finish();
-                        });
-                    }
-                }
-        );
+    private void navegarParaHome() {
+        runOnUiThread(() -> {
+            Intent intent = new Intent(CheckoutActivity.this, Homec.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
+        });
     }
 
     // ─── Helper de erro ─────────────────────────────────────────────

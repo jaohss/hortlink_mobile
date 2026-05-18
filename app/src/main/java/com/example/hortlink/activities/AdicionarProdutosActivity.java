@@ -15,11 +15,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
-import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.remote.StorageHelper;
 import com.example.hortlink.data.repository.ProdutoRepository;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -29,13 +27,10 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
     private AutoCompleteTextView spinnerCategoria, spinnerUnidade;
     private ImageView imgProduto;
     private LinearLayout layoutPlaceholder;
-    private CircularProgressIndicator progressBar; // adicione no seu XML
     private Uri imagemSelecionada;
 
-    private SupabaseHelper supabase;
+    private final StorageHelper storageHelper = new StorageHelper(this);
     private final ProdutoRepository produtoRepository = new ProdutoRepository();
-    //private final StorageHelper storageHelper = new StorageHelper(this);
-
 
     private final ActivityResultLauncher<String> pickImage =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -60,21 +55,18 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
             return insets;
         });
 
-        supabase = new SupabaseHelper(this);
-
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Adicionar Produto");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        edtNome          = findViewById(R.id.edtNome);
-        edtPreco         = findViewById(R.id.edtPreco);
-        edtDescricao     = findViewById(R.id.edtDescricao);
-        spinnerCategoria = findViewById(R.id.spnCategoria);
-        spinnerUnidade   = findViewById(R.id.spinnerUnidade);
-        imgProduto       = findViewById(R.id.imgProduto);
+        edtNome           = findViewById(R.id.edtNome);
+        edtPreco          = findViewById(R.id.edtPreco);
+        edtDescricao      = findViewById(R.id.edtDescricao);
+        spinnerCategoria  = findViewById(R.id.spnCategoria);
+        spinnerUnidade    = findViewById(R.id.spinnerUnidade);
+        imgProduto        = findViewById(R.id.imgProduto);
         layoutPlaceholder = findViewById(R.id.layoutPlaceholder);
-        // progressBar   = findViewById(R.id.progressBar); // descomente se tiver no XML
 
         configurarSpinners();
 
@@ -104,29 +96,22 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
         String unidade   = spinnerUnidade.getText().toString().trim();
         String descricao = edtDescricao.getText().toString().trim();
 
-        // Validações
         if (nome.isEmpty())      { edtNome.setError("Informe o nome"); return; }
         if (categoria.isEmpty()) { spinnerCategoria.setError("Selecione a categoria"); return; }
         if (preco.isEmpty())     { edtPreco.setError("Informe o preço"); return; }
         if (unidade.isEmpty())   { spinnerUnidade.setError("Selecione a unidade"); return; }
 
         double precoDouble = Double.parseDouble(preco.replace(",", "."));
-
-        // UID do vendedor logado via Firebase
-        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid()
-                : "anonimo";
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         setCarregando(true);
 
         if (imagemSelecionada != null) {
-            // 1º: faz upload da imagem, depois salva o produto com a URL
             String nomeArquivo = uid + "_" + System.currentTimeMillis() + ".jpg";
 
-            supabase.uploadImagem(imagemSelecionada, nomeArquivo, new SupabaseHelper.SupabaseCallback() {
+            storageHelper.uploadImagem(imagemSelecionada, nomeArquivo, new StorageHelper.Callback() {
                 @Override
                 public void onSuccess(String fotoUrl) {
-                    // Imagem enviada → agora salva o produto com a URL
                     produtoRepository.inserirProduto(nome, categoria, precoDouble, unidade,
                             descricao, fotoUrl, uid, new ProdutoRepository.Callback() {
                                 @Override
@@ -154,13 +139,12 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         setCarregando(false);
                         Toast.makeText(AdicionarProdutosActivity.this,
-                                "Erro no upload da imagem: " + erro, Toast.LENGTH_LONG).show();
+                                "Erro no upload: " + erro, Toast.LENGTH_LONG).show();
                     });
                 }
             });
 
         } else {
-            // Sem imagem — salva direto
             produtoRepository.inserirProduto(nome, categoria, precoDouble, unidade,
                     descricao, "", uid, new ProdutoRepository.Callback() {
                         @Override
@@ -182,8 +166,8 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
                             });
                         }
                     });
-            }
         }
+    }
 
     private void setCarregando(boolean carregando) {
         findViewById(R.id.btnSalvarProduto).setEnabled(!carregando);

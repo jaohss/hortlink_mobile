@@ -17,7 +17,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
-import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.repository.ProdutoRepository;
 import com.example.hortlink.data.repository.ProdutorRepository;
 import com.example.hortlink.services.ViacepService;
@@ -35,7 +34,6 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
     EditText edtCidade, edtTelefone, edtDescricao, edtEstado, edtCep, edtBairro;
     Button btnConcluir, btnPular;
     ProgressBar progressBar;
-    SupabaseHelper supabase;
     private String uid;
 
     private ProdutorRepository produtorRepository = new ProdutorRepository();

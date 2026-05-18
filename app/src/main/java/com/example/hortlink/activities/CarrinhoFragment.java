@@ -18,8 +18,8 @@ import android.widget.Toast;
 
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.CarrinhoAdapter;
-import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.model.CartItem;
+import com.example.hortlink.data.repository.CarrinhoRepository;
 import com.example.hortlink.entidades.CartManager;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -40,7 +40,7 @@ public class CarrinhoFragment extends Fragment {
     private RecyclerView rvCart;
 
     private String usuarioId;
-    private SupabaseHelper supabase;
+    private CarrinhoRepository carrinhoRepository = new CarrinhoRepository();
 
     @Nullable
     @Override
@@ -55,7 +55,6 @@ public class CarrinhoFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         usuarioId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        supabase  = new SupabaseHelper(requireContext());
 
         // Views — IDs do fragment_carrinho.xml
         layoutEmpty  = view.findViewById(R.id.layout_empty);
@@ -93,7 +92,7 @@ public class CarrinhoFragment extends Fragment {
                 + "?select=id,quantidade,produtos(id,nome,preco,foto_url,unidade,produtor_id)"
                 + "&usuario_id=eq." + usuarioId;
 
-        supabase.get(url, new SupabaseHelper.SupabaseCallback() {
+        carrinhoRepository.carregarCarrinho(usuarioId, new CarrinhoRepository.Callback() {
             @Override
             public void onSuccess(String resultado) {
                 try {
@@ -137,22 +136,19 @@ public class CarrinhoFragment extends Fragment {
 
     // ─── Remove item ─────────────────────────────────────────────────
     private void removerItem(CartItem item) {
-        supabase.delete(
-                "/rest/v1/carrinho?id=eq." + item.getCarrinhoId(),
-                new SupabaseHelper.SupabaseCallback() {
-                    @Override
-                    public void onSuccess(String resultado) {
-                        cartItems.remove(item);
-                        CartManager.getInstance(requireContext())
-                                .removeItem(item.getProdutoId());
-                        atualizarUi();
-                    }
+        carrinhoRepository.removerItem(item.getCarrinhoId(), new CarrinhoRepository.Callback() {
+            @Override
+            public void onSuccess(String resultado) {
+                cartItems.remove(item);
+                CartManager.getInstance(requireContext()).removeItem(item.getProdutoId());
+                atualizarUi();
+            }
 
-                    @Override
-                    public void onError(String erro) {
-                        mostrarErro("Erro ao remover item");
-                    }
-                });
+            @Override
+            public void onError(String erro) {
+                mostrarErro("Erro ao remover item");
+            }
+        });
     }
 
     // ─── Altera quantidade ───────────────────────────────────────────
@@ -162,29 +158,18 @@ public class CarrinhoFragment extends Fragment {
             return;
         }
 
-        try {
-            JSONObject body = new JSONObject();
-            body.put("quantidade", novaQtd);
+        carrinhoRepository.atualizarQuantidade(item.getCarrinhoId(), novaQtd, new CarrinhoRepository.Callback() {
+            @Override
+            public void onSuccess(String resultado) {
+                item.setQuantidade(novaQtd);
+                atualizarUi();
+            }
 
-            supabase.patch(
-                    "/rest/v1/carrinho?id=eq." + item.getCarrinhoId(),
-                    body,
-                    new SupabaseHelper.SupabaseCallback() {
-                        @Override
-                        public void onSuccess(String resultado) {
-                            item.setQuantidade(novaQtd);
-                            atualizarUi();
-                        }
-
-                        @Override
-                        public void onError(String erro) {
-                            mostrarErro("Erro ao atualizar quantidade");
-                        }
-                    });
-
-        } catch (Exception e) {
-            mostrarErro("Erro interno");
-        }
+            @Override
+            public void onError(String erro) {
+                mostrarErro("Erro ao atualizar quantidade");
+            }
+        });
     }
 
     // ─── UI helpers ──────────────────────────────────────────────────
