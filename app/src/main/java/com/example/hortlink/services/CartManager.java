@@ -1,4 +1,4 @@
-package com.example.hortlink.entidades;
+package com.example.hortlink.services;
 
 import android.content.Context;
 import android.content.SharedPreferences;

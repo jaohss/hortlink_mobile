@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.consumidor;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -16,6 +16,7 @@ import com.example.hortlink.R;
 import com.example.hortlink.adapters.PedidoAdapter;
 import com.example.hortlink.data.model.Pedido;
 import com.example.hortlink.data.repository.PedidoRepository;
+import com.example.hortlink.util.SessionManager;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
@@ -54,7 +55,8 @@ public class PedidosFragment extends Fragment {
     }
 
     private void carregarPedidos() {
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String uid = SessionManager.getInstance().getUid();
+        if (uid == null) return;
 
         pedidoRepository.listarPorComprador(uid, new PedidoRepository.CallbackLista() {
             @Override

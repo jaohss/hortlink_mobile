@@ -1,6 +1,5 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.produtor;
 
-import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;

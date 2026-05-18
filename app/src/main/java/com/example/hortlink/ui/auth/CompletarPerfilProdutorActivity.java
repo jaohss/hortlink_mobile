@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,17 +17,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
-import com.example.hortlink.data.repository.ProdutoRepository;
+import com.example.hortlink.data.model.Usuario;
 import com.example.hortlink.data.repository.ProdutorRepository;
 import com.example.hortlink.services.ViacepService;
-
-import org.json.JSONObject;
-
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import com.example.hortlink.ui.auth.RoleRouterActivity;
+import com.example.hortlink.util.SessionManager;
 
 public class CompletarPerfilProdutorActivity extends AppCompatActivity {
 
@@ -53,6 +47,7 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
 
         bindViews();
         configurarViaCep();
+        preencherSeEdicao();
         configurarBotoes();
     }
 
@@ -196,6 +191,19 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
         );
     }
 
+    private void preencherSeEdicao() {
+        boolean modoEdicao = getIntent().getBooleanExtra("modo_edicao", false);
+        if (!modoEdicao) return;
+
+        Usuario u = SessionManager.getInstance().getUsuario();
+        if (u == null) return;
+
+        if (u.telefone  != null) edtTelefone.setText(u.telefone);
+        if (u.cidade    != null) edtCidade.setText(u.cidade);
+        if (u.estado    != null) edtEstado.setText(u.estado);
+        if (u.descricao != null) edtDescricao.setText(u.descricao);
+    }
+
 
     // ─── Helpers de UI ────────────────────────────────────────────────
 
@@ -211,7 +219,7 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
     }
 
     private void irParaHome() {
-        startActivity(new Intent(this, MainActivity.class));
+        startActivity(new Intent(this, RoleRouterActivity.class));
         finish();
     }
 

@@ -1,5 +1,6 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.consumidor;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -10,6 +11,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.hortlink.R;
+import com.example.hortlink.util.BotpressActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 //Home do comprador
@@ -51,7 +53,7 @@ public class Homec extends AppCompatActivity {
             } else if (id == R.id.nav_pedidos) {
                 fragment = new PedidosFragment();
             } else if (id == R.id.nav_perfil) {
-                fragment = new PerfilFragment();
+                fragment = new PerfilCompradorFragment();
             }
 
             if (fragment != null) {
@@ -63,6 +65,9 @@ public class Homec extends AppCompatActivity {
 
             return true;
         });
+
+        findViewById(R.id.fabSuporte).setOnClickListener(v ->
+                startActivity(new Intent(this, BotpressActivity.class)));
 
     }
 }

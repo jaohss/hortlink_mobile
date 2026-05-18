@@ -1,18 +1,13 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.consumidor;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.hortlink.bd.SupabaseHelper;
-
-import java.util.List;
 
 public class BuscarFragment extends Fragment {
 
     // Itens populares
     RecyclerView popularRec;
 
-    SupabaseHelper sp;
 
      /*
     @Override

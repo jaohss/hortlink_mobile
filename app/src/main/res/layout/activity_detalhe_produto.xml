@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:padding="15dp"
     android:background="@color/white"
-    tools:context=".activities.DetalheProdutoActivity">
+    tools:context=".ui.consumidor.DetalheProdutoActivity">
 
     <ImageView
         android:id="@+id/imgProduto"

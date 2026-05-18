@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.consumidor;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -20,7 +20,7 @@ import com.example.hortlink.R;
 import com.example.hortlink.adapters.CarrinhoAdapter;
 import com.example.hortlink.data.model.CartItem;
 import com.example.hortlink.data.repository.CarrinhoRepository;
-import com.example.hortlink.entidades.CartManager;
+import com.example.hortlink.services.CartManager;
 import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONArray;

@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     setCarregando(false);
                     Toast.makeText(MainActivity.this, "Bem-vindo, " + usuario.nome + " !", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(MainActivity.this, Homec.class));
+                    startActivity(new Intent(MainActivity.this, RoleRouterActivity.class));
                     finish();
                 });
             }

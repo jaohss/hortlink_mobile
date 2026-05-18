@@ -10,7 +10,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:background="@drawable/backgroundhort"
-    tools:context=".activities.MainActivity">
+    tools:context=".ui.auth.MainActivity">
 
     <ImageView
         android:id="@+id/imageView"

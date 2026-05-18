@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.consumidor;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,30 +16,30 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
-import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.model.Produto;
 import com.example.hortlink.data.model.Produtor;
+import com.example.hortlink.data.repository.CarrinhoRepository;
 import com.example.hortlink.data.repository.ProdutoRepository;
 import com.example.hortlink.data.repository.ProdutorRepository;
-import com.google.firebase.auth.FirebaseAuth;
+import com.example.hortlink.util.SessionManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class DetalheProdutoActivity extends AppCompatActivity {
 
+    private Produto produto;
 
-    private SupabaseHelper supabase;
-    private Produto produto; // populado uma vez, reutilizado onde precisar
-
-    private TextView      txtNome, txtPreco, txtDescricao;
-    private ImageView     imgProduto;
-    private TextView      txtNomeProd, txtCidadeProd, txtContatoProd;
-    private ImageView     fotoPerfil;
-    private Button        btnCarrinho;
+    private TextView txtNome, txtPreco, txtDescricao;
+    private ImageView imgProduto;
+    private TextView txtNomeProd, txtCidadeProd, txtContatoProd;
+    private ImageView fotoPerfil;
+    private Button btnCarrinho;
     private ConstraintLayout cardProdutor;
-    private ProdutoRepository produtoRepository = new ProdutoRepository();
-    private ProdutorRepository produtorRepository = new ProdutorRepository();
+
+    private final ProdutoRepository produtoRepository     = new ProdutoRepository();
+    private final ProdutorRepository produtorRepository   = new ProdutorRepository();
+    private final CarrinhoRepository carrinhoRepository   = new CarrinhoRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,8 +52,6 @@ public class DetalheProdutoActivity extends AppCompatActivity {
             return insets;
         });
 
-        supabase = new SupabaseHelper(this);
-
         txtNome        = findViewById(R.id.txtNome);
         txtPreco       = findViewById(R.id.txtPreco);
         txtDescricao   = findViewById(R.id.txtDescricao);
@@ -65,7 +63,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
         cardProdutor   = findViewById(R.id.cardProdutor);
         btnCarrinho    = findViewById(R.id.btnCarrinho);
 
-        btnCarrinho.setEnabled(false); // só libera depois que produto carregar
+        btnCarrinho.setEnabled(false);
         findViewById(R.id.btnVoltar).setOnClickListener(v -> finish());
 
         String produtoId = getIntent().getStringExtra("produto_id");
@@ -74,21 +72,19 @@ public class DetalheProdutoActivity extends AppCompatActivity {
         carregarProduto(produtoId);
     }
 
-    // ─── 1. Busca produto ────────────────────────────────────────────
+    // ─── 1. Busca produto ─────────────────────────────────────────────
+
     private void carregarProduto(String produtoId) {
         produtoRepository.buscarProdutoPorId(produtoId, new ProdutoRepository.Callback() {
+
             @Override
             public void onSuccess(String json) {
                 try {
                     JSONArray array = new JSONArray(json);
-                    if (array.length() == 0) {
-                        runOnUiThread(() -> { finish(); });
-                        return;
-                    }
+                    if (array.length() == 0) { runOnUiThread(() -> finish()); return; }
 
                     JSONObject obj = array.getJSONObject(0);
 
-                    // Popula o objeto de domínio uma única vez
                     produto = new Produto();
                     produto.setId(obj.optString("id"));
                     produto.setNome(obj.optString("nome"));
@@ -110,7 +106,6 @@ public class DetalheProdutoActivity extends AppCompatActivity {
                                 .centerCrop()
                                 .into(imgProduto);
 
-                        // Listener definido aqui — produto já está pronto
                         btnCarrinho.setEnabled(true);
                         btnCarrinho.setOnClickListener(v -> adicionarAoCarrinho());
                     });
@@ -133,9 +128,11 @@ public class DetalheProdutoActivity extends AppCompatActivity {
         });
     }
 
-    // ─── 2. Busca produtor ───────────────────────────────────────────
+    // ─── 2. Busca produtor ────────────────────────────────────────────
+
     private void carregarProdutor(String produtorId) {
         produtorRepository.buscarPorId(produtorId, new ProdutorRepository.CallbackUnico() {
+
             @Override
             public void onSuccess(Produtor produtor) {
                 runOnUiThread(() -> {
@@ -164,81 +161,68 @@ public class DetalheProdutoActivity extends AppCompatActivity {
         });
     }
 
-    // ─── 3. Adiciona ao carrinho ─────────────────────────────────────
+    // ─── 3. Adiciona ao carrinho ──────────────────────────────────────
+
     private void adicionarAoCarrinho() {
-        String usuarioId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String usuarioId = SessionManager.getInstance().getUid();
+        if (usuarioId == null) {
+            Toast.makeText(this, "Faça login para adicionar ao carrinho", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         btnCarrinho.setEnabled(false);
 
-        String urlVerifica = "/rest/v1/carrinho"
-                + "?usuario_id=eq." + usuarioId
-                + "&produto_id=eq." + produto.getId()
-                + "&select=id,quantidade";
+        carrinhoRepository.buscarItemExistente(usuarioId, produto.getId(),
+                new CarrinhoRepository.Callback() {
 
-        supabase.get(urlVerifica, new SupabaseHelper.SupabaseCallback() {
-            @Override
-            public void onSuccess(String resultado) {
-                try {
-                    JSONArray rows = new JSONArray(resultado);
+                    @Override
+                    public void onSuccess(String resultado) {
+                        try {
+                            JSONArray rows = new JSONArray(resultado);
 
-                    if (rows.length() > 0) {
-                        // Já existe → incrementa quantidade
-                        JSONObject existing = rows.getJSONObject(0);
-                        String carrinhoId   = existing.getString("id");
-                        int novaQtd         = existing.getInt("quantidade") + 1;
+                            if (rows.length() > 0) {
+                                // Já existe → incrementa quantidade
+                                JSONObject existing = rows.getJSONObject(0);
+                                String carrinhoId   = existing.getString("id");
+                                int novaQtd         = existing.getInt("quantidade") + 1;
 
-                        JSONObject body = new JSONObject();
-                        body.put("quantidade", novaQtd);
-
-                        supabase.patch(
-                                "/rest/v1/carrinho?id=eq." + carrinhoId,
-                                body,
-                                new SupabaseHelper.SupabaseCallback() {
-                                    @Override
-                                    public void onSuccess(String r) {
-                                        runOnUiThread(() -> {
-                                            btnCarrinho.setEnabled(true);
-                                            Toast.makeText(DetalheProdutoActivity.this,
-                                                    "Quantidade atualizada ✓",
-                                                    Toast.LENGTH_SHORT).show();
+                                carrinhoRepository.atualizarQuantidade(carrinhoId, novaQtd,
+                                        new CarrinhoRepository.Callback() {
+                                            @Override
+                                            public void onSuccess(String r) {
+                                                runOnUiThread(() -> {
+                                                    btnCarrinho.setEnabled(true);
+                                                    Toast.makeText(DetalheProdutoActivity.this,
+                                                            "Quantidade atualizada ✓", Toast.LENGTH_SHORT).show();
+                                                });
+                                            }
+                                            @Override
+                                            public void onError(String erro) { erroCarrinho(erro); }
                                         });
-                                    }
-                                    @Override
-                                    public void onError(String erro) { erroCarrinho(erro); }
-                                });
 
-                    } else {
-                        // Novo item → insere
-                        JSONObject body = new JSONObject();
-                        body.put("usuario_id", usuarioId);
-                        body.put("produto_id", produto.getId());
-                        body.put("quantidade", 1);
-
-                        supabase.post(
-                                "/rest/v1/carrinho",
-                                body,
-                                new SupabaseHelper.SupabaseCallback() {
-                                    @Override
-                                    public void onSuccess(String r) {
-                                        runOnUiThread(() -> {
-                                            btnCarrinho.setEnabled(true);
-                                            Toast.makeText(DetalheProdutoActivity.this,
-                                                    "Adicionado ao carrinho ✓",
-                                                    Toast.LENGTH_SHORT).show();
+                            } else {
+                                // Novo item → insere
+                                carrinhoRepository.inserirItem(usuarioId, produto.getId(),
+                                        new CarrinhoRepository.Callback() {
+                                            @Override
+                                            public void onSuccess(String r) {
+                                                runOnUiThread(() -> {
+                                                    btnCarrinho.setEnabled(true);
+                                                    Toast.makeText(DetalheProdutoActivity.this,
+                                                            "Adicionado ao carrinho ✓", Toast.LENGTH_SHORT).show();
+                                                });
+                                            }
+                                            @Override
+                                            public void onError(String erro) { erroCarrinho(erro); }
                                         });
-                                    }
-                                    @Override
-                                    public void onError(String erro) { erroCarrinho(erro); }
-                                });
+                            }
+
+                        } catch (Exception e) { erroCarrinho(e.getMessage()); }
                     }
 
-                } catch (Exception e) {
-                    erroCarrinho(e.getMessage());
-                }
-            }
-
-            @Override
-            public void onError(String erro) { erroCarrinho(erro); }
-        });
+                    @Override
+                    public void onError(String erro) { erroCarrinho(erro); }
+                });
     }
 
     private void erroCarrinho(String erro) {

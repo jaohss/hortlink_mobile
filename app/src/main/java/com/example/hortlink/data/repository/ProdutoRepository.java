@@ -1,6 +1,5 @@
 package com.example.hortlink.data.repository;
 
-import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.remote.SupabaseClient;
 
 import org.json.JSONObject;

@@ -1,17 +1,11 @@
 package com.example.hortlink.data.repository;
 
-import android.content.Context;
-import android.net.Uri;
-
-import com.example.hortlink.bd.SupabaseHelper;
 import com.example.hortlink.data.model.Usuario;
 import com.example.hortlink.data.remote.SupabaseClient;
 import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.InputStream;
 
 import okhttp3.MediaType;
 import okhttp3.Request;

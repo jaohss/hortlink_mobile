@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.produtor;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,10 +18,10 @@ import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.data.model.Usuario;
 import com.example.hortlink.data.repository.UsuarioRepository;
+import com.example.hortlink.ui.auth.CompletarPerfilProdutorActivity;
+import com.example.hortlink.ui.auth.MainActivity;
+import com.example.hortlink.util.SessionManager;
 import com.google.firebase.auth.FirebaseAuth;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * Fragment de perfil do produtor logado.
@@ -119,6 +119,7 @@ public class PerfilFragment extends Fragment {
         // Sair
         view.findViewById(R.id.itemSair).setOnClickListener(v -> {
             usuarioRepository.logout();
+            SessionManager.getInstance().limpar();
             Intent intent = new Intent(getActivity(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);

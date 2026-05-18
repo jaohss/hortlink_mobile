@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/cinza_fundo"
-    tools:context=".activities.HomeFragment">
+    tools:context=".ui.consumidor.HomeFragment">
 
     <!--Barra de busca -->
 

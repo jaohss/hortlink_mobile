@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;

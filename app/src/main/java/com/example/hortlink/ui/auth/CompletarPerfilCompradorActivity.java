@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -24,6 +24,8 @@ import com.example.hortlink.data.repository.UsuarioRepository;
 import com.example.hortlink.services.ViacepService;
 
 import org.json.JSONObject;
+import com.example.hortlink.ui.auth.RoleRouterActivity;
+import com.example.hortlink.util.SessionManager;
 
 public class CompletarPerfilCompradorActivity extends AppCompatActivity {
 
@@ -58,6 +60,7 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
         bindViews();
         configurarSpinnerGenero();
         configurarViaCep();
+        preencherSeEdicao();
         configurarBotoes();
     }
 
@@ -252,6 +255,28 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
         }
     }
 
+    private void preencherSeEdicao() {
+        boolean modoEdicao = getIntent().getBooleanExtra("modo_edicao", false);
+        if (!modoEdicao) return;
+
+        Usuario u = SessionManager.getInstance().getUsuario();
+        if (u == null) return;
+
+        if (u.telefone != null) edtTelefone.setText(u.telefone);
+        if (u.cidade   != null) edtCidade.setText(u.cidade);
+        if (u.estado   != null) edtEstado.setText(u.estado);
+
+        // Gênero: encontra a posição do valor salvo no spinner
+        if (u.genero != null && !u.genero.isEmpty()) {
+            for (int i = 0; i < spinnerGenero.getCount(); i++) {
+                if (spinnerGenero.getItemAtPosition(i).toString().equals(u.genero)) {
+                    spinnerGenero.setSelection(i);
+                    break;
+                }
+            }
+        }
+    }
+
     // ─── Helpers de UI ────────────────────────────────────────────────
 
     private void setCarregando(boolean carregando) {
@@ -262,7 +287,7 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
     }
 
     private void irParaHome() {
-        startActivity(new Intent(this, MainActivity.class));
+        startActivity(new Intent(this, RoleRouterActivity.class));
         finish();
     }
 
