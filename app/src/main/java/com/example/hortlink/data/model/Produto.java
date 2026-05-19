@@ -1,11 +1,14 @@
 package com.example.hortlink.data.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Produto {
     public String id;        // era int (SQLite), agora String (UUID do Supabase)
     public String nome;
     public double preco;
     public String categoria;
     public String descricao;
+    @SerializedName("fotoUrl")
     public String imagemUri; // mantido — agora recebe a URL pública do Supabase Storage
     public String unidade;
     public String vendedorUid;

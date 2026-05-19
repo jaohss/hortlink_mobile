@@ -18,9 +18,6 @@ import com.example.hortlink.adapters.ProdutoAdapter;
 import com.example.hortlink.data.model.Produto;
 import com.example.hortlink.data.repository.ProdutoRepository;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,9 +44,8 @@ public class HomeFragment extends Fragment {
 
         recyclerProdutos = view.findViewById(R.id.recyclerProdutos);
         recyclerProdutos.setLayoutManager(new GridLayoutManager(getContext(), 2));
-        // progressBar = view.findViewById(R.id.progressBar); // descomente se tiver
 
-        // Adapter começa vazio — dados chegam do Supabase
+        // Adapter começa vazio
         adapter = new ProdutoAdapter(produtosFiltrados, produto -> {
             Intent intent = new Intent(getContext(), DetalheProdutoActivity.class);
             intent.putExtra("produto_id", produto.id);
@@ -61,68 +57,44 @@ public class HomeFragment extends Fragment {
         carregarProdutos();
     }
 
-    // ─── Busca produtos no ProdutoRepository/Supabase ──────────────────────────────
+    // ─── Busca produtos na API Spring Boot via Retrofit ──────────────────────────────
     private void carregarProdutos() {
         setCarregando(true);
 
         ProdutoRepository produtoRepository = new ProdutoRepository();
-        produtoRepository.listarProdutos(new ProdutoRepository.Callback() {
+
+        // Chamando o novo método que usa o Retrofit
+        produtoRepository.listarOfertas(new ProdutoRepository.OnlineCallback() {
 
             @Override
-            public void onSuccess(String json) {
-                if (!isAdded() || getActivity() == null) return; // ← proteção
+            public void onSuccess(List<Produto> produtos) {
+                // Proteção caso o usuário feche a tela antes da internet responder
+                if (!isAdded() || getActivity() == null) return;
 
-                List<Produto> lista = parseProdutos(json);
+                setCarregando(false);
 
-                requireActivity().runOnUiThread(() -> {
-                    if (!isAdded()) return; // ← proteção extra dentro do runOnUiThread
-                    setCarregando(false);
-                    todosProdutos.clear();
-                    todosProdutos.addAll(lista);
-                    produtosFiltrados.clear();
-                    produtosFiltrados.addAll(lista);
-                    adapter.notifyDataSetChanged();
-                });
+                // Limpa as listas antigas e adiciona os produtos que vieram da API
+                todosProdutos.clear();
+                todosProdutos.addAll(produtos);
+
+                produtosFiltrados.clear();
+                produtosFiltrados.addAll(produtos);
+
+                // Avisa o visual que a lista mudou
+                adapter.notifyDataSetChanged();
             }
 
             @Override
             public void onError(String erro) {
-                if (!isAdded() || getActivity() == null) return; // ← proteção
+                if (!isAdded() || getActivity() == null) return;
 
-                requireActivity().runOnUiThread(() -> {
-                    if (!isAdded()) return; // ← proteção extra
-                    setCarregando(false);
-                    Toast.makeText(getContext(),
-                            "Erro ao carregar produtos: " + erro, Toast.LENGTH_LONG).show();
-                });
+                setCarregando(false);
+                Toast.makeText(getContext(),
+                        "Erro ao carregar ofertas: " + erro, Toast.LENGTH_LONG).show();
+
+                android.util.Log.e("HortiLink_API", "Motivo da falha: " + erro);
             }
         });
-    }
-
-    // ─── Converte JSON do Supabase → List<Produto> ───────────────
-    private List<Produto> parseProdutos(String json) {
-        List<Produto> lista = new ArrayList<>();
-        try {
-            JSONArray array = new JSONArray(json);
-            for (int i = 0; i < array.length(); i++) {
-                JSONObject obj = array.getJSONObject(i);
-
-                Produto p = new Produto(
-                        obj.optString("id"),
-                        obj.optString("nome"),
-                        obj.optDouble("preco", 0.0),
-                        obj.optString("categoria"),
-                        obj.optString("foto_url"),   // ← vira imagemUri
-                        obj.optString("descricao"),
-                        obj.optString("unidade")
-                );
-
-                lista.add(p);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return lista;
     }
 
     // ─── Filtro por categoria ────────────────────────────────────
@@ -143,7 +115,6 @@ public class HomeFragment extends Fragment {
             if (categoriaSelecionada.equals("Todos")) {
                 produtosFiltrados.addAll(todosProdutos);
             } else {
-                // Normaliza para comparação (ex: "Frutas" bate com "Fruta" do banco)
                 String filtro = categoriaSelecionada.toLowerCase().replaceAll("s$", "");
                 for (Produto p : todosProdutos) {
                     if (p.categoria != null &&

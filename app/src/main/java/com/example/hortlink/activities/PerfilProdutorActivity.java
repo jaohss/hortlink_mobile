@@ -110,7 +110,7 @@ public class PerfilProdutorActivity extends AppCompatActivity {
 
     // ─── Produtos do produtor na lista horizontal ────────────────
     private void carregarProdutosDoProdutor(String uid) {
-        produtoRepository.listarProdutosPorProdutor(uid, new ProdutoRepository.Callback() {
+        produtoRepository.listarProdutosPorProdutor(uid, new ProdutoRepository.OldCallback() {
             @Override
             public void onSuccess(String json) {
                 List<Produto> lista = parseProdutos(json);

@@ -128,7 +128,7 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
                 public void onSuccess(String fotoUrl) {
                     // Imagem enviada → agora salva o produto com a URL
                     produtoRepository.inserirProduto(nome, categoria, precoDouble, unidade,
-                            descricao, fotoUrl, uid, new ProdutoRepository.Callback() {
+                            descricao, fotoUrl, uid, new ProdutoRepository.OldCallback() {
                                 @Override
                                 public void onSuccess(String r) {
                                     runOnUiThread(() -> {
@@ -162,7 +162,7 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
         } else {
             // Sem imagem — salva direto
             produtoRepository.inserirProduto(nome, categoria, precoDouble, unidade,
-                    descricao, "", uid, new ProdutoRepository.Callback() {
+                    descricao, "", uid, new ProdutoRepository.OldCallback() {
                         @Override
                         public void onSuccess(String r) {
                             runOnUiThread(() -> {

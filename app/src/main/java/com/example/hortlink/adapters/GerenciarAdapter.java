@@ -73,7 +73,7 @@ public class GerenciarAdapter extends RecyclerView.Adapter<GerenciarAdapter.View
         holder.btnStatus.setOnClickListener(v -> {
             boolean novoStatus = !p.status;
 
-            produtoRepository.atualizarStatus(p.id, novoStatus, new ProdutoRepository.Callback() {
+            produtoRepository.atualizarStatus(p.id, novoStatus, new ProdutoRepository.OldCallback() {
                 @Override
                 public void onSuccess(String r) {
                     // Atualiza o model em memória

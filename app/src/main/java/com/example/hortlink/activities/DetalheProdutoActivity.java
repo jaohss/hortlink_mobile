@@ -73,7 +73,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
 
     // ─── 1. Busca produto ────────────────────────────────────────────
     private void carregarProduto(String produtoId) {
-        produtoRepository.buscarProdutoPorId(produtoId, new ProdutoRepository.Callback() {
+        produtoRepository.buscarProdutoPorId(produtoId, new ProdutoRepository.OldCallback() {
             @Override
             public void onSuccess(String json) {
                 try {

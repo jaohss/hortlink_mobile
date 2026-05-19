@@ -109,7 +109,7 @@ public class EditarProdutosFragment extends Fragment {
     private void carregarProduto() {
         setCarregando(true);
 
-        produtoRepository.buscarProdutoPorId(produtoId, new ProdutoRepository.Callback() {
+        produtoRepository.buscarProdutoPorId(produtoId, new ProdutoRepository.OldCallback() {
             @Override
             public void onSuccess(String json) {
                 try {
@@ -218,7 +218,7 @@ public class EditarProdutosFragment extends Fragment {
                                   double preco, String fotoUrl) {
         android.util.Log.d("EDITAR", "Salvando no banco. foto_url: " + fotoUrl);
         produtoRepository.atualizarProduto(produtoId, nome, descricao, preco, fotoUrl,
-                new ProdutoRepository.Callback() {
+                new ProdutoRepository.OldCallback() {
                     @Override
                     public void onSuccess(String r) {
                         android.util.Log.d("EDITAR", "Produto atualizado. Resposta: " + r);
