@@ -1,8 +1,6 @@
 package com.example.hortlink.adapters;
 
-import android.content.Context;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,28 +14,28 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.hortlink.R;
-import com.example.hortlink.data.model.Produto;
-import com.example.hortlink.data.repository.ProdutoRepository;
+import com.example.hortlink.data.model.OfertaDTO;
+import com.example.hortlink.data.repository.OfertaRepository;
 
 import java.util.List;
 
 public class GerenciarAdapter extends RecyclerView.Adapter<GerenciarAdapter.ViewHolder> {
 
 
-    private final List<Produto> lista;
+    private final List<OfertaDTO> lista;
     private final OnEditarClick onEditar;
-    private final ProdutoRepository produtoRepository = new ProdutoRepository();
+    private final OfertaRepository ofertaRepository = new OfertaRepository();
 
     // ── OnDeletarClick REMOVIDO ──────────────────────────────────────
     // Produtos nunca são deletados fisicamente (FK em pedido_itens).
     // O controle de visibilidade é feito pelo campo "ativo" via soft delete.
 
     public interface OnEditarClick {
-        void onClick(Produto produto);
+        void onClick(OfertaDTO ofertaDTO);
     }
 
     // Construtor sem onDeletar
-    public GerenciarAdapter(List<Produto> lista, OnEditarClick onEditar) {
+    public GerenciarAdapter(List<OfertaDTO> lista, OnEditarClick onEditar) {
         this.lista    = lista;
         this.onEditar = onEditar;
     }
@@ -52,7 +50,7 @@ public class GerenciarAdapter extends RecyclerView.Adapter<GerenciarAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Produto p = lista.get(position);
+        OfertaDTO p = lista.get(position);
 
         holder.txtNome.setText(p.nome);
         holder.txtTipo.setText(p.categoria);
@@ -73,7 +71,7 @@ public class GerenciarAdapter extends RecyclerView.Adapter<GerenciarAdapter.View
         holder.btnStatus.setOnClickListener(v -> {
             boolean novoStatus = !p.status;
 
-            produtoRepository.atualizarStatus(p.id, novoStatus, new ProdutoRepository.OldCallback() {
+            ofertaRepository.atualizarStatus(p.id, novoStatus, new OfertaRepository.OldCallback() {
                 @Override
                 public void onSuccess(String r) {
                     // Atualiza o model em memória

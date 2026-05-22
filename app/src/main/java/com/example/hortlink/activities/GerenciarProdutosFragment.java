@@ -1,6 +1,5 @@
 package com.example.hortlink.activities;
 
-import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,9 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.GerenciarAdapter;
-import com.example.hortlink.bd.SupabaseHelper;
-import com.example.hortlink.data.model.Produto;
-import com.example.hortlink.data.repository.ProdutoRepository;
+import com.example.hortlink.data.model.OfertaDTO;
+import com.example.hortlink.data.repository.OfertaRepository;
 import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONArray;
@@ -30,10 +28,10 @@ public class GerenciarProdutosFragment extends Fragment {
 
     private RecyclerView recyclerGerenciar;
     private TextView txtListaVazia;
-    private List<Produto> listaProdutos = new ArrayList<>();
+    private List<OfertaDTO> listaProdutos = new ArrayList<>();
     private GerenciarAdapter adapter;
     //private SupabaseHelper supabase;
-    private ProdutoRepository produtoRepository = new ProdutoRepository();
+    private OfertaRepository ofertaRepository = new OfertaRepository();
 
     public GerenciarProdutosFragment() {}
 
@@ -90,10 +88,10 @@ public class GerenciarProdutosFragment extends Fragment {
             return;
         }
 
-        produtoRepository.listarProdutosPorProdutor(uid, new ProdutoRepository.OldCallback()  {
+        ofertaRepository.listarProdutosPorProdutor(uid, new OfertaRepository.OldCallback()  {
             @Override
             public void onSuccess(String json) {
-                List<Produto> lista = parseProdutos(json);
+                List<OfertaDTO> lista = parseProdutos(json);
 
                 requireActivity().runOnUiThread(() -> {
                     listaProdutos.clear();
@@ -117,13 +115,13 @@ public class GerenciarProdutosFragment extends Fragment {
 
 
     // ─── Parse JSON → List<Produto> ──────────────────────────────
-    private List<Produto> parseProdutos(String json) {
-        List<Produto> lista = new ArrayList<>();
+    private List<OfertaDTO> parseProdutos(String json) {
+        List<OfertaDTO> lista = new ArrayList<>();
         try {
             JSONArray array = new JSONArray(json);
             for (int i = 0; i < array.length(); i++) {
                 JSONObject obj = array.getJSONObject(i);
-                Produto p = new Produto(
+                OfertaDTO p = new OfertaDTO(
                         obj.optString("id"),
                         obj.optString("nome"),
                         obj.optDouble("preco", 0.0),

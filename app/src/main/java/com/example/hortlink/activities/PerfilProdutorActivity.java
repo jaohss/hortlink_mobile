@@ -17,8 +17,8 @@ import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.ProdutoAdapter;
 import com.example.hortlink.bd.SupabaseHelper;
-import com.example.hortlink.data.model.Produto;
-import com.example.hortlink.data.repository.ProdutoRepository;
+import com.example.hortlink.data.model.OfertaDTO;
+import com.example.hortlink.data.repository.OfertaRepository;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,7 +32,7 @@ public class PerfilProdutorActivity extends AppCompatActivity {
     private ImageView imgFazenda;
     private RecyclerView recyclerProdutosPerfil;
     private SupabaseHelper supabase;
-    private final ProdutoRepository produtoRepository = new ProdutoRepository();
+    private final OfertaRepository ofertaRepository = new OfertaRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,10 +110,10 @@ public class PerfilProdutorActivity extends AppCompatActivity {
 
     // ─── Produtos do produtor na lista horizontal ────────────────
     private void carregarProdutosDoProdutor(String uid) {
-        produtoRepository.listarProdutosPorProdutor(uid, new ProdutoRepository.OldCallback() {
+        ofertaRepository.listarProdutosPorProdutor(uid, new OfertaRepository.OldCallback() {
             @Override
             public void onSuccess(String json) {
-                List<Produto> lista = parseProdutos(json);
+                List<OfertaDTO> lista = parseProdutos(json);
                 runOnUiThread(() -> {
                     ProdutoAdapter adapter = new ProdutoAdapter(lista, produto -> {
                         android.content.Intent intent = new android.content.Intent(
@@ -130,13 +130,13 @@ public class PerfilProdutorActivity extends AppCompatActivity {
         });
     }
 
-    private List<Produto> parseProdutos(String json) {
-        List<Produto> lista = new ArrayList<>();
+    private List<OfertaDTO> parseProdutos(String json) {
+        List<OfertaDTO> lista = new ArrayList<>();
         try {
             JSONArray array = new JSONArray(json);
             for (int i = 0; i < array.length(); i++) {
                 JSONObject obj = array.getJSONObject(i);
-                Produto p = new Produto(
+                OfertaDTO p = new OfertaDTO(
                         obj.optString("id"),
                         obj.optString("nome"),
                         obj.optDouble("preco", 0.0),

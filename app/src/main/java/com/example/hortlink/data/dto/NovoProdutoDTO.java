@@ -1,16 +1,16 @@
-package com.example.hortlink.data.model;
+package com.example.hortlink.data.dto;
 
 import com.example.hortlink.data.enums.Categoria;
 import com.example.hortlink.data.enums.UnidadeMedida;
 
-public class Produto {
+public class NovoProdutoDTO {
     private Long id;
     private String nome;
     private String descricao;
     private Categoria categoria;
     private UnidadeMedida unidadeMedida;
 
-    public Produto(Long id, String nome, String descricao, Categoria categoria, UnidadeMedida unidadeMedida) {
+    public NovoProdutoDTO(Long id, String nome, String descricao, Categoria categoria, UnidadeMedida unidadeMedida) {
         this.id = id;
         this.nome = nome;
         this.descricao = descricao;

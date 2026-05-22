@@ -55,17 +55,17 @@ public class PerfilFragment extends Fragment {
         // Se quiser reativar, adicione o RecyclerView no XML.
 
         // ── Seção: Gerenciar loja ───────────────────────────────
-        LinearLayout btnMeusProdutos = view.findViewById(R.id.btnMeusProdutos);
-        btnMeusProdutos.setOnClickListener(v ->
-                requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.container, new GerenciarProdutosFragment())
-                        .addToBackStack(null)
-                        .commit());
-
-        LinearLayout btnAddProduto = view.findViewById(R.id.btnAddProduto);
-        btnAddProduto.setOnClickListener(v ->
-                startActivity(new Intent(getActivity(), AdicionarProdutosActivity.class)));
+//        LinearLayout btnMeusProdutos = view.findViewById(R.id.btnMeusProdutos);
+//        btnMeusProdutos.setOnClickListener(v ->
+//                requireActivity().getSupportFragmentManager()
+//                        .beginTransaction()
+//                        .replace(R.id.container, new GerenciarProdutosFragment())
+//                        .addToBackStack(null)
+//                        .commit());
+//
+//        LinearLayout btnAddProduto = view.findViewById(R.id.btnAddProduto);
+//        btnAddProduto.setOnClickListener(v ->
+//                startActivity(new Intent(getActivity(), AdicionarProdutosActivity.class)));
 
         LinearLayout btnPedidos = view.findViewById(R.id.btnPedidos);
         btnPedidos.setOnClickListener(v ->

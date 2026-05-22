@@ -4,7 +4,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.*;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -15,13 +19,19 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
-import com.example.hortlink.bd.SupabaseHelper;
-import com.example.hortlink.data.remote.StorageHelper;
+import com.example.hortlink.data.dto.NovoProdutoDTO;
+import com.example.hortlink.data.enums.Categoria;
+import com.example.hortlink.data.enums.UnidadeMedida;
+import com.example.hortlink.data.model.Produto;
 import com.example.hortlink.data.repository.ProdutoRepository;
+import com.example.hortlink.entidades.BaseCallback;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.firebase.auth.FirebaseAuth;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 public class AdicionarProdutosActivity extends AppCompatActivity {
 
@@ -31,10 +41,11 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
     private LinearLayout layoutPlaceholder;
     private CircularProgressIndicator progressBar; // adicione no seu XML
     private Uri imagemSelecionada;
+    private ProdutoRepository produtoRepository = new ProdutoRepository();
+    private File arquivoImagemSelecionada = null;
 
-    private SupabaseHelper supabase;
-    private final ProdutoRepository produtoRepository = new ProdutoRepository();
-    //private final StorageHelper storageHelper = new StorageHelper(this);
+    private Categoria categoriaSelecionada = null;
+    private UnidadeMedida unidadeSelecionada = null;
 
 
     private final ActivityResultLauncher<String> pickImage =
@@ -42,10 +53,14 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
                 if (uri != null) {
                     getContentResolver().takePersistableUriPermission(
                             uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
                     imagemSelecionada = uri;
                     imgProduto.setImageURI(uri);
                     imgProduto.setVisibility(View.VISIBLE);
                     layoutPlaceholder.setVisibility(View.GONE);
+
+                    // ─── O TRATAMENTO DA IMAGEM AQUI ───
+                    arquivoImagemSelecionada = uriToFile(uri);
                 }
             });
 
@@ -60,15 +75,12 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
             return insets;
         });
 
-        supabase = new SupabaseHelper(this);
-
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Adicionar Produto");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
         edtNome          = findViewById(R.id.edtNome);
-        edtPreco         = findViewById(R.id.edtPreco);
         edtDescricao     = findViewById(R.id.edtDescricao);
         spinnerCategoria = findViewById(R.id.spnCategoria);
         spinnerUnidade   = findViewById(R.id.spinnerUnidade);
@@ -88,101 +100,69 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
     }
 
     private void configurarSpinners() {
-        String[] categorias = {"Fruta", "Legume", "Verdura"};
-        spinnerCategoria.setAdapter(new ArrayAdapter<>(
-                this, android.R.layout.simple_dropdown_item_1line, categorias));
 
-        String[] unidades = {"kg", "g", "un", "dúzia", "maço", "caixa"};
-        spinnerUnidade.setAdapter(new ArrayAdapter<>(
-                this, android.R.layout.simple_dropdown_item_1line, unidades));
+        // Configura os Adapters (isso você já fez e está correto)
+        ArrayAdapter<Categoria> adapterCategoria = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, Categoria.values());
+        spinnerCategoria.setAdapter(adapterCategoria);
+
+        ArrayAdapter<UnidadeMedida> adapterUnidade = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, UnidadeMedida.values());
+        spinnerUnidade.setAdapter(adapterUnidade);
+
+        // ─── O SEGREDO ESTÁ AQUI: Capturar o clique ───
+
+        spinnerCategoria.setOnItemClickListener((parent, view, position, id) -> {
+            // Pega o objeto Categoria real que estava naquela posição da lista
+            categoriaSelecionada = (Categoria) parent.getItemAtPosition(position);
+        });
+
+        spinnerUnidade.setOnItemClickListener((parent, view, position, id) -> {
+            // Pega o objeto UnidadeMedida real
+            unidadeSelecionada = (UnidadeMedida) parent.getItemAtPosition(position);
+        });
     }
 
     private void salvarProduto() {
         String nome      = edtNome.getText().toString().trim();
-        String categoria = spinnerCategoria.getText().toString().trim();
-        String preco     = edtPreco.getText().toString().trim();
-        String unidade   = spinnerUnidade.getText().toString().trim();
         String descricao = edtDescricao.getText().toString().trim();
 
         // Validações
         if (nome.isEmpty())      { edtNome.setError("Informe o nome"); return; }
-        if (categoria.isEmpty()) { spinnerCategoria.setError("Selecione a categoria"); return; }
-        if (preco.isEmpty())     { edtPreco.setError("Informe o preço"); return; }
-        if (unidade.isEmpty())   { spinnerUnidade.setError("Selecione a unidade"); return; }
+        if (descricao.isEmpty()) { edtDescricao.setError("Informe a descrição"); return; }
 
-        double precoDouble = Double.parseDouble(preco.replace(",", "."));
+        if (categoriaSelecionada == null) { spinnerCategoria.setError("Selecione a categoria"); return; }
+        if (unidadeSelecionada == null) { spinnerUnidade.setError("Selecione a unidade"); return; }
 
-        // UID do vendedor logado via Firebase
-        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid()
-                : "anonimo";
+        if (arquivoImagemSelecionada == null) {
+            Toast.makeText(this, "Selecione uma foto para o produto", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        NovoProdutoDTO dto = new NovoProdutoDTO(
+                null,
+                nome,
+                descricao,
+                categoriaSelecionada,
+                unidadeSelecionada
+        );
 
         setCarregando(true);
 
-        if (imagemSelecionada != null) {
-            // 1º: faz upload da imagem, depois salva o produto com a URL
-            String nomeArquivo = uid + "_" + System.currentTimeMillis() + ".jpg";
+        produtoRepository.cadastrarProduto(dto, arquivoImagemSelecionada, new BaseCallback<Produto>() {
+            @Override
+            public void onSuccess(Produto resultado) {
+                setCarregando(false);
+                Toast.makeText(AdicionarProdutosActivity.this, "Produto salvo com sucesso!", Toast.LENGTH_SHORT).show();
 
-            supabase.uploadImagem(imagemSelecionada, nomeArquivo, new SupabaseHelper.SupabaseCallback() {
-                @Override
-                public void onSuccess(String fotoUrl) {
-                    // Imagem enviada → agora salva o produto com a URL
-                    produtoRepository.inserirProduto(nome, categoria, precoDouble, unidade,
-                            descricao, fotoUrl, uid, new ProdutoRepository.OldCallback() {
-                                @Override
-                                public void onSuccess(String r) {
-                                    runOnUiThread(() -> {
-                                        setCarregando(false);
-                                        Toast.makeText(AdicionarProdutosActivity.this,
-                                                "Produto salvo!", Toast.LENGTH_SHORT).show();
-                                        setResult(RESULT_OK);
-                                        finish();
-                                    });
-                                }
-                                @Override
-                                public void onError(String erro) {
-                                    runOnUiThread(() -> {
-                                        setCarregando(false);
-                                        Toast.makeText(AdicionarProdutosActivity.this,
-                                                "Erro ao salvar: " + erro, Toast.LENGTH_LONG).show();
-                                    });
-                                }
-                            });
-                }
-                @Override
-                public void onError(String erro) {
-                    runOnUiThread(() -> {
-                        setCarregando(false);
-                        Toast.makeText(AdicionarProdutosActivity.this,
-                                "Erro no upload da imagem: " + erro, Toast.LENGTH_LONG).show();
-                    });
-                }
-            });
-
-        } else {
-            // Sem imagem — salva direto
-            produtoRepository.inserirProduto(nome, categoria, precoDouble, unidade,
-                    descricao, "", uid, new ProdutoRepository.OldCallback() {
-                        @Override
-                        public void onSuccess(String r) {
-                            runOnUiThread(() -> {
-                                setCarregando(false);
-                                Toast.makeText(AdicionarProdutosActivity.this,
-                                        "Produto salvo!", Toast.LENGTH_SHORT).show();
-                                setResult(RESULT_OK);
-                                finish();
-                            });
-                        }
-                        @Override
-                        public void onError(String erro) {
-                            runOnUiThread(() -> {
-                                setCarregando(false);
-                                Toast.makeText(AdicionarProdutosActivity.this,
-                                        "Erro: " + erro, Toast.LENGTH_LONG).show();
-                            });
-                        }
-                    });
+                setResult(RESULT_OK);
+                finish();
             }
+
+            @Override
+            public void onError(String erro) {
+                setCarregando(false);
+                Toast.makeText(AdicionarProdutosActivity.this, erro, Toast.LENGTH_LONG).show();
+            }
+        });
         }
 
     private void setCarregando(boolean carregando) {
@@ -193,5 +173,33 @@ public class AdicionarProdutosActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         finish();
         return true;
+    }
+
+    private File uriToFile(Uri uri) {
+        try {
+            // Abre um "canal" para ler a imagem da galeria
+            InputStream inputStream = getContentResolver().openInputStream(uri);
+            if (inputStream == null) return null;
+
+            // Cria um arquivo temporário vazio na pasta de cache do seu app
+            File tempFile = File.createTempFile("produto_upload_", ".jpg", getCacheDir());
+            FileOutputStream outputStream = new FileOutputStream(tempFile);
+
+            // Copia os dados da galeria para o arquivo temporário
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+
+            // Fecha os canais
+            outputStream.close();
+            inputStream.close();
+
+            return tempFile; // Retorna o arquivo físico pronto para envio!
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

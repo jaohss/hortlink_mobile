@@ -20,7 +20,7 @@
             android:drawableLeft="@drawable/search_preto"
             android:background="@drawable/search_white"
             android:padding="13dp"
-            android:hint="Procure o seu produto aqui..."
+            android:hint="Procure o seu ofertaDTO aqui..."
             android:drawablePadding="5dp"/>
 
         <LinearLayout

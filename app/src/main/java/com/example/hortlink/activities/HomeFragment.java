@@ -15,8 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.CategoriaAdapter;
 import com.example.hortlink.adapters.ProdutoAdapter;
-import com.example.hortlink.data.model.Produto;
-import com.example.hortlink.data.repository.ProdutoRepository;
+import com.example.hortlink.data.model.OfertaDTO;
+import com.example.hortlink.data.repository.OfertaRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +24,8 @@ import java.util.List;
 public class HomeFragment extends Fragment {
 
     private ProdutoAdapter adapter;
-    private List<Produto> todosProdutos    = new ArrayList<>();
-    private List<Produto> produtosFiltrados = new ArrayList<>();
+    private List<OfertaDTO> todosProdutos    = new ArrayList<>();
+    private List<OfertaDTO> produtosFiltrados = new ArrayList<>();
 
     private RecyclerView recyclerProdutos;
     private View progressBar; // seu loading view no XML
@@ -61,13 +61,13 @@ public class HomeFragment extends Fragment {
     private void carregarProdutos() {
         setCarregando(true);
 
-        ProdutoRepository produtoRepository = new ProdutoRepository();
+        OfertaRepository ofertaRepository = new OfertaRepository();
 
         // Chamando o novo método que usa o Retrofit
-        produtoRepository.listarOfertas(new ProdutoRepository.OnlineCallback() {
+        ofertaRepository.listarOfertas(new OfertaRepository.OnlineCallback() {
 
             @Override
-            public void onSuccess(List<Produto> produtos) {
+            public void onSuccess(List<OfertaDTO> produtos) {
                 // Proteção caso o usuário feche a tela antes da internet responder
                 if (!isAdded() || getActivity() == null) return;
 
@@ -116,7 +116,7 @@ public class HomeFragment extends Fragment {
                 produtosFiltrados.addAll(todosProdutos);
             } else {
                 String filtro = categoriaSelecionada.toLowerCase().replaceAll("s$", "");
-                for (Produto p : todosProdutos) {
+                for (OfertaDTO p : todosProdutos) {
                     if (p.categoria != null &&
                             p.categoria.toLowerCase().startsWith(filtro)) {
                         produtosFiltrados.add(p);

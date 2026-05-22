@@ -17,8 +17,10 @@ import androidx.core.view.WindowInsetsCompat;
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.bd.SupabaseHelper;
-import com.example.hortlink.data.model.Produto;
-import com.example.hortlink.data.repository.ProdutoRepository;
+import com.example.hortlink.data.dto.DetalheOfertaDTO;
+import com.example.hortlink.data.model.OfertaDTO;
+import com.example.hortlink.data.repository.OfertaRepository;
+import com.example.hortlink.entidades.BaseCallback;
 import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONArray;
@@ -28,7 +30,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
 
 
     private SupabaseHelper supabase;
-    private Produto produto; // populado uma vez, reutilizado onde precisar
+    private OfertaDTO ofertaDTO; // populado uma vez, reutilizado onde precisar
 
     private TextView      txtNome, txtPreco, txtDescricao;
     private ImageView     imgProduto;
@@ -36,7 +38,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
     private ImageView     fotoPerfil;
     private Button        btnCarrinho;
     private ConstraintLayout cardProdutor;
-    private ProdutoRepository produtoRepository = new ProdutoRepository();
+    private OfertaRepository ofertaRepository = new OfertaRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,8 +74,8 @@ public class DetalheProdutoActivity extends AppCompatActivity {
     }
 
     // ─── 1. Busca produto ────────────────────────────────────────────
-    private void carregarProduto(String produtoId) {
-        produtoRepository.buscarProdutoPorId(produtoId, new ProdutoRepository.OldCallback() {
+    private void carregarOferta(Long ofertaId) {
+        ofertaRepository.buscarOfertaDetalhadaPorId(ofertaId, new BaseCallback<DetalheOfertaDTO>() {
             @Override
             public void onSuccess(String json) {
                 try {
@@ -86,22 +88,22 @@ public class DetalheProdutoActivity extends AppCompatActivity {
                     JSONObject obj = array.getJSONObject(0);
 
                     // Popula o objeto de domínio uma única vez
-                    produto = new Produto();
-                    produto.setId(obj.optString("id"));
-                    produto.setNome(obj.optString("nome"));
-                    produto.setPreco(obj.optDouble("preco", 0.0));
-                    produto.setDescricao(obj.optString("descricao"));
-                    produto.setImagemUri(obj.optString("foto_url"));
-                    produto.setUnidade(obj.optString("unidade", "un"));
-                    produto.setProdutorId(obj.optString("produtor_id"));
+                    ofertaDTO = new OfertaDTO();
+                    ofertaDTO.setId(obj.optString("id"));
+                    ofertaDTO.setNome(obj.optString("nome"));
+                    ofertaDTO.setPreco(obj.optDouble("preco", 0.0));
+                    ofertaDTO.setDescricao(obj.optString("descricao"));
+                    ofertaDTO.setImagemUri(obj.optString("foto_url"));
+                    ofertaDTO.setUnidade(obj.optString("unidade", "un"));
+                    ofertaDTO.setProdutorId(obj.optString("produtor_id"));
 
                     runOnUiThread(() -> {
-                        txtNome.setText(produto.getNome());
-                        txtPreco.setText(String.format("R$ %.2f", produto.getPreco()));
-                        txtDescricao.setText(produto.getDescricao());
+                        txtNome.setText(ofertaDTO.getNome());
+                        txtPreco.setText(String.format("R$ %.2f", ofertaDTO.getPreco()));
+                        txtDescricao.setText(ofertaDTO.getDescricao());
 
                         Glide.with(DetalheProdutoActivity.this)
-                                .load(produto.getImagemUri().isEmpty() ? null : produto.getImagemUri())
+                                .load(ofertaDTO.getImagemUri().isEmpty() ? null : ofertaDTO.getImagemUri())
                                 .placeholder(R.drawable.hortlink_logo)
                                 .error(R.drawable.hortlink_logo)
                                 .centerCrop()
@@ -112,8 +114,8 @@ public class DetalheProdutoActivity extends AppCompatActivity {
                         btnCarrinho.setOnClickListener(v -> adicionarAoCarrinho());
                     });
 
-                    if (!produto.getProdutorId().isEmpty()) {
-                        carregarProdutor(produto.getProdutorId());
+                    if (!ofertaDTO.getProdutorId().isEmpty()) {
+                        carregarProdutor(ofertaDTO.getProdutorId());
                     }
 
                 } catch (Exception e) {
@@ -183,7 +185,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
 
         String urlVerifica = "/rest/v1/carrinho"
                 + "?usuario_id=eq." + usuarioId
-                + "&produto_id=eq." + produto.getId()
+                + "&produto_id=eq." + ofertaDTO.getId()
                 + "&select=id,quantidade";
 
         supabase.get(urlVerifica, new SupabaseHelper.SupabaseCallback() {
@@ -222,7 +224,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
                         // Novo item → insere
                         JSONObject body = new JSONObject();
                         body.put("usuario_id", usuarioId);
-                        body.put("produto_id", produto.getId());
+                        body.put("produto_id", ofertaDTO.getId());
                         body.put("quantidade", 1);
 
                         supabase.post(

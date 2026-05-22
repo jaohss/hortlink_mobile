@@ -10,16 +10,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
-import com.example.hortlink.data.model.Produto;
+import com.example.hortlink.data.model.OfertaDTO;
 
 import java.util.List;
 
 public class ProdutoAdapter extends RecyclerView.Adapter<ProdutoAdapter.ViewHolder> {
 
-    List<Produto> lista;
+    List<OfertaDTO> lista;
     OnProdutoClick produtoList;
 
-    public ProdutoAdapter(List<Produto> lista, OnProdutoClick produtoList) {
+    public ProdutoAdapter(List<OfertaDTO> lista, OnProdutoClick produtoList) {
         this.lista       = lista;
         this.produtoList = produtoList;
     }
@@ -45,7 +45,7 @@ public class ProdutoAdapter extends RecyclerView.Adapter<ProdutoAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Produto p = lista.get(position);
+        OfertaDTO p = lista.get(position);
 
         holder.nome.setText(p.nome);
         holder.preco.setText(String.format("R$ %.2f", p.preco));
@@ -72,6 +72,6 @@ public class ProdutoAdapter extends RecyclerView.Adapter<ProdutoAdapter.ViewHold
     }
 
     public interface OnProdutoClick {
-        void onClick(Produto p);
+        void onClick(OfertaDTO p);
     }
 }

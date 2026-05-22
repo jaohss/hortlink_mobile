@@ -96,7 +96,7 @@
         android:layout_marginTop="16dp"
 
         android:textColor="@color/black_soft"
-        android:text="Nome do produto"
+        android:text="Nome do ofertaDTO"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintLeft_toLeftOf="parent"
