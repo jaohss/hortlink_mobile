@@ -36,7 +36,7 @@
         app:layout_constraintTop_toBottomOf="@+id/txtPreco" />
 
     <ImageView
-        android:id="@+id/additem"
+        android:id="@+id/removeitem"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:src="@drawable/remove_white"
@@ -44,8 +44,7 @@
         app:layout_constraintBottom_toTopOf="@+id/cardProdutor"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/quantidade"
-        app:layout_constraintTop_toBottomOf="@+id/txtDescricao"
-         />
+        app:layout_constraintTop_toBottomOf="@+id/txtDescricao"/>
 
     <TextView
         android:id="@+id/quantidade"
@@ -61,7 +60,7 @@
         app:layout_constraintBottom_toTopOf="@+id/cardProdutor" />
 
     <ImageView
-        android:id="@+id/removeitem"
+        android:id="@+id/additem"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:src="@drawable/add_white"
@@ -69,8 +68,7 @@
         app:layout_constraintBottom_toTopOf="@+id/cardProdutor"
         app:layout_constraintStart_toEndOf="@+id/quantidade"
         app:layout_constraintEnd_toStartOf="@+id/btnCarrinho"
-        app:layout_constraintTop_toBottomOf="@+id/txtDescricao"
-         />
+        app:layout_constraintTop_toBottomOf="@+id/txtDescricao" />
 
 
     <TextView

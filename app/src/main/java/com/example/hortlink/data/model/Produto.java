@@ -10,6 +10,8 @@ public class Produto {
     public String unidade;
     public String vendedorUid;
     public boolean status = true;
+    public double distanciaKm = Double.MAX_VALUE;
+
 
     // campos legados — mantidos para não quebrar outras telas
     public int imagem = 0;
@@ -135,4 +137,7 @@ public class Produto {
     public void setStatus(boolean status) {
         this.status = status;
     }
+
+    public double getDistanciaKm() { return distanciaKm; }
+    public void setDistanciaKm(double distanciaKm) { this.distanciaKm = distanciaKm; }
 }

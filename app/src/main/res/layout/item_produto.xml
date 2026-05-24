@@ -36,6 +36,15 @@
         android:textColor="@color/green"
         android:textStyle="bold" />
 
+    <TextView
+        android:id="@+id/txtDistancia"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📍 -- km"
+        android:textSize="12sp"
+        android:textColor="@color/black_soft"
+        android:layout_marginTop="2dp" />
+
     <ImageButton
         android:id="@+id/imageButton2"
         android:background="@drawable/bg_redondo"

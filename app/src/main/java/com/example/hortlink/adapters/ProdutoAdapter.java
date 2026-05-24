@@ -25,7 +25,7 @@ public class ProdutoAdapter extends RecyclerView.Adapter<ProdutoAdapter.ViewHold
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView  nome, preco;
+        TextView  nome, preco, distancia;
         ImageView imagem;
 
         public ViewHolder(View itemView) {
@@ -33,6 +33,7 @@ public class ProdutoAdapter extends RecyclerView.Adapter<ProdutoAdapter.ViewHold
             nome   = itemView.findViewById(R.id.txtNome);
             preco  = itemView.findViewById(R.id.txtPreco);
             imagem = itemView.findViewById(R.id.imgProduto);
+            distancia = itemView.findViewById(R.id.txtDistancia);
         }
     }
 
@@ -49,6 +50,18 @@ public class ProdutoAdapter extends RecyclerView.Adapter<ProdutoAdapter.ViewHold
 
         holder.nome.setText(p.nome);
         holder.preco.setText(String.format("R$ %.2f", p.preco));
+
+        // Exibe distância se foi calculada, esconde se não tem localização
+        if (p.distanciaKm < Double.MAX_VALUE) {
+            holder.distancia.setVisibility(View.VISIBLE);
+            if (p.distanciaKm < 1.0) {
+                holder.distancia.setText("📍 menos de 1 km");
+            } else {
+                holder.distancia.setText(String.format("📍 %.1f km", p.distanciaKm));
+            }
+        } else {
+            holder.distancia.setVisibility(View.GONE); // sem localização → esconde
+        }
 
         // URL do Supabase Storage → Glide carrega
         // URI local (legado) → Glide também suporta

@@ -68,6 +68,14 @@ public class CarrinhoAdapter extends RecyclerView.Adapter<CarrinhoAdapter.ViewHo
                 .into(h.ivProduto);
 
         // ── Botões de quantidade ──────────────────────────────────────
+        boolean noMaximo = item.getQuantidade() >= 99;
+        h.btnAumentar.setAlpha(noMaximo ? 0.4f : 1.0f);
+        h.btnAumentar.setEnabled(!noMaximo);
+
+        // ← NOVO: bloqueia visualmente o botão − no limite mínimo
+        boolean noMinimo = item.getQuantidade() <= 1;
+        h.btnDiminuir.setAlpha(noMinimo ? 0.4f : 1.0f);
+        h.btnDiminuir.setEnabled(!noMinimo);
         h.btnAumentar.setOnClickListener(v ->
                 onQuantidade.onAlterarQtd(item, item.getQuantidade() + 1));
 

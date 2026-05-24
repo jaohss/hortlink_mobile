@@ -37,6 +37,13 @@ public class DetalheProdutoActivity extends AppCompatActivity {
     private Button btnCarrinho;
     private ConstraintLayout cardProdutor;
 
+    //controle de quantidade
+    private TextView txtQuantidade;
+    private ImageView btnAdd, btnRemove;
+    private int quantidadeSelecionada = 1;
+    private static final int QUANTIDADE_MINIMA = 1;
+    private static final int QUANTIDADE_MAXIMA = 99;
+
     private final ProdutoRepository produtoRepository     = new ProdutoRepository();
     private final ProdutorRepository produtorRepository   = new ProdutorRepository();
     private final CarrinhoRepository carrinhoRepository   = new CarrinhoRepository();
@@ -62,6 +69,12 @@ public class DetalheProdutoActivity extends AppCompatActivity {
         fotoPerfil     = findViewById(R.id.fotoPerfil);
         cardProdutor   = findViewById(R.id.cardProdutor);
         btnCarrinho    = findViewById(R.id.btnCarrinho);
+
+        // ← NOVO: bind dos botões de quantidade
+        txtQuantidade  = findViewById(R.id.quantidade);
+        btnAdd = findViewById(R.id.additem);
+        btnRemove = findViewById(R.id.removeitem);
+        configurarBotoesQuantidade();
 
         btnCarrinho.setEnabled(false);
         findViewById(R.id.btnVoltar).setOnClickListener(v -> finish());
@@ -162,7 +175,6 @@ public class DetalheProdutoActivity extends AppCompatActivity {
     }
 
     // ─── 3. Adiciona ao carrinho ──────────────────────────────────────
-
     private void adicionarAoCarrinho() {
         String usuarioId = SessionManager.getInstance().getUid();
         if (usuarioId == null) {
@@ -181,10 +193,14 @@ public class DetalheProdutoActivity extends AppCompatActivity {
                             JSONArray rows = new JSONArray(resultado);
 
                             if (rows.length() > 0) {
-                                // Já existe → incrementa quantidade
+                                // Já existe → soma a quantidade atual com a selecionada
                                 JSONObject existing = rows.getJSONObject(0);
                                 String carrinhoId   = existing.getString("id");
-                                int novaQtd         = existing.getInt("quantidade") + 1;
+                                int qtdAtual        = existing.getInt("quantidade");
+                                int novaQtd         = Math.min(
+                                        qtdAtual + quantidadeSelecionada, // ← NOVO
+                                        QUANTIDADE_MAXIMA
+                                );
 
                                 carrinhoRepository.atualizarQuantidade(carrinhoId, novaQtd,
                                         new CarrinhoRepository.Callback() {
@@ -193,7 +209,8 @@ public class DetalheProdutoActivity extends AppCompatActivity {
                                                 runOnUiThread(() -> {
                                                     btnCarrinho.setEnabled(true);
                                                     Toast.makeText(DetalheProdutoActivity.this,
-                                                            "Quantidade atualizada ✓", Toast.LENGTH_SHORT).show();
+                                                            "Carrinho atualizado ✓", Toast.LENGTH_SHORT).show();
+                                                    resetarQuantidade(); // ← NOVO
                                                 });
                                             }
                                             @Override
@@ -201,8 +218,9 @@ public class DetalheProdutoActivity extends AppCompatActivity {
                                         });
 
                             } else {
-                                // Novo item → insere
-                                carrinhoRepository.inserirItem(usuarioId, produto.getId(),
+                                // Novo item → insere com a quantidade selecionada
+                                carrinhoRepository.inserirItemComQuantidade( // ← NOVO
+                                        usuarioId, produto.getId(), quantidadeSelecionada,
                                         new CarrinhoRepository.Callback() {
                                             @Override
                                             public void onSuccess(String r) {
@@ -210,6 +228,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
                                                     btnCarrinho.setEnabled(true);
                                                     Toast.makeText(DetalheProdutoActivity.this,
                                                             "Adicionado ao carrinho ✓", Toast.LENGTH_SHORT).show();
+                                                    resetarQuantidade(); // ← NOVO
                                                 });
                                             }
                                             @Override
@@ -223,6 +242,40 @@ public class DetalheProdutoActivity extends AppCompatActivity {
                     @Override
                     public void onError(String erro) { erroCarrinho(erro); }
                 });
+    }
+
+    // ← NOVO: reseta o seletor para 1 após adicionar
+    private void resetarQuantidade() {
+        quantidadeSelecionada = QUANTIDADE_MINIMA;
+        atualizarDisplayQuantidade();
+    }
+
+    // ─── NOVO: lógica dos botões +/− ─────────────────────────────────
+
+    private void configurarBotoesQuantidade() {
+        atualizarDisplayQuantidade();
+
+        btnAdd.setOnClickListener(v -> {
+            if (quantidadeSelecionada < QUANTIDADE_MAXIMA) {
+                quantidadeSelecionada++;
+                atualizarDisplayQuantidade();
+            }
+        });
+
+        btnRemove.setOnClickListener(v -> {
+            if (quantidadeSelecionada > QUANTIDADE_MINIMA) {
+                quantidadeSelecionada--;
+                atualizarDisplayQuantidade();
+            }
+        });
+    }
+
+    private void atualizarDisplayQuantidade() {
+        txtQuantidade.setText(String.valueOf(quantidadeSelecionada));
+
+        // Feedback visual: botão − fica opaco quando está no mínimo
+        btnRemove.setAlpha(quantidadeSelecionada <= QUANTIDADE_MINIMA ? 0.4f : 1.0f);
+        btnAdd.setAlpha(quantidadeSelecionada >= QUANTIDADE_MAXIMA ? 0.4f : 1.0f);
     }
 
     private void erroCarrinho(String erro) {

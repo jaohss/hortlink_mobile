@@ -32,6 +32,7 @@ import java.util.List;
 public class CarrinhoFragment extends Fragment {
     private List<CartItem> cartItems = new ArrayList<>();
     private CarrinhoAdapter adapter;
+    private static final int QUANTIDADE_MAXIMA = 99;
 
     private View layoutEmpty;
     private View layoutFooter;
@@ -155,6 +156,11 @@ public class CarrinhoFragment extends Fragment {
     private void alterarQuantidade(CartItem item, int novaQtd) {
         if (novaQtd <= 0) {
             removerItem(item);
+            return;
+        }
+        // ← NOVO: teto de quantidade
+        if (novaQtd > 99) {
+            Toast.makeText(getContext(), "Quantidade máxima é 99", Toast.LENGTH_SHORT).show();
             return;
         }
 

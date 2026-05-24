@@ -115,6 +115,32 @@ public class CarrinhoRepository {
         }).start();
     }
 
+    // Insere novo item no carrinho com quantidade customizada
+    public void inserirItemComQuantidade(String usuarioId, String produtoId,
+                                         int quantidade, Callback callback) {
+        new Thread(() -> {
+            try {
+                JSONObject json = new JSONObject();
+                json.put("usuario_id", usuarioId);
+                json.put("produto_id", produtoId);
+                json.put("quantidade", quantidade); // ← respeita a qtd selecionada
+
+                RequestBody body = RequestBody.create(
+                        json.toString(), MediaType.parse("application/json"));
+
+                Request request = client.baseRequest("/rest/v1/carrinho")
+                        .addHeader("Prefer", "return=minimal")
+                        .post(body)
+                        .build();
+
+                Response response = client.getHttp().newCall(request).execute();
+                if (response.isSuccessful()) callback.onSuccess("ok");
+                else callback.onError("Erro " + response.code() + ": " + lerBody(response));
+
+            } catch (Exception e) { callback.onError(e.getMessage()); }
+        }).start();
+    }
+
     // Remove um item específico pelo id do carrinho
     public void removerItem(String carrinhoId, Callback callback) {
         new Thread(() -> {

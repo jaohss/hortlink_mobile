@@ -21,6 +21,7 @@ public class Usuario {
     public String telefone;
     public String genero;
     public String criadoEm;
+    public String cep;
 
     public static final String TIPO_COMPRADOR = "comprador";
     public static final String TIPO_PRODUTOR  = "produtor";
@@ -53,6 +54,8 @@ public class Usuario {
         u.telefone  = obj.optString("telefone");
         u.genero    = obj.optString("genero");
         u.criadoEm  = obj.optString("criado_em");
+        u.cep = obj.optString("cep");
+
         return u;
     }
 }
