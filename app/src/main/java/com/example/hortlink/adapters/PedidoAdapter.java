@@ -3,7 +3,6 @@ package com.example.hortlink.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -16,18 +15,19 @@ import java.util.List;
 
 public class PedidoAdapter extends RecyclerView.Adapter<PedidoAdapter.ViewHolder> {
 
-    public interface OnStatusChangeListener {
-        void onAceitar(Pedido pedido);
-        void onRecusar(Pedido pedido);
+    public interface OnPedidoClickListener {
+        void onClick(Pedido pedido);
     }
 
-    private final List<Pedido> lista;
-    private final OnStatusChangeListener listener;
 
-    // listener pode ser null — para o lado do comprador que não tem botões
-    public PedidoAdapter(List<Pedido> lista, OnStatusChangeListener listener) {
-        this.lista    = lista;
-        this.listener = listener;
+
+    private final List<Pedido> lista;
+    private OnPedidoClickListener clickListener;
+
+    // Substitui os dois construtores anteriores por este único:
+    public PedidoAdapter(List<Pedido> lista, OnPedidoClickListener clickListener) {
+        this.lista = lista;
+        this.clickListener = clickListener;
     }
 
     @NonNull
@@ -42,43 +42,46 @@ public class PedidoAdapter extends RecyclerView.Adapter<PedidoAdapter.ViewHolder
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Pedido pedido = lista.get(position);
 
-        // Resumo dos itens — ex: "2x Tomate • 1x Alface"
+        // Resumo dos itens
         StringBuilder resumo = new StringBuilder();
         for (Pedido.ItemPedido item : pedido.getItens()) {
             if (resumo.length() > 0) resumo.append(" • ");
             resumo.append(item.quantidade).append("x ").append(item.nomeProduto);
         }
-
-        holder.txtItens.setText(resumo.length() > 0 ? resumo : "Sem itens");
+        holder.txtItens.setText(resumo.length() > 0 ? resumo : "Carregando itens…");
         holder.txtValor.setText(String.format("R$ %.2f", pedido.getValorTotal()));
-        holder.txtStatus.setText(pedido.getStatus());
+        holder.txtStatus.setText(pedido.getStatus() != null
+                ? pedido.getStatus().toUpperCase() : "");
 
         aplicarCorStatus(holder.txtStatus, pedido.getStatus());
+        holder.txtData.setText(formatarData(pedido.getCriadoEm()));
 
-        // Botões só visíveis para o produtor (quando listener não é null)
-        boolean mostrarBotoes = listener != null
-                && "pago".equals(pedido.getStatus()); // só mostra se ainda não processado
-
-        holder.btnAceitar.setVisibility(mostrarBotoes ? View.VISIBLE : View.GONE);
-        holder.btnRecusar.setVisibility(mostrarBotoes ? View.VISIBLE : View.GONE);
-
-        holder.btnAceitar.setOnClickListener(v -> {
-            if (listener != null) listener.onAceitar(pedido);
-        });
-
-        holder.btnRecusar.setOnClickListener(v -> {
-            if (listener != null) listener.onRecusar(pedido);
+        holder.itemView.setOnClickListener(v -> {
+            if (clickListener != null) clickListener.onClick(pedido);
         });
     }
 
     private void aplicarCorStatus(TextView view, String status) {
         if (status == null) return;
+        int cor;
         switch (status) {
-            case "pago":      view.setBackgroundColor(0xFFFFA000); break; // laranja
-            case "enviado":   view.setBackgroundColor(0xFF1565C0); break; // azul
-            case "entregue":  view.setBackgroundColor(0xFF2E7D32); break; // verde
-            case "cancelado": view.setBackgroundColor(0xFFC62828); break; // vermelho
-            default:          view.setBackgroundColor(0xFF616161); break; // cinza
+            case "pendente":      cor = 0xFFFFA000; break; // laranja
+            case "aceito":   cor = 0xFF1565C0; break; // azul
+            case "entregue":  cor = 0xFF2E7D32; break; // verde
+            case "cancelado": cor = 0xFFC62828; break; // vermelho
+            default:          cor = 0xFF616161; break; // cinza
+        }
+        view.getBackground().setTint(cor);
+    }
+
+    // Converte "2026-05-25T14:30:00" → "25/05/2026"
+    private String formatarData(String iso) {
+        if (iso == null || iso.length() < 10) return "";
+        try {
+            String[] partes = iso.substring(0, 10).split("-");
+            return partes[2] + "/" + partes[1] + "/" + partes[0];
+        } catch (Exception e) {
+            return "";
         }
     }
 
@@ -92,16 +95,14 @@ public class PedidoAdapter extends RecyclerView.Adapter<PedidoAdapter.ViewHolder
     public int getItemCount() { return lista.size(); }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView txtItens, txtValor, txtStatus;
-        Button btnAceitar, btnRecusar;
+        TextView txtItens, txtValor, txtStatus, txtData;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            txtItens   = itemView.findViewById(R.id.txtItens);
-            txtValor   = itemView.findViewById(R.id.txtValor);
-            txtStatus  = itemView.findViewById(R.id.txtStatus);
-            btnAceitar = itemView.findViewById(R.id.btnAceitar);
-            btnRecusar = itemView.findViewById(R.id.btnRecusar);
+            txtItens  = itemView.findViewById(R.id.txtItens);
+            txtValor  = itemView.findViewById(R.id.txtValor);
+            txtStatus = itemView.findViewById(R.id.txtStatus);
+            txtData   = itemView.findViewById(R.id.txtData);
         }
     }
 }

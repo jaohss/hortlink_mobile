@@ -16,7 +16,6 @@ public class SupabaseClient {
         return instance;
     }
 
-    // Monta uma Request.Builder já com os headers obrigatórios
     public Request.Builder baseRequest(String path) {
         return new Request.Builder()
                 .url(URL + path)

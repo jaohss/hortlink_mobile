@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="8dp">
+
+    <TextView
+        android:id="@+id/txtLinhaQtd"
+        android:layout_width="36dp"
+        android:layout_height="wrap_content"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="#2E7D32"
+        android:text="2x"/>
+
+    <TextView
+        android:id="@+id/txtLinhaNome"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="#1A1A1A"
+        android:text="Produto"/>
+
+    <TextView
+        android:id="@+id/txtLinhaSubtotal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="#424242"
+        android:text="R$ 0,00"/>
+
+</LinearLayout>

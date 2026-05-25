@@ -65,9 +65,6 @@ public class StorageHelper {
 
     // Pega a key do SupabaseClient via reflexão seria ruim — melhor expor direto
     private String getKey() {
-        // SupabaseClient já monta o header Authorization internamente no baseRequest,
-        // mas o storage não usa baseRequest pois o Content-Type é image/jpeg, não json.
-        // Por isso precisamos da key aqui. Exponha um getter no SupabaseClient:
         return SupabaseClient.getInstance().getKey();
     }
 }

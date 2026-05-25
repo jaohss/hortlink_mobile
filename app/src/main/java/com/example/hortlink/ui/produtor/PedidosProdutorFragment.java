@@ -49,23 +49,27 @@ public class PedidosProdutorFragment extends Fragment {
 
         recyclerPedidos.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new PedidoAdapter(listaPedidos, new PedidoAdapter.OnStatusChangeListener() {
-            @Override
-            public void onAceitar(Pedido pedido) {
-                atualizarStatus(pedido, "enviado");
-            }
+        // Adapter com click listener — abre o bottom sheet
+        adapter = new PedidoAdapter(listaPedidos, pedido -> {
+            DetalhePedidoFragment sheet = DetalhePedidoFragment.newInstance(pedido);
 
-            @Override
-            public void onRecusar(Pedido pedido) {
-                atualizarStatus(pedido, "cancelado");
-            }
+            // Quando o status mudar dentro do sheet, atualiza o item na lista
+            sheet.setOnStatusAtualizadoListener((pedidoId, novoStatus) -> {
+                for (int i = 0; i < listaPedidos.size(); i++) {
+                    if (listaPedidos.get(i).getId().equals(pedidoId)) {
+                        listaPedidos.get(i).setStatus(novoStatus);
+                        adapter.notifyItemChanged(i);
+                        break;
+                    }
+                }
+            });
+
+            sheet.show(getChildFragmentManager(), "detalhe_pedido");
         });
 
         recyclerPedidos.setAdapter(adapter);
         carregarPedidos();
     }
-
-    // ─── Carregar ─────────────────────────────────────────────────────
 
     private void carregarPedidos() {
         String uid = SessionManager.getInstance().getUid();
@@ -90,45 +94,11 @@ public class PedidosProdutorFragment extends Fragment {
                 if (!isAdded()) return;
                 requireActivity().runOnUiThread(() -> {
                     setCarregando(false);
-                    Toast.makeText(getContext(),
-                            "Erro ao carregar pedidos", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Erro ao carregar pedidos", Toast.LENGTH_SHORT).show();
                 });
             }
         });
     }
-
-    // ─── Atualizar status ─────────────────────────────────────────────
-
-    private void atualizarStatus(Pedido pedido, String novoStatus) {
-        pedidoRepository.atualizarStatus(pedido.getId(), novoStatus,
-                new PedidoRepository.Callback() {
-                    @Override
-                    public void onSuccess(String resultado) {
-                        if (!isAdded()) return;
-                        requireActivity().runOnUiThread(() -> {
-                            pedido.setStatus(novoStatus);
-                            // Atualiza só o item alterado, sem recarregar tudo
-                            int pos = listaPedidos.indexOf(pedido);
-                            if (pos >= 0) adapter.notifyItemChanged(pos);
-
-                            String msg = "enviado".equals(novoStatus)
-                                    ? "Pedido marcado como enviado ✓"
-                                    : "Pedido cancelado";
-                            Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
-                        });
-                    }
-
-                    @Override
-                    public void onError(String erro) {
-                        if (!isAdded()) return;
-                        requireActivity().runOnUiThread(() ->
-                                Toast.makeText(getContext(),
-                                        "Erro ao atualizar status", Toast.LENGTH_SHORT).show());
-                    }
-                });
-    }
-
-    // ─── Helper ───────────────────────────────────────────────────────
 
     private void setCarregando(boolean carregando) {
         progressBar.setVisibility(carregando ? View.VISIBLE : View.GONE);

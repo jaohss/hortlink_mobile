@@ -126,64 +126,6 @@ public class UsuarioRepository {
         }).start();
     }
 
-    // ─── Upload de foto de perfil ─────────────────────────────────────
-    // O upload não passa pelo baseRequest porque o Content-Type muda
-    // para image/jpeg — por isso precisa de um request manual.
-    // Solução limpa: adicionar getKey() no SupabaseClient (veja comentário abaixo).
-//    public void uploadFotoPerfil(String uid, Uri fotoUri,
-//                                 Context context, CallbackFoto callback) {
-//        new Thread(() -> {
-//            try {
-//                InputStream is = context.getContentResolver().openInputStream(fotoUri);
-//                byte[] bytes   = is.readAllBytes();
-//                is.close();
-//
-//                String path      = "fotos/perfil_" + uid + ".jpg";
-//                String uploadUrl = client.getStorageUrl() + "/object/produtos/" + path;
-//
-//                // TODO: quando adicionar getKey() no SupabaseClient, usar client.getKey() aqui
-//                String key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZmJ0ZXZpZG5mYXJscG5meXNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNTcwNzMsImV4cCI6MjA5MzgzMzA3M30.79uc9zT_T-HPoUhJMMyUMKsW4qS2kiCHuuBcpmv3sDQ";
-//
-//                Request uploadRequest = new Request.Builder()
-//                        .url(uploadUrl)
-//                        .addHeader("Authorization", "Bearer " + key)
-//                        .addHeader("apikey", key)
-//                        .addHeader("x-upsert", "true")
-//                        .post(RequestBody.create(bytes, MediaType.parse("image/jpeg")))
-//                        .build();
-//
-//                Response uploadResponse = client.getHttp().newCall(uploadRequest).execute();
-//
-//                if (!uploadResponse.isSuccessful()) {
-//                    callback.onError("Erro no upload: " + uploadResponse.code());
-//                    return;
-//                }
-//
-//                String urlPublica = client.getStorageUrl() + "/object/public/produtos/" + path;
-//
-//                // Salva a URL pública no banco
-//                JSONObject json = new JSONObject();
-//                json.put("foto_url", urlPublica);
-//
-//                RequestBody patchBody = RequestBody.create(
-//                        json.toString(), MediaType.parse("application/json"));
-//
-//                Request patchRequest = client
-//                        .baseRequest("/rest/v1/usuarios?id=eq." + uid)
-//                        .addHeader("Prefer", "return=minimal")
-//                        .patch(patchBody)
-//                        .build();
-//
-//                Response patchResponse = client.getHttp().newCall(patchRequest).execute();
-//
-//                if (patchResponse.isSuccessful()) callback.onSuccess(urlPublica);
-//                else callback.onError("Upload ok, mas erro ao salvar URL: " + patchResponse.code());
-//
-//            } catch (Exception e) {
-//                callback.onError(e.getMessage());
-//            }
-//        }).start();
-//    }
 
     // ─── Logout ───────────────────────────────────────────────────────
     public void logout() {

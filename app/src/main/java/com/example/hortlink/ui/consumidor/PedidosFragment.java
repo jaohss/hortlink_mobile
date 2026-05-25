@@ -48,7 +48,7 @@ public class PedidosFragment extends Fragment {
         recyclerPedidos.setLayoutManager(new LinearLayoutManager(getContext()));
 
         // Comprador não tem botões de aceitar/recusar → listener null
-        adapter = new PedidoAdapter(listaPedidos, null);
+        adapter = new PedidoAdapter(listaPedidos, pedido -> {});
         recyclerPedidos.setAdapter(adapter);
 
         carregarPedidos();
