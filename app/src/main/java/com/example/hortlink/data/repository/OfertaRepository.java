@@ -127,6 +127,24 @@ public class OfertaRepository {
         });
     }
 
+    public void buscarOfertasPorComercioId(Long comercioId, BaseCallback<List<OfertaDTO>> callback) {
+        api.buscarOfertasDoComercio(comercioId).enqueue(new Callback<List<OfertaDTO>>() {
+            @Override
+            public void onResponse(Call<List<OfertaDTO>> call, Response<List<OfertaDTO>> response){
+                if(response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao buscar oferta: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<OfertaDTO>> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
+    }
+
 
 
 

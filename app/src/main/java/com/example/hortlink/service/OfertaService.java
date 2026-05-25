@@ -26,6 +26,9 @@ public interface OfertaService {
     @GET("oferta/{id}")
     Call<OfertaDTO> buscarPorId(@Path("id") Long idOferta);
 
+    @GET("oferta/comercio/{comercioId}")
+    Call<List<OfertaDTO>> buscarOfertasDoComercio(@Path("comercioId") Long comercioId);
+
     @GET("oferta/detalhes/{id}")
     Call<DetalheOfertaDTO> buscarOfertaDetalhadaPorId(@Path("id") Long idOferta);
 }

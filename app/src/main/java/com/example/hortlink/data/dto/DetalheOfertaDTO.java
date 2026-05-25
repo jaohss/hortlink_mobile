@@ -10,6 +10,15 @@ public class DetalheOfertaDTO {
     private String nomeProdutor;
     private String cidadeUf;
     private String telefone;
+    private Long comercioId;
+
+    public Long getComercioId() {
+        return comercioId;
+    }
+
+    public void setComercioId(Long comercioId) {
+        this.comercioId = comercioId;
+    }
 
     public Long getId() {
         return id;

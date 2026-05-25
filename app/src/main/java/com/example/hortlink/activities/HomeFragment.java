@@ -48,6 +48,7 @@ public class HomeFragment extends Fragment {
         // Adapter começa vazio
         adapter = new ProdutoAdapter(produtosFiltrados, produto -> {
             Intent intent = new Intent(getContext(), DetalheProdutoActivity.class);
+            intent.putExtra("imagem_url", produto.imagemUri);
             intent.putExtra("produto_id", produto.id);
             startActivity(intent);
         });
