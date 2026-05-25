@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -16,7 +15,6 @@ import com.example.hortlink.R;
 import com.example.hortlink.adapters.CategoriaAdapter;
 import com.example.hortlink.adapters.ProdutoAdapter;
 import com.example.hortlink.data.model.OfertaDTO;
-import com.example.hortlink.data.repository.OfertaRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,48 +53,48 @@ public class HomeFragment extends Fragment {
         recyclerProdutos.setAdapter(adapter);
 
         configurarCategorias(view);
-        carregarProdutos();
+        //carregarProdutos();
     }
 
     // ─── Busca produtos na API Spring Boot via Retrofit ──────────────────────────────
-    private void carregarProdutos() {
-        setCarregando(true);
-
-        OfertaRepository ofertaRepository = new OfertaRepository();
-
-        // Chamando o novo método que usa o Retrofit
-        ofertaRepository.listarOfertas(new OfertaRepository.OnlineCallback() {
-
-            @Override
-            public void onSuccess(List<OfertaDTO> produtos) {
-                // Proteção caso o usuário feche a tela antes da internet responder
-                if (!isAdded() || getActivity() == null) return;
-
-                setCarregando(false);
-
-                // Limpa as listas antigas e adiciona os produtos que vieram da API
-                todosProdutos.clear();
-                todosProdutos.addAll(produtos);
-
-                produtosFiltrados.clear();
-                produtosFiltrados.addAll(produtos);
-
-                // Avisa o visual que a lista mudou
-                adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onError(String erro) {
-                if (!isAdded() || getActivity() == null) return;
-
-                setCarregando(false);
-                Toast.makeText(getContext(),
-                        "Erro ao carregar ofertas: " + erro, Toast.LENGTH_LONG).show();
-
-                android.util.Log.e("HortiLink_API", "Motivo da falha: " + erro);
-            }
-        });
-    }
+//    private void carregarProdutos() {
+//        setCarregando(true);
+//
+//        OfertaRepository ofertaRepository = new OfertaRepository();
+//
+//        // Chamando o novo método que usa o Retrofit
+//        ofertaRepository.listarOfertas(new OfertaRepository.OnlineCallback() {
+//
+//            @Override
+//            public void onSuccess(List<OfertaDTO> produtos) {
+//                // Proteção caso o usuário feche a tela antes da internet responder
+//                if (!isAdded() || getActivity() == null) return;
+//
+//                setCarregando(false);
+//
+//                // Limpa as listas antigas e adiciona os produtos que vieram da API
+//                todosProdutos.clear();
+//                todosProdutos.addAll(produtos);
+//
+//                produtosFiltrados.clear();
+//                produtosFiltrados.addAll(produtos);
+//
+//                // Avisa o visual que a lista mudou
+//                adapter.notifyDataSetChanged();
+//            }
+//
+//            @Override
+//            public void onError(String erro) {
+//                if (!isAdded() || getActivity() == null) return;
+//
+//                setCarregando(false);
+//                Toast.makeText(getContext(),
+//                        "Erro ao carregar ofertas: " + erro, Toast.LENGTH_LONG).show();
+//
+//                android.util.Log.e("HortiLink_API", "Motivo da falha: " + erro);
+//            }
+//        });
+//    }
 
     // ─── Filtro por categoria ────────────────────────────────────
     private void configurarCategorias(View view) {

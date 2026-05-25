@@ -18,9 +18,6 @@ import com.example.hortlink.data.model.OfertaDTO;
 import com.example.hortlink.data.repository.OfertaRepository;
 import com.google.firebase.auth.FirebaseAuth;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,13 +62,13 @@ public class GerenciarProdutosFragment extends Fragment {
         adapter = new GerenciarAdapter(
                 listaProdutos,
                 produto -> {
-                    EditarProdutosFragment fragment =
-                            EditarProdutosFragment.newInstance(produto.id);
-                    requireActivity().getSupportFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.container, fragment)
-                            .addToBackStack(null)
-                            .commit();
+//                    EditarProdutosFragment fragment =
+//                            EditarProdutosFragment.newInstance(produto.id);
+//                    requireActivity().getSupportFragmentManager()
+//                            .beginTransaction()
+//                            .replace(R.id.container, fragment)
+//                            .addToBackStack(null)
+//                            .commit();
                 }
         );
         recyclerGerenciar.setAdapter(adapter);
@@ -88,52 +85,52 @@ public class GerenciarProdutosFragment extends Fragment {
             return;
         }
 
-        ofertaRepository.listarProdutosPorProdutor(uid, new OfertaRepository.OldCallback()  {
-            @Override
-            public void onSuccess(String json) {
-                List<OfertaDTO> lista = parseProdutos(json);
-
-                requireActivity().runOnUiThread(() -> {
-                    listaProdutos.clear();
-                    listaProdutos.addAll(lista);
-                    adapter.notifyDataSetChanged();
-
-                    boolean vazia = listaProdutos.isEmpty();
-                    txtListaVazia.setVisibility(vazia ? View.VISIBLE : View.GONE);
-                    recyclerGerenciar.setVisibility(vazia ? View.GONE : View.VISIBLE);
-                });
-            }
-
-            @Override
-            public void onError(String erro) {
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(getContext(),
-                                "Erro ao carregar: " + erro, Toast.LENGTH_LONG).show());
-            }
-        });
+//        ofertaRepository.listarProdutosPorProdutor(uid, new OfertaRepository.OldCallback()  {
+//            @Override
+//            public void onSuccess(String json) {
+//                List<OfertaDTO> lista = parseProdutos(json);
+//
+//                requireActivity().runOnUiThread(() -> {
+//                    listaProdutos.clear();
+//                    listaProdutos.addAll(lista);
+//                    adapter.notifyDataSetChanged();
+//
+//                    boolean vazia = listaProdutos.isEmpty();
+//                    txtListaVazia.setVisibility(vazia ? View.VISIBLE : View.GONE);
+//                    recyclerGerenciar.setVisibility(vazia ? View.GONE : View.VISIBLE);
+//                });
+//            }
+//
+//            @Override
+//            public void onError(String erro) {
+//                requireActivity().runOnUiThread(() ->
+//                        Toast.makeText(getContext(),
+//                                "Erro ao carregar: " + erro, Toast.LENGTH_LONG).show());
+//            }
+//        });
     }
 
 
     // ─── Parse JSON → List<Produto> ──────────────────────────────
-    private List<OfertaDTO> parseProdutos(String json) {
-        List<OfertaDTO> lista = new ArrayList<>();
-        try {
-            JSONArray array = new JSONArray(json);
-            for (int i = 0; i < array.length(); i++) {
-                JSONObject obj = array.getJSONObject(i);
-                OfertaDTO p = new OfertaDTO(
-                        obj.optString("id"),
-                        obj.optString("nome"),
-                        obj.optDouble("preco", 0.0),
-                        obj.optString("categoria"),
-                        obj.optString("foto_url"),
-                        obj.optString("descricao"),
-                        obj.optString("unidade")
-                );
-                p.status = obj.optBoolean("status", true);
-                lista.add(p);
-            }
-        } catch (Exception e) { e.printStackTrace(); }
-        return lista;
-    }
+//    private List<OfertaDTO> parseProdutos(String json) {
+//        List<OfertaDTO> lista = new ArrayList<>();
+//        try {
+//            JSONArray array = new JSONArray(json);
+//            for (int i = 0; i < array.length(); i++) {
+//                JSONObject obj = array.getJSONObject(i);
+//                OfertaDTO p = new OfertaDTO(
+//                        obj.optString("id"),
+//                        obj.optString("nome"),
+//                        obj.optDouble("preco", 0.0),
+//                        obj.optString("categoria"),
+//                        obj.optString("foto_url"),
+//                        obj.optString("descricao"),
+//                        obj.optString("unidade")
+//                );
+//                p.status = obj.optBoolean("status", true);
+//                lista.add(p);
+//            }
+//        } catch (Exception e) { e.printStackTrace(); }
+//        return lista;
+//    }
 }

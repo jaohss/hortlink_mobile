@@ -15,31 +15,33 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
-import com.example.hortlink.bd.SupabaseHelper;
+import com.example.hortlink.data.dto.RegistroDTO;
+import com.example.hortlink.data.repository.AuthRepository;
+import com.example.hortlink.entidades.BaseCallback;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.firebase.auth.FirebaseAuth;
 
 public class Cadastro extends AppCompatActivity {
 
-    EditText emailEdt, nomeEdt, passwordEdt, confirmPassEdt, telefoneEdt;
-    Button registerButton;
-    ProgressBar progressBar;
+    private EditText emailEdt, nomeEdt, passwordEdt, confirmPassEdt, telefoneEdt;
+    private Button registerButton;
+    private ProgressBar progressBar;
 
-    FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    SupabaseHelper supabase;
+    private AuthRepository authRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_cadastro);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets sb = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(sb.left, sb.top, sb.right, sb.bottom);
             return insets;
         });
 
-        supabase = new SupabaseHelper(this);
+        // Inicializa o Repositório Limpo
+        authRepository = new AuthRepository();
 
         emailEdt       = findViewById(R.id.email);
         nomeEdt        = findViewById(R.id.nomeText);
@@ -48,21 +50,21 @@ public class Cadastro extends AppCompatActivity {
         telefoneEdt    = findViewById(R.id.telefone);
         registerButton = findViewById(R.id.registerButton);
         progressBar    = findViewById(R.id.progressBar);
+
         progressBar.setVisibility(View.GONE);
 
         registerButton.setOnClickListener(v -> validarECadastrar());
     }
 
     private void validarECadastrar() {
-        String nome    = nomeEdt.getText().toString().trim();
-        String email   = emailEdt.getText().toString().trim();
-        String senha   = passwordEdt.getText().toString();
+        String nome     = nomeEdt.getText().toString().trim();
+        String email    = emailEdt.getText().toString().trim();
+        String senha    = passwordEdt.getText().toString();
         String confirma = confirmPassEdt.getText().toString();
         String telefone = telefoneEdt.getText().toString().trim();
 
         // Validações
-        if (nome.isEmpty() || email.isEmpty() || senha.isEmpty()
-                || confirma.isEmpty() || telefone.isEmpty()) {
+        if (nome.isEmpty() || email.isEmpty() || senha.isEmpty() || confirma.isEmpty() || telefone.isEmpty()) {
             Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -75,76 +77,50 @@ public class Cadastro extends AppCompatActivity {
             return;
         }
 
-        // Pergunta o tipo de conta antes de criar
+        // Pergunta o tipo de conta (usando as Roles exatas do seu Spring Boot)
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Tipo de conta")
                 .setMessage("Como você vai usar o HortLink?")
-                .setPositiveButton("🛒 Sou comprador", (d, w) ->
-                        criarConta(nome, email, senha, telefone, "comprador"))
-                .setNegativeButton("🌱 Sou produtor", (d, w) ->
-                        criarConta(nome, email, senha, telefone, "produtor"))
+                .setPositiveButton("🛒 Sou comprador", (d, w) -> criarConta(nome, email, senha, telefone, "CONSUMIDOR"))
+                .setNegativeButton("🌱 Sou produtor", (d, w) -> criarConta(nome, email, senha, telefone, "PRODUTOR"))
                 .setCancelable(false)
                 .show();
     }
 
-    private void criarConta(String nome, String email, String senha,
-                            String telefone, String tipo) {
-        progressBar.setVisibility(View.VISIBLE);
-        registerButton.setEnabled(false);
+    private void criarConta(String nome, String email, String senha, String telefone, String role) {
+        setCarregando(true);
 
-        // 1º — cria no Firebase Auth
-        mAuth.createUserWithEmailAndPassword(email, senha)
-                .addOnCompleteListener(task -> {
-                    if (!task.isSuccessful()) {
-                        progressBar.setVisibility(View.GONE);
-                        registerButton.setEnabled(true);
-                        Toast.makeText(this,
-                                task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                        return;
-                    }
+        // Monta o DTO com os dados da tela
+        RegistroDTO novoUsuario = new RegistroDTO(nome, email, senha, role, telefone);
 
-                    String uid = task.getResult().getUser().getUid();
+        // Chama a API Spring Boot
+        authRepository.register(novoUsuario, new BaseCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                setCarregando(false);
+                Toast.makeText(Cadastro.this, "Conta criada! Faça login para continuar.", Toast.LENGTH_LONG).show();
 
-                    // 2º — salva perfil no Supabase
-                    supabase.salvarUsuario(uid, nome, email, telefone, tipo,
-                            new SupabaseHelper.SupabaseCallback() {
+                // Manda para a tela de Login.
+                // Ao logar, a própria MainActivity vai ler o token e decidir se manda para a Home ou para Completar Perfil!
+                startActivity(new Intent(Cadastro.this, MainActivity.class));
+                finish();
+            }
 
-                                @Override
-                                public void onSuccess(String r) {
-                                    runOnUiThread(() -> {
-                                        progressBar.setVisibility(View.GONE);
-                                        Toast.makeText(Cadastro.this,
-                                                "Conta criada com sucesso!", Toast.LENGTH_SHORT).show();
+            @Override
+            public void onError(String erro) {
+                setCarregando(false);
+                Toast.makeText(Cadastro.this, "Erro ao criar conta: " + erro, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
 
-                                        if (tipo.equals("produtor")) {
-                                            // Produtor completa o perfil na próxima tela
-                                            Intent intent = new Intent(Cadastro.this,
-                                                    CompletarPerfilProdutorActivity.class);
-                                            intent.putExtra("uid", uid);
-                                            intent.putExtra("nome", nome);
-                                            startActivity(intent);
-                                        } else {
-                                            // Comprador vai direto para a home
-                                            startActivity(new Intent(Cadastro.this, MainActivity.class));
-                                        }
-                                        finish();
-                                    });
-                                }
-
-                                @Override
-                                public void onError(String erro) {
-                                    runOnUiThread(() -> {
-                                        progressBar.setVisibility(View.GONE);
-                                        registerButton.setEnabled(true);
-                                        // Firebase criou mas Supabase falhou — avisa mas deixa continuar
-                                        Toast.makeText(Cadastro.this,
-                                                "Conta criada, mas erro ao salvar perfil: " + erro,
-                                                Toast.LENGTH_LONG).show();
-                                        startActivity(new Intent(Cadastro.this, MainActivity.class));
-                                        finish();
-                                    });
-                                }
-                            });
-                });
+    private void setCarregando(boolean carregando) {
+        progressBar.setVisibility(carregando ? View.VISIBLE : View.GONE);
+        registerButton.setEnabled(!carregando);
+        nomeEdt.setEnabled(!carregando);
+        emailEdt.setEnabled(!carregando);
+        passwordEdt.setEnabled(!carregando);
+        confirmPassEdt.setEnabled(!carregando);
+        telefoneEdt.setEnabled(!carregando);
     }
 }

@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -68,31 +67,31 @@ public class GerenciarAdapter extends RecyclerView.Adapter<GerenciarAdapter.View
         // Botão de status — reflete o estado atual e permite alternar
         aplicarEstadoBotao(holder.btnStatus, p.status);
 
-        holder.btnStatus.setOnClickListener(v -> {
-            boolean novoStatus = !p.status;
-
-            ofertaRepository.atualizarStatus(p.id, novoStatus, new OfertaRepository.OldCallback() {
-                @Override
-                public void onSuccess(String r) {
-                    // Atualiza o model em memória
-                    p.status = novoStatus;
-
-                    // Atualiza a UI na thread principal
-                    holder.itemView.post(() ->
-                            aplicarEstadoBotao(holder.btnStatus, novoStatus));
-                }
-
-                @Override
-                public void onError(String erro) {
-                    holder.itemView.post(() ->
-                            Toast.makeText(
-                                    holder.itemView.getContext(),
-                                    "Erro ao atualizar status",
-                                    Toast.LENGTH_SHORT
-                            ).show());
-                }
-            });
-        });
+//        holder.btnStatus.setOnClickListener(v -> {
+//            boolean novoStatus = !p.status;
+//
+//            ofertaRepository.atualizarStatus(p.id, novoStatus, new OfertaRepository.OldCallback() {
+//                @Override
+//                public void onSuccess(String r) {
+//                    // Atualiza o model em memória
+//                    p.status = novoStatus;
+//
+//                    // Atualiza a UI na thread principal
+//                    holder.itemView.post(() ->
+//                            aplicarEstadoBotao(holder.btnStatus, novoStatus));
+//                }
+//
+//                @Override
+//                public void onError(String erro) {
+//                    holder.itemView.post(() ->
+//                            Toast.makeText(
+//                                    holder.itemView.getContext(),
+//                                    "Erro ao atualizar status",
+//                                    Toast.LENGTH_SHORT
+//                            ).show());
+//                }
+//            });
+//        });
     }
 
     @Override

@@ -38,9 +38,6 @@ public class OfertaDTO {
 
     // Construtor do Supabase
 
-
-
-
     // Construtor legado — mantido para não quebrar nada que já usa
     public OfertaDTO(String nome, double preco, String categoria,
                      String imagemUri, String descricao) {

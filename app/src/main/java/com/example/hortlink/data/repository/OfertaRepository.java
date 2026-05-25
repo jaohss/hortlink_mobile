@@ -1,6 +1,6 @@
 package com.example.hortlink.data.repository;
 
-import com.example.hortlink.RetrofitClient;
+import com.example.hortlink.util.RetrofitClient;
 import com.example.hortlink.data.dto.DetalheOfertaDTO;
 import com.example.hortlink.data.dto.NovaOfertaDTO;
 import com.example.hortlink.data.model.OfertaDTO;
