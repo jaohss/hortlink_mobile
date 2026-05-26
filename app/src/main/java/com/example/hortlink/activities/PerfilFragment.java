@@ -40,13 +40,6 @@ public class PerfilFragment extends Fragment {
         txtAvaliacao = view.findViewById(R.id.txtAvaliacao);
         imgFazenda   = view.findViewById(R.id.imgFazenda);
 
-        // ── Seção: Ações dos Botões ───────────────────────────────
-        LinearLayout btnPedidos = view.findViewById(R.id.btnPedidos);
-        if(btnPedidos != null) {
-            btnPedidos.setOnClickListener(v ->
-                    Toast.makeText(getContext(), "Em breve: pedidos", Toast.LENGTH_SHORT).show());
-        }
-
         // ── Seção: Conta ────────────────────────────────────────
         LinearLayout btnEditarPerfil = view.findViewById(R.id.btnEditarPerfil);
         btnEditarPerfil.setOnClickListener(v -> {

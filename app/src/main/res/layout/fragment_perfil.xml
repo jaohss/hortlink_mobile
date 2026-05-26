@@ -237,7 +237,7 @@
                     android:orientation="vertical"
                     android:paddingStart="12dp">
                     <TextView
-                        android:text="Vender um ofertaDTO"
+                        android:text="Anunciar um produto"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:textColor="#1A1A1A"
@@ -353,59 +353,6 @@
                         android:layout_height="wrap_content"/>
                     <TextView
                         android:text="Todos os seus produtos cadastrados"
-                        android:textSize="11sp"
-                        android:textColor="#999"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@drawable/baseline_person_24"
-                    app:tint="#CCCCCC"/>
-            </LinearLayout>
-
-            <!-- Pedidos (Opcional, mantido para integridade) -->
-            <LinearLayout
-                android:id="@+id/btnPedidos"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@android:color/white"
-                android:padding="12dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-
-                <LinearLayout
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:background="#EAF3DE"
-                    android:gravity="center">
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/pedidos"
-                        app:tint="#3B6D11"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:paddingStart="12dp">
-                    <TextView
-                        android:text="Pedidos"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="#1A1A1A"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
-                    <TextView
-                        android:text="Acompanhar vendas"
                         android:textSize="11sp"
                         android:textColor="#999"
                         android:layout_width="wrap_content"

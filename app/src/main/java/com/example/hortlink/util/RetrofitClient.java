@@ -1,6 +1,7 @@
 package com.example.hortlink.util;
 
 import com.example.hortlink.service.AuthService;
+import com.example.hortlink.service.CarrinhoService;
 import com.example.hortlink.service.ComercioService;
 import com.example.hortlink.service.OfertaService;
 import com.example.hortlink.service.ProdutoService;
@@ -68,6 +69,10 @@ public class RetrofitClient {
 
     public static ComercioService getComercioService() {
         return getClient().create(ComercioService.class);
+    }
+
+    public static CarrinhoService getCarrinhoService() {
+        return getClient().create(CarrinhoService.class);
     }
 
     public static AuthService getAuthService() {
