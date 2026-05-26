@@ -35,10 +35,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // ─── AUTO-LOGIN (Verifica se já tem token salvo) ───
+        // ─── AUTO-LOGIN (Agora vai DIRETO para a Home!) ───
         if (SessionManager.getInstance().getToken() != null) {
+            startActivity(new Intent(this, Homec.class));
             finish();
-            return; // Impede que a tela de login carregue atoa
+            return;
         }
 
         EdgeToEdge.enable(this);
@@ -50,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        // Binds
         username = findViewById(R.id.username);
         password = findViewById(R.id.password);
         loginButton = findViewById(R.id.loginButton);
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar2);
 
         progressBar.setVisibility(View.GONE);
-        authRepository = new AuthRepository(); // Super limpo, sem Context!
+        authRepository = new AuthRepository();
 
         // ─── AÇÃO DO BOTÃO DE LOGIN ───
         loginButton.setOnClickListener(v -> {
@@ -71,14 +71,17 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            setCarregando(true); // Trava a tela e mostra a bolinha rodando
+            setCarregando(true);
 
             authRepository.login(email, senha, new BaseCallback<Usuario>() {
                 @Override
                 public void onSuccess(Usuario usuarioLogado) {
                     setCarregando(false);
 
-                    finish(); // Fecha a tela de login
+                    // Removido o IF do cadastro incompleto. Vai direto para a Home!
+                    Toast.makeText(MainActivity.this, "Bem-vindo, " + usuarioLogado.getNome(), Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(MainActivity.this, Homec.class));
+                    finish();
                 }
 
                 @Override
@@ -89,25 +92,22 @@ public class MainActivity extends AppCompatActivity {
             });
         });
 
-        // ─── RECUPERAR SENHA ───
+        // ─── RECUPERAR SENHA E CADASTRO ... (mantidos iguais) ───
         resetPass.setOnClickListener(v -> {
             String email = username.getText().toString().trim();
             if (email.isEmpty()) {
-                Toast.makeText(this, "Digite seu e-mail no campo acima para redefinir a senha.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Digite seu e-mail no campo acima.", Toast.LENGTH_LONG).show();
             } else {
-                // Em breve você criará esse endpoint na sua API Spring!
-                Toast.makeText(this, "Recuperação de senha pela nova API em construção...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Recuperação de senha pela API em construção...", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // ─── IR PARA CADASTRO ───
         cadastroText.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, Cadastro.class);
             startActivity(intent);
         });
     }
 
-    // ─── MÉTODO AUXILIAR PARA CONTROLAR O VISUAL DA TELA ───
     private void setCarregando(boolean carregando) {
         progressBar.setVisibility(carregando ? View.VISIBLE : View.GONE);
         loginButton.setEnabled(!carregando);

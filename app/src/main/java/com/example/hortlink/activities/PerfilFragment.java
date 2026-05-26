@@ -12,22 +12,15 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
-import com.example.hortlink.bd.SupabaseHelper;
-import com.google.firebase.auth.FirebaseAuth;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.example.hortlink.util.SessionManager;
 
 public class PerfilFragment extends Fragment {
 
     private TextView txtNome, txtAvaliacao, txtCidade;
     private ImageView imgFazenda;
-    private RecyclerView recyclerProdutosPerfil;
-    private SupabaseHelper supabase;
 
     public PerfilFragment() {}
 
@@ -41,42 +34,27 @@ public class PerfilFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        supabase = new SupabaseHelper(requireContext());
-
         // ── Views do perfil ─────────────────────────────────────
         txtNome      = view.findViewById(R.id.txtNomeProd);
         txtCidade    = view.findViewById(R.id.txtCidadeProd);
         txtAvaliacao = view.findViewById(R.id.txtAvaliacao);
         imgFazenda   = view.findViewById(R.id.imgFazenda);
 
-        // ── RecyclerView horizontal de produtos ─────────────────
-        // O novo XML não tem recyclerProdutosPerfil no fragment_perfil,
-        // pois os produtos ficam no GerenciarProdutosFragment.
-        // Se quiser reativar, adicione o RecyclerView no XML.
-
-        // ── Seção: Gerenciar loja ───────────────────────────────
-//        LinearLayout btnMeusProdutos = view.findViewById(R.id.btnMeusProdutos);
-//        btnMeusProdutos.setOnClickListener(v ->
-//                requireActivity().getSupportFragmentManager()
-//                        .beginTransaction()
-//                        .replace(R.id.container, new GerenciarProdutosFragment())
-//                        .addToBackStack(null)
-//                        .commit());
-//
-//        LinearLayout btnAddProduto = view.findViewById(R.id.btnAddProduto);
-//        btnAddProduto.setOnClickListener(v ->
-//                startActivity(new Intent(getActivity(), AdicionarProdutosActivity.class)));
-
+        // ── Seção: Ações dos Botões ───────────────────────────────
         LinearLayout btnPedidos = view.findViewById(R.id.btnPedidos);
-        btnPedidos.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Em breve: pedidos", Toast.LENGTH_SHORT).show());
+        if(btnPedidos != null) {
+            btnPedidos.setOnClickListener(v ->
+                    Toast.makeText(getContext(), "Em breve: pedidos", Toast.LENGTH_SHORT).show());
+        }
 
         // ── Seção: Conta ────────────────────────────────────────
         LinearLayout btnEditarPerfil = view.findViewById(R.id.btnEditarPerfil);
         btnEditarPerfil.setOnClickListener(v -> {
-            String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            // Pegando o ID do nosso SessionManager ao invés do Firebase
+            Long usuarioId = SessionManager.getInstance().getUsuarioId();
+
             Intent intent = new Intent(getActivity(), CompletarPerfilProdutorActivity.class);
-            intent.putExtra("uid", uid);
+            intent.putExtra("usuario_id", usuarioId);
             intent.putExtra("modo_edicao", true);
             startActivity(intent);
         });
@@ -88,64 +66,50 @@ public class PerfilFragment extends Fragment {
         view.findViewById(R.id.itemConfiguracoes).setOnClickListener(v ->
                 Toast.makeText(getContext(), "Em breve: configurações", Toast.LENGTH_SHORT).show());
 
+        // ── BOTÃO DE LOGOUT ─────────────────────────────────────
         view.findViewById(R.id.itemSair).setOnClickListener(v -> {
-            FirebaseAuth.getInstance().signOut();
+            // 1. Apaga o Token JWT e os dados do usuário do SharedPreferences
+            SessionManager.getInstance().clear();
+
+            // 2. Volta para a tela de Login limpando o histórico (para não voltar com o botão "Voltar" do Android)
             Intent intent = new Intent(getActivity(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         });
 
-        // ── Carrega dados do produtor logado ────────────────────
-        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
-
-        if (uid != null) {
-            carregarPerfil(uid);
-        }
+        // Carrega as informações na tela
+        carregarPerfilLocal();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
-        if (uid != null) carregarPerfil(uid);
+        carregarPerfilLocal();
     }
 
-    // ─── Busca e preenche dados do produtor ──────────────────────
-    private void carregarPerfil(String uid) {
-        supabase.buscarProdutorPorId(uid, new SupabaseHelper.SupabaseCallback() {
-            @Override
-            public void onSuccess(String json) {
-                try {
-                    JSONArray array = new JSONArray(json);
-                    if (array.length() == 0) return;
+    // ─── Carrega dados de forma instantânea da Sessão ────────────
+    private void carregarPerfilLocal() {
+        // Puxa os dados que o AuthRepository salvou na hora do Login
+        String nome = SessionManager.getInstance().getNomeUsuario();
+        String fotoUrl = SessionManager.getInstance().getUrlFoto();
+        String role = SessionManager.getInstance().getRole();
 
-                    JSONObject obj   = array.getJSONObject(0);
-                    String nome      = obj.optString("nome", "");
-                    String cidade    = obj.optString("cidade", "Cidade não informada");
-                    double avaliacao = obj.optDouble("avaliacao", 0.0);
-                    String fotoUrl   = obj.optString("foto_url", "");
+        // Atualiza a UI
+        txtNome.setText(nome != null ? nome : "Usuário");
 
-                    requireActivity().runOnUiThread(() -> {
-                        txtNome.setText(nome);
-                        txtCidade.setText(cidade);
-                        txtAvaliacao.setText(String.format("⭐ %.1f", avaliacao));
+        // Como ainda não puxamos o endereço da nova API, mostramos a Role do usuário
+        txtCidade.setText(role != null ? role : "Perfil do HortiLink");
 
-                        if (!fotoUrl.isEmpty()) {
-                            Glide.with(requireContext())
-                                    .load(fotoUrl)
-                                    .placeholder(R.drawable.hortlink_logo)
-                                    .circleCrop()
-                                    .into(imgFazenda);
-                        }
-                    });
+        txtAvaliacao.setText("⭐ 5.0"); // Fictício até criarmos a rota de avaliações
 
-                } catch (Exception e) { e.printStackTrace(); }
-            }
-
-            @Override
-            public void onError(String erro) { /* silencioso */ }
-        });
+        if (fotoUrl != null && !fotoUrl.isEmpty()) {
+            Glide.with(requireContext())
+                    .load(fotoUrl)
+                    .placeholder(R.drawable.hortlink_logo)
+                    .circleCrop()
+                    .into(imgFazenda);
+        } else {
+            imgFazenda.setImageResource(R.drawable.hortlink_logo);
+        }
     }
 }

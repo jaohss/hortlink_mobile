@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -23,6 +24,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 public class Cadastro extends AppCompatActivity {
 
     private EditText emailEdt, nomeEdt, passwordEdt, confirmPassEdt, telefoneEdt;
+    ImageButton btnVoltar;
     private Button registerButton;
     private ProgressBar progressBar;
 
@@ -50,6 +52,8 @@ public class Cadastro extends AppCompatActivity {
         telefoneEdt    = findViewById(R.id.telefone);
         registerButton = findViewById(R.id.registerButton);
         progressBar    = findViewById(R.id.progressBar);
+        btnVoltar = findViewById(R.id.btnVoltar);
+        btnVoltar.setOnClickListener(v -> finish());
 
         progressBar.setVisibility(View.GONE);
 
@@ -77,13 +81,21 @@ public class Cadastro extends AppCompatActivity {
             return;
         }
 
-        // Pergunta o tipo de conta (usando as Roles exatas do seu Spring Boot)
+        String[] opcoesDePerfil = {
+                "🛒 Sou Consumidor (Comprar produtos)",
+                "🌱 Sou Produtor (Cultivo e vendo no atacado/varejo)",
+                "🏪 Sou Comércio (Tenho quitanda/mercado)"
+        };
+
+        String[] rolesParaEnviar = {"CONSUMIDOR", "PRODUTOR", "COMERCIO"};
+
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Tipo de conta")
-                .setMessage("Como você vai usar o HortLink?")
-                .setPositiveButton("🛒 Sou comprador", (d, w) -> criarConta(nome, email, senha, telefone, "CONSUMIDOR"))
-                .setNegativeButton("🌱 Sou produtor", (d, w) -> criarConta(nome, email, senha, telefone, "PRODUTOR"))
-                .setCancelable(false)
+                .setTitle("Como você vai usar o HortLink?")
+                .setItems(opcoesDePerfil, (dialog, qualItemFoiClicado) -> {
+                    String roleSelecionada = rolesParaEnviar[qualItemFoiClicado];
+                    criarConta(nome, email, senha, telefone, roleSelecionada);
+                })
+                .setNegativeButton("Cancelar", null)
                 .show();
     }
 
