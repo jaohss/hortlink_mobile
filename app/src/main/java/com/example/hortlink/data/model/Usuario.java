@@ -1,7 +1,5 @@
 package com.example.hortlink.data.model;
 
-import org.json.JSONObject;
-
 /**
  * Mapeamento 1:1 com a tabela `usuarios` no Supabase.
  * É um POJO puro — sem lógica de UI, sem dependência de Android.
@@ -9,6 +7,7 @@ import org.json.JSONObject;
  */
 public class Usuario {
 
+/* 
     public String id;
     public String nome;
     public String email;
@@ -22,40 +21,23 @@ public class Usuario {
     public String genero;
     public String criadoEm;
     public String cep;
+*/
+    
+    private Long id;
+    private String nome;
+    private String email;
+    private String role;
+    private Long comercioProfileId;
+    private Boolean cadastroIncompleto;
+    private String urlFotoPerfil;
 
-    public static final String TIPO_COMPRADOR = "comprador";
-    public static final String TIPO_PRODUTOR  = "produtor";
-
-    public static final String GENERO_MASCULINO    = "Masculino";
-    public static final String GENERO_FEMININO     = "Feminino";
-    public static final String GENERO_NAO_INFORMAR = "Prefiro não informar";
-
-    public Usuario() {}
-
-    public boolean isProdutor() {
-        return TIPO_PRODUTOR.equals(tipo);
-    }
-
-    public boolean isComprador() {
-        return TIPO_COMPRADOR.equals(tipo);
-    }
-
-    public static Usuario fromJson(JSONObject obj) {
-        Usuario u   = new Usuario();
-        u.id        = obj.optString("id");
-        u.nome      = obj.optString("nome");
-        u.email     = obj.optString("email");
-        u.tipo      = obj.optString("tipo");
-        u.fotoUrl   = obj.optString("foto_url");
-        u.cidade    = obj.optString("cidade");
-        u.estado    = obj.optString("estado");
-        u.descricao = obj.optString("descricao");
-        u.avaliacao = obj.optDouble("avaliacao", 0.0);
-        u.telefone  = obj.optString("telefone");
-        u.genero    = obj.optString("genero");
-        u.criadoEm  = obj.optString("criado_em");
-        u.cep = obj.optString("cep");
-
-        return u;
-    }
+    // Getters
+    public Long getId() { return id; }
+    public String getNome() { return nome; }
+    public String getEmail() { return email; }
+    public String getRole() { return role; }
+    public Long getComercioProfileId() { return comercioProfileId; }
+    public Boolean getCadastroIncompleto() { return cadastroIncompleto; }
+    public String getUrlFotoPerfil() { return urlFotoPerfil; }
 }
+

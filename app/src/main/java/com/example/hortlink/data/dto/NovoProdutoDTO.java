@@ -1,51 +1,22 @@
-package com.example.hortlink.data.model;
+package com.example.hortlink.data.dto;
 
 import com.example.hortlink.data.enums.Categoria;
 import com.example.hortlink.data.enums.UnidadeMedida;
 
-public class Produto {
-    
+public class NovoProdutoDTO {
     private Long id;
     private String nome;
     private String descricao;
     private Categoria categoria;
     private UnidadeMedida unidadeMedida;
-    public double distanciaKm = Double.MAX_VALUE;
-    public Long vendedorId;
 
-    public Produto(Long id, String nome, String descricao, Categoria categoria, UnidadeMedida unidadeMedida) {
+    public NovoProdutoDTO(Long id, String nome, String descricao, Categoria categoria, UnidadeMedida unidadeMedida) {
         this.id = id;
         this.nome = nome;
         this.descricao = descricao;
         this.categoria = categoria;
         this.unidadeMedida = unidadeMedida;
     }
-
-    
-
-    public double getDistanciaKm() {
-        return distanciaKm;
-    }
-
-
-
-    public void setDistanciaKm(double distanciaKm) {
-        this.distanciaKm = distanciaKm;
-    }
-
-
-
-    public Long getVendedorId() {
-        return vendedorId;
-    }
-
-
-
-    public void setVendedorId(Long vendedorId) {
-        this.vendedorId = vendedorId;
-    }
-
-
 
     public Long getId() {
         return id;
@@ -86,5 +57,4 @@ public class Produto {
     public void setUnidadeMedida(UnidadeMedida unidadeMedida) {
         this.unidadeMedida = unidadeMedida;
     }
-
 }

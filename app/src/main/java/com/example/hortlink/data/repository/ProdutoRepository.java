@@ -1,206 +1,94 @@
 package com.example.hortlink.data.repository;
 
-import com.example.hortlink.data.remote.SupabaseClient;
+import com.example.hortlink.util.RetrofitClient;
+import com.example.hortlink.data.dto.NovoProdutoDTO;
+import com.example.hortlink.data.model.Produto;
+import com.example.hortlink.entidades.BaseCallback;
+import com.example.hortlink.service.ProdutoService;
+import com.google.gson.Gson;
 
-import org.json.JSONObject;
+import java.io.File;
 
 import okhttp3.MediaType;
-import okhttp3.Request;
+import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import okhttp3.Response;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ProdutoRepository {
 
-    private final SupabaseClient client = SupabaseClient.getInstance();
+    private final ProdutoService api = RetrofitClient.getProdutoService();
 
-    public interface Callback {
-        void onSuccess(String resultado);
+    public void cadastrarProduto(NovoProdutoDTO novoProduto, File arquivoImagem, BaseCallback<Produto> callback) {
+        Gson gson = new Gson();
+        String dtoJson = gson.toJson(novoProduto);
+        RequestBody produtoData = RequestBody.create(
+                MediaType.parse("application/json; charset=utf-8"),
+                dtoJson
+        );
 
-        void onError(String erro);
-    }
+        RequestBody requestFile = RequestBody.create(
+                MediaType.parse("image/*"),
+                arquivoImagem
+        );
 
-    // ─── INSERIR produto ─────────────────────────────────────────
-    public void inserirProduto(String nome, String categoria, double preco,
-                               String unidade, String descricao, String fotoUrl,
-                               String produtorUid, Callback callback) {
-        new Thread(() -> {
-            try {
-                JSONObject json = new JSONObject();
-                json.put("nome", nome);
-                json.put("categoria", categoria);
-                json.put("preco", preco);
-                json.put("unidade", unidade);
-                json.put("descricao", descricao);
-                json.put("foto_url", fotoUrl);
-                json.put("produtor_id", produtorUid);
+        MultipartBody.Part imagem = MultipartBody.Part.createFormData(
+                "imagem",
+                arquivoImagem.getName(),
+                requestFile
+        );
 
-                RequestBody body = RequestBody.create(
-                        json.toString(), MediaType.parse("application/json"));
-
-                Request request = client.baseRequest("/rest/v1/produtos")
-                        .addHeader("Prefer", "return=representation")
-                        .post(body)
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-                String respBody = response.body().string();
-
-                if (response.isSuccessful()) callback.onSuccess(respBody);
-                else callback.onError("Erro ao salvar: " + response.code() + " | " + respBody);
-
-            } catch (Exception e) {
-                callback.onError("Exceção: " + e.getMessage());
-            }
-        }).start();
-    }
-
-    // ─── LISTAR todos os produtos ────────────────────────────────
-    public void listarProdutos(Callback callback) {
-        new Thread(() -> {
-            try {
-                Request request = client
-                        .baseRequest("/rest/v1/produtos?select=*&status=eq.true&order=criado_em.desc")
-                        .get()
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-                String body = response.body().string();
-
-                if (response.isSuccessful()) callback.onSuccess(body);
-                else callback.onError("Erro ao listar: " + response.code());
-
-            } catch (Exception e) {
-                callback.onError("Exceção: " + e.getMessage());
-            }
-        }).start();
-    }
-
-    // ─── BUSCAR produto por ID ───────────────────────────────────
-    public void buscarProdutoPorId(String id, Callback callback) {
-        new Thread(() -> {
-            try {
-                Request request = client
-                        .baseRequest("/rest/v1/produtos?id=eq." + id + "&select=*")
-                        .get()
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-                String body = response.body().string();
-
-                if (response.isSuccessful()) callback.onSuccess(body);
-                else callback.onError("Erro " + response.code() + ": " + body);
-
-            } catch (Exception e) {
-                callback.onError(e.getMessage());
-            }
-        }).start();
-    }
-
-    // ─── Atualizar produto (PATCH) ───────────────────────────────────
-    public void atualizarProduto(String id, String nome, String descricao,
-                                 double preco, String fotoUrl, Callback callback) {
-        new Thread(() -> {
-            try {
-                JSONObject json = new JSONObject();
-                json.put("nome", nome);
-                json.put("descricao", descricao);
-                json.put("preco", preco);
-                if (fotoUrl != null && !fotoUrl.isEmpty()) {
-                    json.put("foto_url", fotoUrl);
+        api.cadastrarProduto(produtoData, imagem).enqueue(new Callback<Produto>() {
+            @Override
+            public void onResponse(Call<Produto> call, Response<Produto> response) {
+                if(response.isSuccessful()) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao salvar Produto: " + response.code());
                 }
-
-                RequestBody body = RequestBody.create(
-                        json.toString(), MediaType.parse("application/json"));
-
-                Request request = client.baseRequest("/rest/v1/produtos?id=eq." + id)
-                        .addHeader("Prefer", "return=representation")
-                        .patch(body)
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-                String respBody = response.body().string();
-
-                if (response.isSuccessful()) callback.onSuccess(respBody);
-                else callback.onError("Erro " + response.code() + ": " + respBody);
-
-            } catch (Exception e) {
-                callback.onError(e.getMessage());
             }
-        }).start();
-    }
 
-    // ─── Listar produtos por produtor (para o painel do produtor) ────
-    public void listarProdutosPorProdutor(String produtorUid, Callback callback) {
-        new Thread(() -> {
-            try {
-                Request request = client.baseRequest("/rest/v1/produtos?produtor_id=eq." + produtorUid + "&select=*&order=criado_em.desc")
-                        .get()
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-                String body = response.body().string();
-
-                if (response.isSuccessful()) callback.onSuccess(body);
-                else callback.onError("Erro " + response.code() + ": " + body);
-
-            } catch (Exception e) { callback.onError(e.getMessage()); }
-        }).start();
-    }
-
-    // ─── ATIVAR / DESATIVAR produto (soft delete) ────────────────
-    // Substitui completamente o deletarProduto().
-    // Envia PATCH com {"ativo": true/false} — bate exatamente com
-    // a coluna "ativo boolean" da tabela produtos no Supabase.
-    //
-    // CORREÇÃO CRÍTICA: o campo enviado era "status" (nome errado).
-    // O Supabase ignorava silenciosamente e nunca atualizava nada.
-    public void atualizarStatus(String id, boolean status, Callback callback) {
-        new Thread(() -> {
-            try {
-                JSONObject json = new JSONObject();
-                json.put("status", status); // ← era "status", agora correto
-
-                RequestBody body = RequestBody.create(
-                        json.toString(), MediaType.parse("application/json"));
-
-                Request request = client.baseRequest("/rest/v1/produtos?id=eq." + id)
-                        .addHeader("Prefer", "return=minimal")
-                        .patch(body)
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-                String respBody = response.body().string();
-
-                if (response.isSuccessful()) callback.onSuccess("ok");
-                else callback.onError("Erro " + response.code() + ": " + respBody);
-
-            } catch (Exception e) {
-                callback.onError(e.getMessage());
+            @Override
+            public void onFailure(Call<Produto> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
             }
-        }).start();
+        });
     }
 
-    // Adicione no ProdutoRepository existente
-    public void verificarStatus(String produtoId, Callback callback) {
-        new Thread(() -> {
-            try {
-                String path = "/rest/v1/produtos"
-                        + "?select=id"
-                        + "&id=eq." + produtoId
-                        + "&status=eq.true";
+    public void deletarProduto(Long idProduto, BaseCallback<Void> callback) {
+        api.deletarProduto(idProduto).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if(response.isSuccessful()) {
+                    callback.onSuccess(null);
+                } else {
+                    callback.onError("Erro ao deletar Produto: " + response.code());
+                }
+            }
 
-                Request request = client.baseRequest(path)
-                        .addHeader("Accept", "application/json")
-                        .get()
-                        .build();
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
+    }
 
-                Response response = client.getHttp().newCall(request).execute();
-                String body = response.body().string();
+    public void buscarPorId(Long idProduto, BaseCallback<Produto> callback) {
+        api.buscarPorId(idProduto).enqueue(new Callback<Produto>() {
+            @Override
+            public void onResponse(Call<Produto> call, Response<Produto> response){
+                if(response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao buscar Produto: " + response.code());
+                }
+            }
 
-                if (response.isSuccessful()) callback.onSuccess(body);
-                else callback.onError("Erro " + response.code());
-
-            } catch (Exception e) { callback.onError(e.getMessage()); }
-        }).start();
+            @Override
+            public void onFailure(Call<Produto> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
     }
 }

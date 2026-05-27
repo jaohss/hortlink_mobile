@@ -14,7 +14,7 @@
         android:padding="12dp"
         android:gravity="center_vertical">
 
-        <!-- Foto do produto -->
+        <!-- Foto do ofertaDTO -->
         <ImageView
             android:id="@+id/imgProduto"
             android:layout_width="64dp"

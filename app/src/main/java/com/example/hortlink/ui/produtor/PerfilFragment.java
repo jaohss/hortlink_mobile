@@ -1,4 +1,4 @@
-package com.example.hortlink.ui.produtor;
+package com.example.hortlink.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,30 +12,15 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
-import com.example.hortlink.data.model.Usuario;
-import com.example.hortlink.data.repository.UsuarioRepository;
-import com.example.hortlink.ui.auth.CompletarPerfilProdutorActivity;
-import com.example.hortlink.ui.auth.MainActivity;
 import com.example.hortlink.util.SessionManager;
-import com.google.firebase.auth.FirebaseAuth;
 
-/**
- * Fragment de perfil do produtor logado.
- * é o próprio usuário consultando o próprio perfil, não um produtor
- * público, por isso usamos UsuarioRepository e não ProdutorRepository.
- */
 public class PerfilFragment extends Fragment {
 
-    private TextView txtNome, txtCidade;
+    private TextView txtNome, txtAvaliacao, txtCidade;
     private ImageView imgFazenda;
-    private RecyclerView recyclerProdutosPerfil;
-
-    // ─── Dependências ─────────────────────────────────────────────────
-    private final UsuarioRepository usuarioRepository = new UsuarioRepository();
 
     public PerfilFragment() {}
 
@@ -49,125 +34,75 @@ public class PerfilFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        bindViews(view);
-        configurarBotoes(view);
+        // ── Views do perfil ─────────────────────────────────────
+        txtNome      = view.findViewById(R.id.txtNomeProd);
+        txtCidade    = view.findViewById(R.id.txtCidadeProd);
+        txtAvaliacao = view.findViewById(R.id.txtAvaliacao);
+        imgFazenda   = view.findViewById(R.id.imgFazenda);
 
-        String uid = getUidAtual();
-        if (uid != null) carregarPerfil(uid);
+        // ── Seção: Conta ────────────────────────────────────────
+        LinearLayout btnEditarPerfil = view.findViewById(R.id.btnEditarPerfil);
+        btnEditarPerfil.setOnClickListener(v -> {
+            // Pegando o ID do nosso SessionManager ao invés do Firebase
+            Long usuarioId = SessionManager.getInstance().getUsuarioId();
+
+            Intent intent = new Intent(getActivity(), CompletarPerfilProdutorActivity.class);
+            intent.putExtra("usuario_id", usuarioId);
+            intent.putExtra("modo_edicao", true);
+            startActivity(intent);
+        });
+
+        LinearLayout btnDashboard = view.findViewById(R.id.btnDashboard);
+        btnDashboard.setOnClickListener(v ->
+                Toast.makeText(getContext(), "Em breve: dashboard", Toast.LENGTH_SHORT).show());
+
+        view.findViewById(R.id.itemConfiguracoes).setOnClickListener(v ->
+                Toast.makeText(getContext(), "Em breve: configurações", Toast.LENGTH_SHORT).show());
+
+        // ── BOTÃO DE LOGOUT ─────────────────────────────────────
+        view.findViewById(R.id.itemSair).setOnClickListener(v -> {
+            // 1. Apaga o Token JWT e os dados do usuário do SharedPreferences
+            SessionManager.getInstance().clear();
+
+            // 2. Volta para a tela de Login limpando o histórico (para não voltar com o botão "Voltar" do Android)
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        });
+
+        // Carrega as informações na tela
+        carregarPerfilLocal();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Recarrega ao voltar da tela de edição de perfil
-        String uid = getUidAtual();
-        if (uid != null) carregarPerfil(uid);
+        carregarPerfilLocal();
     }
 
-    // ─── Bind de views ────────────────────────────────────────────────
+    // ─── Carrega dados de forma instantânea da Sessão ────────────
+    private void carregarPerfilLocal() {
+        // Puxa os dados que o AuthRepository salvou na hora do Login
+        String nome = SessionManager.getInstance().getNomeUsuario();
+        String fotoUrl = SessionManager.getInstance().getUrlFoto();
+        String role = SessionManager.getInstance().getRole();
 
-    private void bindViews(View view) {
-        txtNome      = view.findViewById(R.id.txtNomeProd);
-        txtCidade    = view.findViewById(R.id.txtCidadeProd);
-        imgFazenda   = view.findViewById(R.id.imgFazenda);
+        // Atualiza a UI
+        txtNome.setText(nome != null ? nome : "Usuário");
 
-    }
+        // Como ainda não puxamos o endereço da nova API, mostramos a Role do usuário
+        txtCidade.setText(role != null ? role : "Perfil do HortiLink");
 
-    // ─── Configuração de botões ───────────────────────────────────────
+        txtAvaliacao.setText("⭐ 5.0"); // Fictício até criarmos a rota de avaliações
 
-    private void configurarBotoes(View view) {
-
-        // Meus produtos
-        LinearLayout btnMeusProdutos = view.findViewById(R.id.btnMeusProdutos);
-        btnMeusProdutos.setOnClickListener(v ->
-                requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.container, new GerenciarProdutosFragment())
-                        .addToBackStack(null)
-                        .commit());
-
-        // Adicionar produto
-        LinearLayout btnAddProduto = view.findViewById(R.id.btnAddProduto);
-        btnAddProduto.setOnClickListener(v ->
-                startActivity(new Intent(getActivity(), AdicionarProdutosActivity.class)));
-
-        // Pedidos — em breve
-        LinearLayout btnPedidos = view.findViewById(R.id.btnPedidos);
-        btnPedidos.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Em breve: pedidos", Toast.LENGTH_SHORT).show());
-
-        // Editar perfil — reaproveita CompletarPerfilProdutorActivity em modo edição
-        LinearLayout btnEditarPerfil = view.findViewById(R.id.btnEditarPerfil);
-        btnEditarPerfil.setOnClickListener(v -> {
-            String uid = getUidAtual();
-            if (uid == null) return;
-            Intent intent = new Intent(getActivity(), CompletarPerfilProdutorActivity.class);
-            intent.putExtra("uid", uid);
-            intent.putExtra("modo_edicao", true);
-            startActivity(intent);
-        });
-
-        // Dashboard — em breve
-        LinearLayout btnDashboard = view.findViewById(R.id.btnDashboard);
-        btnDashboard.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Em breve: dashboard", Toast.LENGTH_SHORT).show());
-
-        // Configurações — em breve
-        view.findViewById(R.id.itemConfiguracoes).setOnClickListener(v ->
-                Toast.makeText(getContext(), "Em breve: configurações", Toast.LENGTH_SHORT).show());
-
-        // Sair
-        view.findViewById(R.id.itemSair).setOnClickListener(v -> {
-            usuarioRepository.logout();
-            SessionManager.getInstance().limpar();
-            Intent intent = new Intent(getActivity(), MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-        });
-    }
-
-
-
-    // ─── Carregamento do perfil ───────────────────────────────────────
-
-    private void carregarPerfil(String uid) {
-        usuarioRepository.buscarPorId(uid, new UsuarioRepository.Callback() {
-
-            @Override
-            public void onSuccess(Usuario usuario) {
-                if (!isAdded()) return; // fragment pode ter sido destacado
-
-                requireActivity().runOnUiThread(() -> {
-                    txtNome.setText(usuario.nome);
-
-                    // Cidade + estado juntos, com fallback
-                    String cidade = usuario.cidade  != null ? usuario.cidade  : "";
-                    String estado = usuario.estado  != null ? usuario.estado  : "";
-                    String local  = (!cidade.isEmpty() && !estado.isEmpty())
-                            ? cidade + ", " + estado
-                            : !cidade.isEmpty() ? cidade : "Localização não informada";
-                    txtCidade.setText(local);
-
-                    // Foto de perfil
-                    if (usuario.fotoUrl != null && !usuario.fotoUrl.isEmpty() && !usuario.fotoUrl.equals("null")) {
-                        Glide.with(requireContext())
-                                .load(usuario.fotoUrl)
-                                .placeholder(R.drawable.hortlink_logo)
-                                .circleCrop()
-                                .into(imgFazenda);
-                    }
-                });
-            }
-
-            @Override
-            public void onError(String erro) {
-                // Falha silenciosa — não bloqueia a tela de perfil
-            }
-        });
-    }
-
-    private String getUidAtual() {
-        var user = FirebaseAuth.getInstance().getCurrentUser();
-        return user != null ? user.getUid() : null;
+        if (fotoUrl != null && !fotoUrl.isEmpty()) {
+            Glide.with(requireContext())
+                    .load(fotoUrl)
+                    .placeholder(R.drawable.hortlink_logo)
+                    .circleCrop()
+                    .into(imgFazenda);
+        } else {
+            imgFazenda.setImageResource(R.drawable.hortlink_logo);
+        }
     }
 }

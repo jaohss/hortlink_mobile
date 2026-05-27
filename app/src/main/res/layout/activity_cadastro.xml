@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,124 +7,148 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
     android:background="@drawable/backgroundhort"
+
     tools:context=".ui.auth.MainActivity">
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="149dp"
-        android:layout_height="130dp"
-        card_view:srcCompat="@drawable/hortlink_logo" />
 
-    <androidx.cardview.widget.CardView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="30dp"
-        app:cardCornerRadius="30dp"
-        app:cardElevation="20dp"
-        android:background="@drawable/custom_edittext">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center">
 
-        <LinearLayout
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="149dp"
+            android:layout_height="130dp"
+            card_view:srcCompat="@drawable/hortlink_logo" />
+
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
-            android:layout_height="527dp"
-            android:layout_gravity="center_horizontal"
-            android:orientation="vertical"
-            android:padding="24dp"
-            android:background="@color/white_soft">
+            android:layout_height="wrap_content"
+            android:layout_margin="30dp"
+            app:cardCornerRadius="30dp"
+            app:cardElevation="20dp"
+            android:background="@drawable/custom_edittext">
 
-
-
-            <TextView
-                android:id="@+id/CadastroText"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Cadastro"
-                android:textAlignment="center"
-                android:textColor="@color/green"
-                android:textSize="36sp"
-                android:textStyle="bold" />
+                android:layout_height="527dp"
+                android:layout_gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="24dp"
+                android:background="@color/white_soft">
 
-            <EditText
-                android:id="@+id/nomeText"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/custom_edittext"
-                android:drawableLeft="@drawable/nome"
-                android:drawablePadding="8dp"
-                android:hint="Digite seu nome"
-                android:textColorHint="@color/black_soft"
-                android:padding="8dp"
-                android:textColor="@color/black"
-                android:textColorHighlight="@color/cardview_dark_background" />
+                <TextView
+                    android:id="@+id/CadastroText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Cadastro"
+                    android:textAlignment="center"
+                    android:textColor="@color/green"
+                    android:textSize="36sp"
+                    android:textStyle="bold" />
 
-            <EditText
-                android:id="@+id/email"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/custom_edittext"
-                android:drawableLeft="@drawable/baseline_person_24"
-                android:drawablePadding="8dp"
-                android:hint="Digite seu e-mail"
-                android:textColorHint="@color/black_soft"
-                android:inputType="textEmailAddress"
-                android:padding="8dp"
-                android:textColor="@color/black"
-                android:textColorHighlight="@color/cardview_dark_background" />
+                <EditText
+                    android:id="@+id/nomeText"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/custom_edittext"
+                    android:drawableLeft="@drawable/nome"
+                    android:drawablePadding="8dp"
+                    android:hint="Digite seu nome"
+                    android:textColorHint="@color/black_soft"
+                    android:padding="8dp"
+                    android:textColor="@color/black" />
 
-            <EditText
-                android:id="@+id/password"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/custom_edittext"
-                android:drawableLeft="@drawable/blacklock"
-                android:drawablePadding="8dp"
-                android:hint="Inserir senha"
-                android:textColorHint="@color/black_soft"
-                android:inputType="textPassword"
-                android:padding="8dp"
-                android:textColor="@color/black"
-                android:textColorHighlight="@color/cardview_dark_background" />
+                <EditText
+                    android:id="@+id/email"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/custom_edittext"
+                    android:drawableLeft="@drawable/baseline_person_24"
+                    android:drawablePadding="8dp"
+                    android:hint="Digite seu e-mail"
+                    android:textColorHint="@color/black_soft"
+                    android:inputType="textEmailAddress"
+                    android:padding="8dp"
+                    android:textColor="@color/black" />
 
-            <EditText
-                android:id="@+id/confirmPass"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/custom_edittext"
-                android:drawableLeft="@drawable/blacklock"
-                android:drawablePadding="8dp"
-                android:hint="Confirmar senha"
-                android:textColorHint="@color/black_soft"
-                android:inputType="textPassword"
-                android:padding="8dp"
-                android:textColor="@color/black"
-                android:textColorHighlight="@color/cardview_dark_background" />
+                <EditText
+                    android:id="@+id/password"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/custom_edittext"
+                    android:drawableLeft="@drawable/blacklock"
+                    android:drawablePadding="8dp"
+                    android:hint="Inserir senha"
+                    android:textColorHint="@color/black_soft"
+                    android:inputType="textPassword"
+                    android:padding="8dp"
+                    android:textColor="@color/black" />
 
+                <EditText
+                    android:id="@+id/confirmPass"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/custom_edittext"
+                    android:drawableLeft="@drawable/blacklock"
+                    android:drawablePadding="8dp"
+                    android:hint="Confirmar senha"
+                    android:textColorHint="@color/black_soft"
+                    android:inputType="textPassword"
+                    android:padding="8dp"
+                    android:textColor="@color/black" />
 
-            <Button
-                android:id="@+id/registerButton"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_marginTop="20dp"
-                android:backgroundTint="@color/green"
-                android:text="Avançar"
-                android:textSize="18sp"
-                app:cornerRadius="20dp" />
+                <EditText
+                    android:id="@+id/telefone"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/custom_edittext"
+                    android:drawableLeft="@drawable/telephone"
+                    android:drawablePadding="8dp"
+                    android:hint="Inserir telefone"
+                    android:textColorHint="@color/black_soft"
+                    android:inputType="phone"
+                    android:padding="8dp"
+                    android:textColor="@color/black" />
 
-        </LinearLayout>
+                <Button
+                    android:id="@+id/registerButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:layout_marginTop="20dp"
+                    android:backgroundTint="@color/green"
+                    android:text="Avançar"
+                    android:textSize="18sp"
+                    app:cornerRadius="20dp" />
 
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-    </androidx.cardview.widget.CardView>
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="@style/Theme.LoginScreen"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+    </LinearLayout>
 
-</LinearLayout>
+    <ImageButton
+        android:id="@+id/btnVoltar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:src="@drawable/back_white"
+        android:background="@drawable/shape_btn_voltar"
+        android:backgroundTint="@color/green"
+        android:padding="12dp"
+        android:elevation="6dp" />
+
+</FrameLayout>

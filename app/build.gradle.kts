@@ -52,6 +52,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     //firebase
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-analytics")
@@ -61,7 +62,10 @@ dependencies {
 
     // Supabase via REST (OkHttp)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-// Para converter imagem Uri → InputStream
+    // Para converter imagem Uri → InputStream
     implementation("commons-io:commons-io:2.13.0")
     implementation("com.google.code.gson:gson:2.14.0")
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }

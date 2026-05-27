@@ -14,24 +14,25 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.hortlink.R;
-import com.example.hortlink.data.model.CartItem;
+import com.example.hortlink.data.model.ItemCarrinhoResponse; // Import do novo DTO
 
 import java.util.List;
 
 public class CarrinhoAdapter extends RecyclerView.Adapter<CarrinhoAdapter.ViewHolder> {
 
+    // Interfaces atualizadas para receber o novo DTO
     public interface OnRemoverListener{
-        void onRemover(CartItem item);
+        void onRemover(ItemCarrinhoResponse item);
     }
     public interface OnQuantidadeListener{
-        void onAlterarQtd(CartItem item, int novaQtd);
+        void onAlterarQtd(ItemCarrinhoResponse item, int novaQtd);
     }
 
-    private final List<CartItem> items;
+    private final List<ItemCarrinhoResponse> items; // Lista atualizada
     private final OnRemoverListener    onRemover;
     private final OnQuantidadeListener onQuantidade;
 
-    public CarrinhoAdapter(List<CartItem> items, OnRemoverListener onRemover, OnQuantidadeListener onQuantidade) {
+    public CarrinhoAdapter(List<ItemCarrinhoResponse> items, OnRemoverListener onRemover, OnQuantidadeListener onQuantidade) {
         this.items        = items;
         this.onRemover    = onRemover;
         this.onQuantidade = onQuantidade;
@@ -47,12 +48,13 @@ public class CarrinhoAdapter extends RecyclerView.Adapter<CarrinhoAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder h, int position) {
-        CartItem item = items.get(position);
+        ItemCarrinhoResponse item = items.get(position); // Objeto atualizado
 
         // ── Textos ───────────────────────────────────────────────────
         h.tvNome.setText(item.getNomeProduto());
 
-        h.tvPrecoUnitario.setText(String.format("R$ %.2f / %s", item.getPreco(), item.getUnidade()));
+        // Atualizado: getPreco() mudou para getPrecoUnitario()
+        h.tvPrecoUnitario.setText(String.format("R$ %.2f / %s", item.getPrecoUnitario(), item.getUnidade()));
 
         h.tvQuantidade.setText(String.valueOf(item.getQuantidade()));
 
@@ -90,6 +92,7 @@ public class CarrinhoAdapter extends RecyclerView.Adapter<CarrinhoAdapter.ViewHo
     public int getItemCount() { return items.size(); }
 
     // ── ViewHolder ───────────────────────────────────────────────────
+    // O ViewHolder permanece idêntico, pois as IDs e Views da tela (XML) não mudaram
     static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView ivProduto;
         TextView tvNome, tvPrecoUnitario, tvQuantidade, tvSubtotal;
