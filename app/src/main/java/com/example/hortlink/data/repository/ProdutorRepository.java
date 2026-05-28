@@ -1,13 +1,11 @@
 package com.example.hortlink.data.repository;
 
 import com.example.hortlink.data.model.Produtor;
-import com.example.hortlink.data.model.Usuario;
 import com.example.hortlink.data.remote.SupabaseClient;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import okhttp3.MediaType;
@@ -185,12 +183,12 @@ public class ProdutorRepository {
 
     // ─── Parse privado ────────────────────────────────────────────────
     private List<Produtor> parseProdutores(String json) throws Exception {
-        JSONArray array = new JSONArray(json);
-        List<Produtor> lista = new ArrayList<>();
-        for (int i = 0; i < array.length(); i++) {
-            Usuario u = Usuario.fromJson(array.getJSONObject(i));
-            if (u.isProdutor()) lista.add(new Produtor(u));
-        }
-        return lista;
+//        JSONArray array = new JSONArray(json);
+//        List<Produtor> lista = new ArrayList<>();
+//        for (int i = 0; i < array.length(); i++) {
+//            Usuario u = Usuario.fromJson(array.getJSONObject(i));
+//            if (u.isProdutor()) lista.add(new Produtor(u));
+//        }
+        return null;
     }
 }

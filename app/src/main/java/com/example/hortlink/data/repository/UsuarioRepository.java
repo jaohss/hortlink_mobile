@@ -1,16 +1,12 @@
 package com.example.hortlink.data.repository;
 
-import com.example.hortlink.data.model.Usuario;
-import com.example.hortlink.data.remote.SupabaseClient;
-import com.google.firebase.auth.FirebaseAuth;
+import com.example.hortlink.data.dto.PerfilCompradorDTO;
+import com.example.hortlink.service.BaseCallback;
+import com.example.hortlink.service.UsuarioService;
+import com.example.hortlink.util.RetrofitClient;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import retrofit2.Call;
+import retrofit2.Callback;
 
 /**
  * Responsabilidades:
@@ -23,152 +19,46 @@ import okhttp3.Response;
  */
 public class UsuarioRepository {
 
-    private final SupabaseClient client = SupabaseClient.getInstance();
-    private final FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+    private final UsuarioService api;
 
-    // ─── Callbacks específicos deste repository ───────────────────────
-
-    public interface Callback {
-        void onSuccess(Usuario usuario);
-        void onError(String erro);
-    }
-
-    public interface CallbackSimples {
-        void onSuccess();
-        void onError(String erro);
-    }
-
-    public interface CallbackFoto {
-        void onSuccess(String urlPublica);
-        void onError(String erro);
-    }
-
-    // ─── Login ────────────────────────────────────────────────────────
-    public void login(String email, String senha, Callback callback) {
-        firebaseAuth.signInWithEmailAndPassword(email, senha)
-                .addOnCompleteListener(task -> {
-                    if (!task.isSuccessful()) {
-                        callback.onError(task.getException().getMessage());
-                        return;
-                    }
-                    String uid = task.getResult().getUser().getUid();
-                    buscarPorId(uid, callback);
-                });
-    }
-
-    // ─── Cadastro ─────────────────────────────────────────────────────
-    public void cadastrar(String nome, String email, String senha, String tipo, Callback callback) {
-        firebaseAuth.createUserWithEmailAndPassword(email, senha)
-                .addOnCompleteListener(task -> {
-                    if (!task.isSuccessful()) {
-                        callback.onError(task.getException().getMessage());
-                        return;
-                    }
-                    String uid = task.getResult().getUser().getUid();
-                    salvarNoSupabase(uid, nome, email, tipo, callback);
-                });
+    public UsuarioRepository() {
+        this.api = RetrofitClient.getUsuarioService();
     }
 
     // ─── Buscar por ID ────────────────────────────────────────────────
-    public void buscarPorId(String uid, Callback callback) {
-        new Thread(() -> {
-            try {
-                Request request = client
-                        .baseRequest("/rest/v1/usuarios?id=eq." + uid + "&select=*")
-                        .get()
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-                String body = response.body().string();
-
-                if (!response.isSuccessful()) {
-                    callback.onError("Erro " + response.code() + ": " + body);
-                    return;
+    public void obterPerfil(BaseCallback<PerfilCompradorDTO> callback) {
+        api.obterPerfil().enqueue(new Callback<PerfilCompradorDTO>() {
+            @Override
+            public void onResponse(Call<PerfilCompradorDTO> call, retrofit2.Response<PerfilCompradorDTO> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao carregar carrinho: " + response.code());
                 }
-
-                JSONArray array = new JSONArray(body);
-                if (array.length() == 0) {
-                    callback.onError("Usuário não encontrado");
-                    return;
-                }
-
-                callback.onSuccess(Usuario.fromJson(array.getJSONObject(0)));
-
-            } catch (Exception e) {
-                callback.onError(e.getMessage());
             }
-        }).start();
+
+            @Override
+            public void onFailure(Call<PerfilCompradorDTO> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
     }
 
-    // ─── Atualizar perfil (genérico) ──────────────────────────────────
-    // Recebe um JSONObject com apenas os campos a atualizar.
-    // Usado tanto pelo CompletarPerfilCompradorActivity
-    // quanto pelo CompletarPerfilProdutorActivity.
-    public void atualizarPerfil(String uid, JSONObject campos, CallbackSimples callback) {
-        new Thread(() -> {
-            try {
-                RequestBody body = RequestBody.create(campos.toString(), MediaType.parse("application/json"));
-
-                Request request = client
-                        .baseRequest("/rest/v1/usuarios?id=eq." + uid)
-                        .addHeader("Prefer", "return=minimal")
-                        .patch(body)
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-
-                if (response.isSuccessful()) callback.onSuccess();
-                else callback.onError("Erro " + response.code() + ": " + response.body().string());
-
-            } catch (Exception e) {
-                callback.onError(e.getMessage());
-            }
-        }).start();
-    }
-
-
-    // ─── Logout ───────────────────────────────────────────────────────
-    public void logout() {
-        firebaseAuth.signOut();
-    }
-
-    // ─── Privado: salva no Supabase após criar no Firebase ────────────
-    private void salvarNoSupabase(String uid, String nome, String email, String tipo, Callback callback) {
-        new Thread(() -> {
-            try {
-                JSONObject json = new JSONObject();
-                json.put("id",       uid);
-                json.put("nome",     nome);
-                json.put("email",    email);
-                json.put("tipo",     tipo);
-
-                RequestBody body = RequestBody.create(
-                        json.toString(), MediaType.parse("application/json"));
-
-                Request request = client
-                        .baseRequest("/rest/v1/usuarios")
-                        .addHeader("Prefer", "resolution=merge-duplicates")
-                        .post(body)
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-
-                if (!response.isSuccessful()) {
-                    callback.onError("Erro ao salvar perfil: " + response.code());
-                    return;
+    public void atualizarPerfil(PerfilCompradorDTO dto, BaseCallback<Void> callback) {
+        api.atualizarPerfil(dto).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, retrofit2.Response<Void> response) {
+                if (response.isSuccessful()) {
+                    callback.onSuccess(null);
+                } else {
+                    callback.onError("Erro ao remover item: " + response.code());
                 }
-
-                // Monta Usuario localmente — evita uma requisição extra de busca
-                Usuario u  = new Usuario();
-                u.id       = uid;
-                u.nome     = nome;
-                u.email    = email;
-                u.tipo     = tipo;
-                callback.onSuccess(u);
-
-            } catch (Exception e) {
-                callback.onError(e.getMessage());
             }
-        }).start();
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
     }
 }

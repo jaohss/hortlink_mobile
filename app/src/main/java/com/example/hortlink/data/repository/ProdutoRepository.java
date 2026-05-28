@@ -3,7 +3,7 @@ package com.example.hortlink.data.repository;
 import com.example.hortlink.util.RetrofitClient;
 import com.example.hortlink.data.dto.NovoProdutoDTO;
 import com.example.hortlink.data.model.Produto;
-import com.example.hortlink.entidades.BaseCallback;
+import com.example.hortlink.service.BaseCallback;
 import com.example.hortlink.service.ProdutoService;
 import com.google.gson.Gson;
 

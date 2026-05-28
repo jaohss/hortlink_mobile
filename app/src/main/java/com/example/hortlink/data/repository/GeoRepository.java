@@ -1,111 +1,140 @@
 package com.example.hortlink.data.repository;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.example.hortlink.data.dto.CoordenadasDTO;
+import com.example.hortlink.data.dto.ViaCepResponse;
+import com.example.hortlink.service.BaseCallback;
+import com.example.hortlink.service.GeoService;
+import com.example.hortlink.util.RetrofitClient;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class GeoRepository {
-    // Cache em memória: CEP → [lat, lng]
-    // Evita chamar a API duas vezes pro mesmo produtor
-    private static final Map<String, double[]> cache = new HashMap<>();
 
-    private final OkHttpClient http = new OkHttpClient();
+    // Cache em memória para evitar chamadas repetidas na API
+    private static final Map<String, CoordenadasDTO> cache = new HashMap<>();
 
-    public interface CallbackCoordenadas {
-        void onSuccess(double lat, double lng);
-        void onError(String erro);
+    private final GeoService api;
+
+    public GeoRepository() {
+        this.api = RetrofitClient.getGeoService();
     }
 
-    /**
-     * Converte CEP em coordenadas geográficas.
-     * Fluxo: ViaCEP (pega endereço) → Nominatim/OpenStreetMap (pega lat/lng)
-     * Ambas as APIs são gratuitas e sem chave.
-     */
-    public void buscarCoordenadas(String cep, CallbackCoordenadas callback) {
-        // CEP inválido ou vazio — não tenta
+    public void buscarCoordenadas(String cep, BaseCallback<CoordenadasDTO> callback) {
         if (cep == null || cep.replaceAll("[^0-9]", "").length() != 8) {
-            callback.onError("CEP inválido: " + cep);
+            callback.onError("CEP inválido.");
             return;
         }
 
         String cepLimpo = cep.replaceAll("[^0-9]", "");
 
-        // Retorna do cache se já foi consultado antes
+        // 1. Retorna do cache se já existe
         if (cache.containsKey(cepLimpo)) {
-            double[] coords = cache.get(cepLimpo);
-            callback.onSuccess(coords[0], coords[1]);
+            callback.onSuccess(cache.get(cepLimpo));
             return;
         }
 
-        new Thread(() -> {
-            try {
-                // 1. ViaCEP → logradouro para montar a query
-                String viaCepUrl = "https://viacep.com.br/ws/" + cepLimpo + "/json/";
-                Request viaCepReq = new Request.Builder().url(viaCepUrl).build();
-                Response viaCepResp = http.newCall(viaCepReq).execute();
-
-                if (!viaCepResp.isSuccessful()) {
-                    callback.onError("ViaCEP falhou: " + viaCepResp.code());
+        // 2. Chama a API do ViaCEP
+        api.buscarCep(cepLimpo).enqueue(new Callback<ViaCepResponse>() {
+            @Override
+            public void onResponse(Call<ViaCepResponse> call, Response<ViaCepResponse> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    callback.onError("Erro na consulta do CEP: " + response.code());
                     return;
                 }
 
-                JSONObject viacep = new JSONObject(viaCepResp.body().string());
-                if (viacep.optBoolean("erro", false)) {
-                    callback.onError("CEP não encontrado");
+                ViaCepResponse viaCep = response.body();
+
+                if (viaCep.getErro()) {
+                    callback.onError("CEP não encontrado.");
                     return;
                 }
 
-                String logradouro = viacep.optString("logradouro", "");
-                String bairro     = viacep.optString("bairro", "");
-                String cidade     = viacep.optString("localidade", "");
-                String estado     = viacep.optString("uf", "");
+                // Monta a frase de pesquisa
+                String logradouro = viaCep.getLogradouro() != null ? viaCep.getLogradouro() : "";
+                String bairro = viaCep.getBairro() != null ? viaCep.getBairro() : "";
+                String cidade = viaCep.getLocalidade() != null ? viaCep.getLocalidade() : "";
+                String estado = viaCep.getUf() != null ? viaCep.getUf() : "";
 
-                // Monta query de busca para o Nominatim
-                String query = (logradouro.isEmpty() ? bairro : logradouro)
-                        + ", " + cidade + ", " + estado + ", Brasil";
-                String encodedQuery = query.replace(" ", "+").replace(",", "%2C");
+                String query = (logradouro.isEmpty() ? bairro : logradouro) + ", " + cidade + ", " + estado + ", Brasil";
 
-                // 2. Nominatim (OpenStreetMap) → lat/lng
-                String nominatimUrl = "https://nominatim.openstreetmap.org/search"
-                        + "?q=" + encodedQuery
-                        + "&format=json&limit=1&countrycodes=br";
-
-                Request nominatimReq = new Request.Builder()
-                        .url(nominatimUrl)
-                        .addHeader("User-Agent", "HortlinkApp/1.0") // obrigatório pelo Nominatim
-                        .build();
-
-                Response nominatimResp = http.newCall(nominatimReq).execute();
-
-                if (!nominatimResp.isSuccessful()) {
-                    callback.onError("Nominatim falhou: " + nominatimResp.code());
-                    return;
-                }
-
-                JSONArray results = new JSONArray(nominatimResp.body().string());
-                if (results.length() == 0) {
-                    callback.onError("Nenhuma coordenada encontrada para: " + query);
-                    return;
-                }
-
-                JSONObject lugar = results.getJSONObject(0);
-                double lat = Double.parseDouble(lugar.getString("lat"));
-                double lng = Double.parseDouble(lugar.getString("lon"));
-
-                // Salva no cache
-                cache.put(cepLimpo, new double[]{lat, lng});
-
-                callback.onSuccess(lat, lng);
-
-            } catch (Exception e) {
-                callback.onError(e.getMessage());
+                // 3. Chama o Nominatim usando a query montada
+                buscarLatLonNoNominatim(query, cepLimpo, callback);
             }
-        }).start();
+
+            @Override
+            public void onFailure(Call<ViaCepResponse> call, Throwable t) {
+                callback.onError("Falha na rede (ViaCEP): " + t.getMessage());
+            }
+        });
+    }
+
+    private void buscarLatLonNoNominatim(String query, String cepLimpo, BaseCallback<CoordenadasDTO> callback) {
+        api.buscarCoordenadas(query).enqueue(new Callback<JsonArray>() {
+            @Override
+            public void onResponse(Call<JsonArray> call, Response<JsonArray> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    callback.onError("Erro na consulta de localização: " + response.code());
+                    return;
+                }
+
+                JsonArray results = response.body();
+                if (results.isEmpty()) {
+                    callback.onError("Nenhuma coordenada encontrada para o endereço informado.");
+                    return;
+                }
+
+                try {
+                    // Lê o JSON genérico diretamente (sem precisar de DTO para o Nominatim)
+                    JsonObject lugar = results.get(0).getAsJsonObject();
+                    double lat = lugar.get("lat").getAsDouble();
+                    double lng = lugar.get("lon").getAsDouble();
+
+                    CoordenadasDTO coords = new CoordenadasDTO(lat, lng);
+                    cache.put(cepLimpo, coords); // Salva no cache
+                    callback.onSuccess(coords);
+
+                } catch (Exception e) {
+                    callback.onError("Erro ao ler as coordenadas recebidas.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonArray> call, Throwable t) {
+                callback.onError("Falha na rede (Nominatim): " + t.getMessage());
+            }
+        });
+    }
+
+    public void buscarEnderecoPorCep(String cep, BaseCallback<ViaCepResponse> callback) {
+        String cepLimpo = cep.replaceAll("[^0-9]", "");
+
+        api.buscarCep(cepLimpo).enqueue(new Callback<ViaCepResponse>() {
+            @Override
+            public void onResponse(Call<ViaCepResponse> call, Response<ViaCepResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ViaCepResponse viaCep = response.body();
+
+                    if (viaCep.getErro()) {
+                        callback.onError("CEP não encontrado.");
+                    } else {
+                        callback.onSuccess(viaCep); // Devolve o DTO com todos os textos!
+                    }
+                } else {
+                    callback.onError("Erro na consulta do CEP: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ViaCepResponse> call, Throwable t) {
+                callback.onError("Falha na rede (ViaCEP): " + t.getMessage());
+            }
+        });
     }
 }

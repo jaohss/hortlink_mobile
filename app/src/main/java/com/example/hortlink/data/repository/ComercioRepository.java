@@ -2,7 +2,7 @@ package com.example.hortlink.data.repository;
 
 import com.example.hortlink.util.RetrofitClient;
 import com.example.hortlink.data.dto.ComercioDTO;
-import com.example.hortlink.entidades.BaseCallback;
+import com.example.hortlink.service.BaseCallback;
 import com.example.hortlink.service.ComercioService;
 
 import retrofit2.Call;

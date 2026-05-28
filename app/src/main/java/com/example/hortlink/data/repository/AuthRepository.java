@@ -4,8 +4,8 @@ import com.example.hortlink.data.dto.AuthRequest;
 import com.example.hortlink.data.dto.AuthResponse;
 import com.example.hortlink.data.dto.RegistroDTO;
 import com.example.hortlink.data.model.Usuario;
-import com.example.hortlink.entidades.BaseCallback;
 import com.example.hortlink.service.AuthService;
+import com.example.hortlink.service.BaseCallback;
 import com.example.hortlink.util.RetrofitClient;
 import com.example.hortlink.util.SessionManager;
 

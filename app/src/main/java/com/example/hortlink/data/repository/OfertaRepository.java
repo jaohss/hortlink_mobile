@@ -5,7 +5,7 @@ import com.example.hortlink.data.dto.DetalheOfertaDTO;
 import com.example.hortlink.data.dto.NovaOfertaDTO;
 import com.example.hortlink.data.model.OfertaDTO;
 import com.example.hortlink.data.remote.SupabaseClient;
-import com.example.hortlink.entidades.BaseCallback;
+import com.example.hortlink.service.BaseCallback;
 import com.example.hortlink.service.OfertaService;
 
 import org.json.JSONObject;

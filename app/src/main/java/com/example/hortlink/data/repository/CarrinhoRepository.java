@@ -1,6 +1,8 @@
 package com.example.hortlink.data.repository;
 
+import com.example.hortlink.data.dto.CheckoutRequestDTO;
 import com.example.hortlink.data.model.CarrinhoResponse;
+import com.example.hortlink.service.BaseCallback;
 import com.example.hortlink.service.CarrinhoService;
 import com.example.hortlink.util.RetrofitClient;
 import com.google.gson.JsonObject;
@@ -17,13 +19,9 @@ public class CarrinhoRepository {
         this.api = RetrofitClient.getCarrinhoService();
     }
 
-    public interface CarrinhoCallback {
-        void onSuccess(CarrinhoResponse carrinho);
-        void onError(String mensagemErro);
-    }
-
-    public void obterCarrinho(Long compradorId, CarrinhoCallback callback) {
-        api.obterCarrinho(compradorId).enqueue(new Callback<CarrinhoResponse>() {
+    // ─── OBTER CARRINHO ──────────────────────────────────────────────
+    public void obterCarrinho(BaseCallback<CarrinhoResponse> callback) {
+        api.obterCarrinho().enqueue(new Callback<CarrinhoResponse>() {
             @Override
             public void onResponse(Call<CarrinhoResponse> call, Response<CarrinhoResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -40,17 +38,18 @@ public class CarrinhoRepository {
         });
     }
 
-    public void alterarQuantidade(Long compradorId, Long idItem, int novaQuantidade, CarrinhoCallback callback) {
+    public void adicionarItem(Long ofertaId, int quantidade, BaseCallback<CarrinhoResponse> callback) {
         JsonObject request = new JsonObject();
-        request.addProperty("novaQuantidade", novaQuantidade);
+        request.addProperty("ofertaId", ofertaId);
+        request.addProperty("quantidade", quantidade);
 
-        api.atualizarQuantidade(compradorId, idItem, request).enqueue(new Callback<CarrinhoResponse>() {
+        api.adicionarItem(request).enqueue(new Callback<CarrinhoResponse>() {
             @Override
             public void onResponse(Call<CarrinhoResponse> call, Response<CarrinhoResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     callback.onSuccess(response.body());
                 } else {
-                    callback.onError("Erro ao atualizar quantidade");
+                    callback.onError("Erro ao adicionar item: " + response.code());
                 }
             }
 
@@ -61,19 +60,61 @@ public class CarrinhoRepository {
         });
     }
 
-    public void removerItem(Long compradorId, Long idItem, CarrinhoCallback callback) {
-        api.removerItem(compradorId, idItem).enqueue(new Callback<CarrinhoResponse>() {
+    // ─── ALTERAR QUANTIDADE ──────────────────────────────────────────
+    public void alterarQuantidade(Long idItem, int novaQuantidade, BaseCallback<CarrinhoResponse> callback) {
+        JsonObject request = new JsonObject();
+        request.addProperty("novaQuantidade", novaQuantidade);
+
+        api.atualizarQuantidade(idItem, request).enqueue(new Callback<CarrinhoResponse>() {
             @Override
             public void onResponse(Call<CarrinhoResponse> call, Response<CarrinhoResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     callback.onSuccess(response.body());
                 } else {
-                    callback.onError("Erro ao remover item");
+                    callback.onError("Erro ao atualizar quantidade: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<CarrinhoResponse> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
+    }
+
+    // ─── REMOVER ITEM ────────────────────────────────────────────────
+    public void removerItem(Long idItem, BaseCallback<CarrinhoResponse> callback) {
+        api.removerItem(idItem).enqueue(new Callback<CarrinhoResponse>() {
+            @Override
+            public void onResponse(Call<CarrinhoResponse> call, Response<CarrinhoResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao remover item: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CarrinhoResponse> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
+    }
+
+    // ─── REALIZAR CHECKOUT ───────────────────────────────────────────
+    public void realizarCheckout(CheckoutRequestDTO dto, BaseCallback<Void> callback) {
+        api.realizarCheckout(dto).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    callback.onSuccess(null);
+                } else {
+                    callback.onError("Não foi possível finalizar o pedido (Erro " + response.code() + ").");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
                 callback.onError("Falha na rede: " + t.getMessage());
             }
         });
