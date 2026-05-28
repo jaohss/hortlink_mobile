@@ -19,13 +19,14 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
+import com.example.hortlink.data.dto.ViaCepResponse;
 import com.example.hortlink.data.model.Usuario;
+import com.example.hortlink.data.repository.GeoRepository;
 import com.example.hortlink.data.repository.UsuarioRepository;
-import com.example.hortlink.services.ViacepService;
+import com.example.hortlink.service.BaseCallback;
+import com.example.hortlink.util.SessionManager;
 
 import org.json.JSONObject;
-import com.example.hortlink.ui.auth.RoleRouterActivity;
-import com.example.hortlink.util.SessionManager;
 
 public class CompletarPerfilCompradorActivity extends AppCompatActivity {
 
@@ -38,6 +39,7 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
 
     // ─── Dependências ─────────────────────────────────────────────────
     private final UsuarioRepository usuarioRepository = new UsuarioRepository();
+    private final GeoRepository geoRepository = new GeoRepository();
 
     // ─── Estado ───────────────────────────────────────────────────────
     private String uid;
@@ -131,16 +133,19 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
     private void buscarCep(String cep) {
         setCarregando(true);
 
-        ViacepService.buscar(cep, new ViacepService.Callback() {
-
+        geoRepository.buscarEnderecoPorCep(cep, new BaseCallback<ViaCepResponse>() {
             @Override
-            public void onSuccess(String bairro, String cidade, String estado) {
+            public void onSuccess(ViaCepResponse endereco) {
                 runOnUiThread(() -> {
                     setCarregando(false);
-                    edtCidade.setText(cidade);
-                    edtEstado.setText(estado);
-                    // Foca no bairro — próximo campo lógico após localização
-                    edtBairro.setText(bairro);
+
+                    // Puxamos os dados diretamente do DTO ViaCepResponse
+                    edtCidade.setText(endereco.getLocalidade());
+                    edtEstado.setText(endereco.getUf());
+                    edtBairro.setText(endereco.getBairro());
+
+                    // Foca na referência, já que o bairro foi preenchido
+                    edtReferencia.requestFocus();
                 });
             }
 

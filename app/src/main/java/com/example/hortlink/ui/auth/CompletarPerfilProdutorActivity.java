@@ -19,8 +19,6 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.hortlink.R;
 import com.example.hortlink.data.model.Usuario;
 import com.example.hortlink.data.repository.ProdutorRepository;
-import com.example.hortlink.services.ViacepService;
-import com.example.hortlink.ui.auth.RoleRouterActivity;
 import com.example.hortlink.util.SessionManager;
 
 public class CompletarPerfilProdutorActivity extends AppCompatActivity {

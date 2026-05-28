@@ -9,7 +9,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/backgroundhort"
 
-    tools:context=".ui.auth.MainActivity">
+    tools:context=".ui.auth.Cadastro">
 
 
     <LinearLayout

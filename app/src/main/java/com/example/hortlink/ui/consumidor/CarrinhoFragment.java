@@ -17,11 +17,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.CarrinhoAdapter;
-
 import com.example.hortlink.data.model.CarrinhoResponse;
 import com.example.hortlink.data.model.ItemCarrinhoResponse;
 import com.example.hortlink.data.repository.CarrinhoRepository;
-import com.example.hortlink.entidades.CartManager;
 import com.example.hortlink.util.SessionManager;
 
 import java.util.ArrayList;
@@ -32,7 +30,6 @@ public class CarrinhoFragment extends Fragment {
     // Substituímos o modelo antigo CartItem pelo DTO gerado pelo backend
     private List<ItemCarrinhoResponse> cartItems = new ArrayList<>();
     private CarrinhoAdapter adapter;
-    private static final int QUANTIDADE_MAXIMA = 99;
 
     private View layoutEmpty;
     private View layoutFooter;
@@ -40,11 +37,10 @@ public class CarrinhoFragment extends Fragment {
     private Button btnCheckout;
     private RecyclerView rvCart;
 
-
     // Novo Repository substituindo o SupabaseHelper
     private CarrinhoRepository repository;
     private Long compradorId;
-    private Double valorTotalCarrinho = 0.0;
+    private Double valorTotalCarrinho = 0.0; // Agora o backend nos dá esse valor
 
     @Nullable
     @Override
@@ -70,7 +66,6 @@ public class CarrinhoFragment extends Fragment {
             // Opcional: Redirecionar para a tela de Login aqui
             return;
         }
-
 
         // Views — IDs do fragment_carrinho.xml
         layoutEmpty  = view.findViewById(R.id.layout_empty);
@@ -124,8 +119,6 @@ public class CarrinhoFragment extends Fragment {
         repository.removerItem(compradorId, item.getId(), new CarrinhoRepository.CarrinhoCallback() {
             @Override
             public void onSuccess(CarrinhoResponse carrinhoAtualizado) {
-                // A API já nos devolve o carrinho inteiro atualizado, recarregamos a tela!
-                CartManager.getInstance(requireContext()).removeItem(String.valueOf(item.getOfertaId()));
                 processarSucessoCarrinho(carrinhoAtualizado);
             }
 
@@ -167,14 +160,6 @@ public class CarrinhoFragment extends Fragment {
 
         // Puxa o valor total já calculado pelo Spring Boot
         valorTotalCarrinho = carrinho.getValorTotal() != null ? carrinho.getValorTotal() : 0.0;
-
-        // Opcional: Sincroniza o CartManager local se ainda for usar
-        CartManager cm = CartManager.getInstance(requireContext());
-        cm.clearCart();
-        for (ItemCarrinhoResponse ci : cartItems) {
-            // Adapte o seu CartManager para aceitar o novo DTO se necessário
-            // cm.addItem(ci);
-        }
 
         atualizarUi();
     }

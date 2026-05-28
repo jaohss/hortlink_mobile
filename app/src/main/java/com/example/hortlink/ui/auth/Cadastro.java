@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,10 +15,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.hortlink.R;
 import com.example.hortlink.data.dto.RegistroDTO;
 import com.example.hortlink.data.repository.AuthRepository;
-import com.example.hortlink.entidades.BaseCallback;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class Cadastro extends AppCompatActivity {
@@ -114,7 +112,7 @@ public class Cadastro extends AppCompatActivity {
 
                 // Manda para a tela de Login.
                 // Ao logar, a própria MainActivity vai ler o token e decidir se manda para a Home ou para Completar Perfil!
-                startActivity(new Intent(Cadastro.this, MainActivity.class));
+                startActivity(new Intent(Cadastro.this, com.example.hortlink.activities.MainActivity.class));
                 finish();
             }
 

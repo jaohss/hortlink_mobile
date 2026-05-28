@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,7 +18,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.hortlink.R;
 import com.example.hortlink.data.model.Usuario;
 import com.example.hortlink.data.repository.AuthRepository;
-import com.example.hortlink.entidades.BaseCallback;
+import com.example.hortlink.service.BaseCallback;
+import com.example.hortlink.ui.consumidor.Homec;
 import com.example.hortlink.util.SessionManager;
 
 public class MainActivity extends AppCompatActivity {

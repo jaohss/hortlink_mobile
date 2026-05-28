@@ -17,29 +17,13 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
-import com.example.hortlink.data.model.CartItem;
-import com.example.hortlink.data.repository.CarrinhoRepository;
+import com.example.hortlink.data.dto.CheckoutRequestDTO;
 import com.example.hortlink.data.repository.PedidoRepository;
-import com.example.hortlink.data.repository.ProdutoRepository;
-import com.example.hortlink.services.CartManager;
-import com.google.firebase.auth.FirebaseAuth;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.example.hortlink.service.BaseCallback;
 
 public class CheckoutActivity extends AppCompatActivity {
 
-    private List<CartItem> cartItems;
-    private String usuarioId;
-
-    private final ProdutoRepository  produtoRepository  = new ProdutoRepository();
-    private final CarrinhoRepository carrinhoRepository = new CarrinhoRepository();
-    private final PedidoRepository   pedidoRepository   = new PedidoRepository();
+    private final PedidoRepository pedidoRepository = new PedidoRepository();
 
     private ProgressBar spinner;
     private TextView tvMsg;
@@ -50,190 +34,76 @@ public class CheckoutActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_checkout);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        usuarioId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        cartItems = CartManager.getInstance(this).getItems();
-
         spinner = findViewById(R.id.spinner);
         tvMsg   = findViewById(R.id.tv_msg);
         btnPay  = findViewById(R.id.btn_pagar);
 
-        btnPay.setOnClickListener(v -> validarItensAntesDeComprar());
+        // O único gatilho da tela agora é este botão
+        btnPay.setOnClickListener(v -> iniciarPagamento());
     }
 
-    // ─── 0. Valida cada produto antes de cobrar ──────────────────────
-    private void validarItensAntesDeComprar() {
-        if (cartItems == null || cartItems.isEmpty()) {
-            Toast.makeText(this, "Carrinho vazio", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
+    // ─── 1. Simula o tempo de um Gateway de Pagamento ─────────
+    private void iniciarPagamento() {
         btnPay.setEnabled(false);
         spinner.setVisibility(View.VISIBLE);
-        tvMsg.setText("Verificando disponibilidade...");
+        tvMsg.setText("Processando pagamento...");
 
-        List<CartItem> inativos = new ArrayList<>();
-        AtomicInteger pendentes = new AtomicInteger(cartItems.size());
-
-        for (CartItem item : cartItems) {
-            produtoRepository.verificarStatus(item.getProdutoId(), new ProdutoRepository.Callback() {
-                @Override
-                public void onSuccess(String resultado) {
-                    try {
-                        if (new JSONArray(resultado).length() == 0) {
-                            synchronized (inativos) { inativos.add(item); }
-                        }
-                    } catch (Exception e) {
-                        synchronized (inativos) { inativos.add(item); }
-                    }
-                    onRespostaChegou(pendentes, inativos);
-                }
-
-                @Override
-                public void onError(String erro) {
-                    synchronized (inativos) { inativos.add(item); }
-                    onRespostaChegou(pendentes, inativos);
-                }
-            });
-        }
-    }
-
-    private void onRespostaChegou(AtomicInteger pendentes, List<CartItem> inativos) {
-        if (pendentes.decrementAndGet() != 0) return;
-        runOnUiThread(() -> {
-            if (!inativos.isEmpty()) removerItensInativosEAvisar(inativos);
-            else iniciarPagamento();
-        });
-    }
-
-    // ─── Remove inativos do carrinho e avisa ─────────────────────────
-    private void removerItensInativosEAvisar(List<CartItem> itensInativos) {
-        StringBuilder nomes = new StringBuilder();
-
-        for (CartItem item : itensInativos) {
-            nomes.append("\n• ").append(item.getNomeProduto());
-            cartItems.remove(item);
-            CartManager.getInstance(this).removeItem(item.getProdutoId());
-
-            carrinhoRepository.removerItem(item.getCarrinhoId(), new CarrinhoRepository.Callback() {
-                @Override public void onSuccess(String r) {}
-                @Override public void onError(String e) {}
-            });
-        }
-
-        spinner.setVisibility(View.GONE);
-        btnPay.setEnabled(true);
-        tvMsg.setText("");
-
-        Toast.makeText(this,
-                "Produto(s) indisponível(is):" + nomes + "\n\nRevise o carrinho e tente novamente.",
-                Toast.LENGTH_LONG).show();
-
-        finish();
-    }
-
-    // ─── 1. Simula pagamento e cria o pedido ─────────────────────────
-    private void iniciarPagamento() {
-        runOnUiThread(() -> tvMsg.setText("Processando pagamento..."));
-
+        // Aguarda 2 segundos para dar feedback visual ao usuário
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            tvMsg.setText("Pagamento aprovado ✅");
-            spinner.setVisibility(View.GONE);
-            criarPedido();
+            tvMsg.setText("Pagamento aprovado ✅\nGerando pedido...");
+            enviarCheckoutParaAPI();
         }, 2000);
     }
 
-    // ─── 2. INSERT em pedidos ────────────────────────────────────────
-    private void criarPedido() {
-        String produtorId = cartItems.get(0).getProducerId();
-        double total = 0;
-        for (CartItem i : cartItems) total += i.getSubtotal();
+    // ─── 2. Envia apenas as decisões para o Spring Boot ───────
+    private void enviarCheckoutParaAPI() {
+        // Dados fixos para o teste atual.
+        // No futuro, pegar de componentes UI (RadioGroup, Spinners, etc)
+        String formaPagtoEscolhida = "PIX";
+        Long enderecoId = null;
+        String observacoes = "Nenhuma observação";
 
-        pedidoRepository.inserirPedido(usuarioId, produtorId, total, new PedidoRepository.Callback() {
+        CheckoutRequestDTO dto = new CheckoutRequestDTO(formaPagtoEscolhida, enderecoId, observacoes);
+
+        pedidoRepository.finalizarCheckout(dto, new BaseCallback<Void>() {
             @Override
-            public void onSuccess(String resultado) {
-                try {
-                    String pedidoId = new JSONArray(resultado)
-                            .getJSONObject(0)
-                            .getString("id");
-                    inserirItensPedido(pedidoId);
-                } catch (JSONException e) {
-                    logError("Erro ao ler id do pedido: " + e.getMessage());
-                }
-            }
+            public void onSuccess(Void unused) {
+                runOnUiThread(() -> {
+                    spinner.setVisibility(View.GONE);
+                    Toast.makeText(CheckoutActivity.this, "Pedido realizado com sucesso!", Toast.LENGTH_LONG).show();
 
-            @Override
-            public void onError(String erro) { logError(erro); }
-        });
-    }
-
-    // ─── 3. INSERT batch em pedido_itens ────────────────────────────
-    private void inserirItensPedido(String pedidoId) {
-        try {
-            JSONArray batch = new JSONArray();
-            for (CartItem item : cartItems) {
-                JSONObject obj = new JSONObject();
-                obj.put("pedido_id",      pedidoId);
-                obj.put("produto_id",     item.getProdutoId());
-                obj.put("quantidade",     item.getQuantidade());
-                obj.put("preco_unitario", item.getPreco());
-                batch.put(obj);
-            }
-
-            pedidoRepository.inserirItensPedido(batch, new PedidoRepository.Callback() {
-                @Override
-                public void onSuccess(String resultado) { limparCarrinho(); }
-
-                @Override
-                public void onError(String erro) { logError(erro); }
-            });
-
-        } catch (JSONException e) {
-            logError("Erro ao montar itens: " + e.getMessage());
-        }
-    }
-
-    // ─── 4. Limpa carrinho e navega para Home ───────────────────────
-    private void limparCarrinho() {
-        carrinhoRepository.limparCarrinho(usuarioId, new CarrinhoRepository.Callback() {
-            @Override
-            public void onSuccess(String resultado) {
-                CartManager.getInstance(CheckoutActivity.this).clearCart();
-                navegarParaHome();
-                runOnUiThread(() -> Toast.makeText(CheckoutActivity.this,
-                        "Pedido realizado com sucesso!", Toast.LENGTH_LONG).show());
+                    // Como não temos mais o CartManager, é só navegar para a Home!
+                    // O Spring Boot já limpou o carrinho no banco.
+                    navegarParaHome();
+                });
             }
 
             @Override
             public void onError(String erro) {
-                // Pedido já foi criado — navega mesmo assim
-                CartManager.getInstance(CheckoutActivity.this).clearCart();
-                navegarParaHome();
+                runOnUiThread(() -> {
+                    btnPay.setEnabled(true);
+                    spinner.setVisibility(View.GONE);
+                    tvMsg.setText("Ocorreu um problema.");
+
+                    // Mostra o que a API devolveu (ex: "Sem estoque")
+                    Toast.makeText(CheckoutActivity.this, erro, Toast.LENGTH_LONG).show();
+                });
             }
         });
     }
 
+    // ─── 3. Finaliza o fluxo e volta para a tela inicial ──────
     private void navegarParaHome() {
-        runOnUiThread(() -> {
-            Intent intent = new Intent(CheckoutActivity.this, Homec.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
-            finish();
-        });
-    }
-
-    // ─── Helper de erro ─────────────────────────────────────────────
-    private void logError(String msg) {
-        runOnUiThread(() -> {
-            btnPay.setEnabled(true);
-            spinner.setVisibility(View.GONE);
-            tvMsg.setText("Ocorreu um erro. Tente novamente.");
-            Toast.makeText(this, "Erro: " + msg, Toast.LENGTH_LONG).show();
-        });
+        Intent intent = new Intent(CheckoutActivity.this, Homec.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 }
