@@ -3,8 +3,10 @@ package com.example.hortlink.util;
 import com.example.hortlink.service.AuthService;
 import com.example.hortlink.service.CarrinhoService;
 import com.example.hortlink.service.ComercioService;
+import com.example.hortlink.service.GeoService;
 import com.example.hortlink.service.OfertaService;
 import com.example.hortlink.service.ProdutoService;
+import com.example.hortlink.service.UsuarioService;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -73,6 +75,14 @@ public class RetrofitClient {
 
     public static CarrinhoService getCarrinhoService() {
         return getClient().create(CarrinhoService.class);
+    }
+
+    public static UsuarioService getUsuarioService() {
+        return getClient().create(UsuarioService.class);
+    }
+
+    public static GeoService getGeoService() {
+        return getClient().create(GeoService.class);
     }
 
     public static AuthService getAuthService() {

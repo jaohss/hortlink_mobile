@@ -1,5 +1,6 @@
 package com.example.hortlink.service;
 
+import com.example.hortlink.data.dto.CheckoutRequestDTO;
 import com.example.hortlink.data.model.CarrinhoResponse;
 import com.google.gson.JsonObject;
 
@@ -13,28 +14,24 @@ import retrofit2.http.Path;
 
 public interface CarrinhoService {
 
-    @GET("{compradorId}/carrinho")
-    Call<CarrinhoResponse> obterCarrinho(@Path("compradorId") Long compradorId);
+    @GET("carrinho")
+    Call<CarrinhoResponse> obterCarrinho();
 
-    @POST("{compradorId}/carrinho/itens")
-    Call<CarrinhoResponse> adicionarItem(
-            @Path("compradorId") Long compradorId,
-            @Body JsonObject request
-    );
+    @POST("carrinho/itens")
+    Call<CarrinhoResponse> adicionarItem(@Body JsonObject request);
 
-    @PUT("{compradorId}/carrinho/itens/{idItem}")
+    @PUT("carrinho/itens/{idItem}")
     Call<CarrinhoResponse> atualizarQuantidade(
-            @Path("compradorId") Long compradorId,
             @Path("idItem") Long idItem,
             @Body JsonObject request
     );
 
-    @DELETE("{compradorId}/carrinho/itens/{idItem}")
-    Call<CarrinhoResponse> removerItem(
-            @Path("compradorId") Long compradorId,
-            @Path("idItem") Long idItem
-    );
+    @DELETE("carrinho/itens/{idItem}")
+    Call<CarrinhoResponse> removerItem( @Path("idItem") Long idItem);
 
-    @DELETE("{compradorId}/carrinho")
-    Call<Void> limparCarrinho(@Path("compradorId") Long compradorId);
+    @DELETE("carrinho")
+    Call<Void> limparCarrinho();
+
+    @POST("carrinho/checkout")
+    Call<Void> realizarCheckout(@Body CheckoutRequestDTO requestDTO);
 }
