@@ -17,12 +17,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.adapters.ProdutoAdapter;
-
 import com.example.hortlink.data.dto.ComercioDTO;
 import com.example.hortlink.data.model.OfertaDTO;
 import com.example.hortlink.data.repository.ComercioRepository;
 import com.example.hortlink.data.repository.OfertaRepository;
-import com.example.hortlink.entidades.BaseCallback;
+import com.example.hortlink.service.BaseCallback;
 
 import java.util.List;
 
@@ -35,7 +34,7 @@ import java.util.List;
 
 public class PerfilProdutorActivity extends AppCompatActivity {
 
-    private TextView txtNome, txtCidade, txtContato, txtDescricao;
+    private TextView txtNome, txtCidade, txtContato, txtDescricao, txtAvaliacao;
     private ImageView imgFazenda;
     private RecyclerView recyclerProdutosPerfil;
 
@@ -60,6 +59,7 @@ public class PerfilProdutorActivity extends AppCompatActivity {
         txtCidade    = findViewById(R.id.txtCidadeProd);
         txtContato   = findViewById(R.id.txtContatoProd);
         txtDescricao = findViewById(R.id.txtDescricao);
+        txtAvaliacao = findViewById(R.id.txtAvaliacao);
         imgFazenda   = findViewById(R.id.imgFazenda);
 
         recyclerProdutosPerfil = findViewById(R.id.recyclerProdutosPerfil);
@@ -90,7 +90,7 @@ public class PerfilProdutorActivity extends AppCompatActivity {
                 txtContato.setText(comercio.getTelefone());
 
                 // Formata a avaliação para ter apenas 1 casa decimal (ex: "4.5")
-                txtAvaliacao.setText(String.valueOf(comercio.getAvaliacao()));
+                txtAvaliacao.setText(comercio.getAvaliacao());
 
                 // Carrega a foto do comércio (se houver)
                 String fotoUrl = comercio.getImg_url();
@@ -118,7 +118,7 @@ public class PerfilProdutorActivity extends AppCompatActivity {
 
                 // Cria o adapter passando a lista pronta
                 ProdutoAdapter adapter = new ProdutoAdapter(lista, produto -> {
-                    Intent intent = new Intent(PerfilProdutorActivity.this, DetalheProdutoActivity.class);
+                    Intent intent = new Intent(PerfilProdutorActivity.this, com.example.hortlink.activities.DetalheProdutoActivity.class);
 
                     // Passa o ID da oferta clicada
                     intent.putExtra("produto_id", produto.getId());

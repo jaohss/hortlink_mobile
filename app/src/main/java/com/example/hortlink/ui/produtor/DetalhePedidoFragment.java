@@ -14,13 +14,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.hortlink.R;
+import com.example.hortlink.data.dto.PerfilCompradorDTO;
 import com.example.hortlink.data.model.Pedido;
-import com.example.hortlink.data.model.Usuario;
 import com.example.hortlink.data.repository.PedidoRepository;
 import com.example.hortlink.data.repository.UsuarioRepository;
+import com.example.hortlink.service.BaseCallback;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
 
+import java.text.NumberFormat;
+import java.util.Locale;
 
 public class DetalhePedidoFragment extends BottomSheetDialogFragment {
 
@@ -28,36 +31,33 @@ public class DetalhePedidoFragment extends BottomSheetDialogFragment {
     private static final String ARG_COMPRADOR_ID = "comprador_id";
     private static final String ARG_STATUS = "status";
     private static final String ARG_TOTAL = "total";
-    private static final String ARG_ITENS_RESUMO = "itens_resumo";
 
-    // Callback para avisar o Fragment pai quando o status mudar
     public interface OnStatusAtualizadoListener {
         void onStatusAtualizado(String pedidoId, String novoStatus);
     }
 
     private OnStatusAtualizadoListener statusListener;
 
-    // Dados do pedido passados via args (sem serializar o objeto inteiro)
     private String pedidoId;
-    private String compradorId;
+    private Long compradorId;
     private String statusAtual;
     private double valorTotal;
-    private Pedido pedidoCompleto; // referência para inflar itens
+    private Pedido pedidoCompleto;
 
     private final UsuarioRepository usuarioRepo = new UsuarioRepository();
     private final PedidoRepository  pedidoRepo  = new PedidoRepository();
-
-    // ─── Factory ──────────────────────────────────────────────────────
 
     public static DetalhePedidoFragment newInstance(Pedido pedido) {
         DetalhePedidoFragment f = new DetalhePedidoFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PEDIDO_ID,    pedido.getId());
-        args.putString(ARG_COMPRADOR_ID, pedido.getCompradorId());
+        // Ajuste aqui se o seu modelo atualizou para Long
+        args.putString(ARG_COMPRADOR_ID, String.valueOf(pedido.getClienteId()));
         args.putString(ARG_STATUS,       pedido.getStatus());
-        args.putDouble(ARG_TOTAL,        pedido.getValorTotal());
+        // Proteção caso o valor seja nulo
+        double total = pedido.getValorTotal() != null ? pedido.getValorTotal().doubleValue() : 0.0;
+        args.putDouble(ARG_TOTAL,        total);
         f.setArguments(args);
-        // Guarda referência ao objeto para acessar itens
         f.pedidoCompleto = pedido;
         return f;
     }
@@ -65,8 +65,6 @@ public class DetalhePedidoFragment extends BottomSheetDialogFragment {
     public void setOnStatusAtualizadoListener(OnStatusAtualizadoListener l) {
         this.statusListener = l;
     }
-
-    // ─── Ciclo de vida ────────────────────────────────────────────────
 
     @Nullable
     @Override
@@ -83,12 +81,11 @@ public class DetalhePedidoFragment extends BottomSheetDialogFragment {
         Bundle args = getArguments();
         if (args == null) { dismiss(); return; }
 
-        pedidoId   = args.getString(ARG_PEDIDO_ID);
-        compradorId = args.getString(ARG_COMPRADOR_ID);
+        pedidoId    = args.getString(ARG_PEDIDO_ID);
+        compradorId = args.getLong(ARG_COMPRADOR_ID);
         statusAtual = args.getString(ARG_STATUS);
         valorTotal  = args.getDouble(ARG_TOTAL);
 
-        // Views
         TextView txtPedidoId       = view.findViewById(R.id.txtPedidoId);
         TextView txtStatusDetalhe  = view.findViewById(R.id.txtStatusDetalhe);
         TextView txtNomeComprador  = view.findViewById(R.id.txtNomeComprador);
@@ -104,80 +101,81 @@ public class DetalhePedidoFragment extends BottomSheetDialogFragment {
         MaterialButton btnAceitar  = view.findViewById(R.id.btnAceitarDetalhe);
         MaterialButton btnMapa     = view.findViewById(R.id.btnVerMapa);
 
-        // IDs dos grupos que ficam ocultos até carregar
         int[] toShow = {
                 R.id.labelComprador, R.id.divider1,
                 R.id.labelItens,     R.id.divider2,
                 R.id.layoutPagamento, R.id.layoutTotal
         };
 
-        // Dados estáticos — já disponíveis
-        txtPedidoId.setText("#" + pedidoId.substring(0, 8).toUpperCase());
+        NumberFormat formatoMoeda = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+
+        txtPedidoId.setText(pedidoId != null ? "#" + pedidoId.toUpperCase() : "");
         txtStatusDetalhe.setText(statusAtual != null ? statusAtual.toUpperCase() : "");
         aplicarCorStatus(txtStatusDetalhe, statusAtual);
-        txtTotalDetalhe.setText(String.format("R$ %.2f", valorTotal));
-        txtFormaPagamento.setText("Pix"); // fixo por enquanto — adapte quando tiver coluna
 
-        // Itens já vêm no objeto
+        // Uso do NumberFormat para o total
+        txtTotalDetalhe.setText(formatoMoeda.format(valorTotal));
+        txtFormaPagamento.setText("Pix");
+
         if (pedidoCompleto != null && pedidoCompleto.getItens() != null) {
             for (Pedido.ItemPedido item : pedidoCompleto.getItens()) {
                 View linha = LayoutInflater.from(getContext()).inflate(R.layout.item_detalhe_linha, containerItens, false);
                 ((TextView) linha.findViewById(R.id.txtLinhaQtd)).setText(item.quantidade + "x");
                 ((TextView) linha.findViewById(R.id.txtLinhaNome)).setText(item.nomeProduto);
-                ((TextView) linha.findViewById(R.id.txtLinhaSubtotal)).setText(String.format("R$ %.2f", item.getSubtotal()));
+
+                // Uso do NumberFormat para o subtotal do item
+                double subtotalItem = item.subtotal != null ? item.subtotal.doubleValue() : 0.0;
+                ((TextView) linha.findViewById(R.id.txtLinhaSubtotal)).setText(formatoMoeda.format(subtotalItem));
+
                 containerItens.addView(linha);
             }
         }
 
-        // Botão aceitar — só mostra se ainda está como "pendente"
-        if ("pendente".equals(statusAtual)) {
+        if ("pendente".equalsIgnoreCase(statusAtual)) {
             btnAceitar.setVisibility(View.VISIBLE);
             btnAceitar.setOnClickListener(v -> aceitarPedido(btnAceitar, txtStatusDetalhe));
         }
 
-        // Busca dados do comprador
-        usuarioRepo.buscarPorId(compradorId, new UsuarioRepository.Callback() {
+        // CORREÇÃO 1: Adicionado o "new" e ajustado o tipo esperado
+        usuarioRepo.obterDetalhesCliente(compradorId, new BaseCallback<PerfilCompradorDTO>() {
             @Override
-            public void onSuccess(Usuario usuario) {
+            public void onSuccess(PerfilCompradorDTO compradorDTO) {
                 if (!isAdded()) return;
                 requireActivity().runOnUiThread(() -> {
                     progressDetalhe.setVisibility(View.GONE);
 
-                    // Mostra seções
                     for (int id : toShow) view.findViewById(id).setVisibility(View.VISIBLE);
                     layoutInfoComprador.setVisibility(View.VISIBLE);
 
-                    txtNomeComprador.setText(
-                            usuario.nome != null && !usuario.nome.isEmpty()
-                                    ? usuario.nome : "Não informado");
+                    // CORREÇÃO 2: Uso dos Getters (Certifique-se de adicionar nome e email no DTO!)
+                    String nome = compradorDTO.getNome();
+                    String email = compradorDTO.getEmail();
+                    String telefone = compradorDTO.getTelefone();
+                    String cidade = compradorDTO.getCidade();
+                    String estado = compradorDTO.getEstado();
+                    String cep = compradorDTO.getCep();
 
-                    txtTelefone.setText(
-                            usuario.telefone != null && !usuario.telefone.isEmpty()
-                                    ? usuario.telefone : "Não informado");
+                    txtNomeComprador.setText(nome != null && !nome.isEmpty() ? nome : "Não informado");
+                    txtTelefone.setText(telefone != null && !telefone.isEmpty() ? telefone : "Não informado");
+                    txtEmailComprador.setText(email != null && !email.isEmpty() ? email : "Não informado");
 
-                    txtEmailComprador.setText(
-                            usuario.email != null && !usuario.email.isEmpty()
-                                    ? usuario.email : "Não informado");
+                    if ((cidade != null && !cidade.isEmpty()) || (estado != null && !estado.isEmpty())) {
+                        String endFormatado = (cidade != null ? cidade : "") +
+                                ((cidade != null && estado != null && !cidade.isEmpty() && !estado.isEmpty()) ? ", " : "") +
+                                (estado != null ? estado : "");
 
-                    // Endereço: cidade + estado
-                    String cidade = usuario.cidade != null ? usuario.cidade : "";
-                    String estado = usuario.estado != null ? usuario.estado : "";
-                    if (!cidade.isEmpty() || !estado.isEmpty()) {
-                        txtEndereco.setText(cidade + ((!cidade.isEmpty() && !estado.isEmpty()) ? ", " : "") + estado);
+                        txtEndereco.setText(endFormatado);
                         btnMapa.setVisibility(View.VISIBLE);
 
-                        // Abre Google Maps com busca pelo endereço
                         btnMapa.setOnClickListener(v -> {
-                            String query = Uri.encode(cidade + " " + estado + " " + usuario.cep);
-                            Intent intent = new Intent(Intent.ACTION_VIEW,
-                                    Uri.parse("geo:0,0?q=" + query));
+                            String queryCep = cep != null ? cep : "";
+                            String query = Uri.encode(endFormatado + " " + queryCep);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + query));
                             intent.setPackage("com.google.android.apps.maps");
                             if (intent.resolveActivity(requireActivity().getPackageManager()) != null) {
                                 startActivity(intent);
                             } else {
-                                // Fallback: abre no browser se Maps não estiver instalado
-                                startActivity(new Intent(Intent.ACTION_VIEW,
-                                        Uri.parse("https://maps.google.com/?q=" + query)));
+                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://maps.google.com/maps?q=" + query)));
                             }
                         });
                     } else {
@@ -191,29 +189,26 @@ public class DetalhePedidoFragment extends BottomSheetDialogFragment {
                 if (!isAdded()) return;
                 requireActivity().runOnUiThread(() -> {
                     progressDetalhe.setVisibility(View.GONE);
-                    Toast.makeText(getContext(),
-                            "Não foi possível carregar dados do comprador", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Não foi possível carregar dados do comprador", Toast.LENGTH_SHORT).show();
                 });
             }
         });
     }
 
-    // ─── Aceitar pedido ───────────────────────────────────────────────
-
     private void aceitarPedido(MaterialButton btnAceitar, TextView txtStatus) {
         btnAceitar.setEnabled(false);
         btnAceitar.setText("Enviando…");
 
-        pedidoRepo.atualizarStatus(pedidoId, "aceito", new PedidoRepository.Callback() {
+        // Verifique se o seu PedidoRepository usa BaseCallback ou uma Callback própria. Ajuste se necessário.
+        pedidoRepo.atualizarStatus(pedidoId, "aceito", new BaseCallback<Void>() {
             @Override
-            public void onSuccess(String resultado) {
+            public void onSuccess(Void unused) {
                 if (!isAdded()) return;
                 requireActivity().runOnUiThread(() -> {
                     txtStatus.setText("ACEITO");
                     aplicarCorStatus(txtStatus, "aceito");
                     btnAceitar.setVisibility(View.GONE);
-                    Toast.makeText(getContext(),
-                            "Pedido marcado como aceito ✓", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Pedido marcado como aceito ✓", Toast.LENGTH_SHORT).show();
 
                     if (statusListener != null) {
                         statusListener.onStatusAtualizado(pedidoId, "aceito");
@@ -227,24 +222,22 @@ public class DetalhePedidoFragment extends BottomSheetDialogFragment {
                 requireActivity().runOnUiThread(() -> {
                     btnAceitar.setEnabled(true);
                     btnAceitar.setText("✓  Aceitar Pedido");
-                    Toast.makeText(getContext(),
-                            "Erro ao atualizar pedido", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Erro ao atualizar pedido", Toast.LENGTH_SHORT).show();
                 });
             }
         });
     }
 
-    // ─── Cor do badge de status ───────────────────────────────────────
-
     private void aplicarCorStatus(TextView view, String status) {
         if (status == null || view.getBackground() == null) return;
         int cor;
-        switch (status) {
+        // CORREÇÃO 4: toLowerCase para segurança
+        switch (status.toLowerCase()) {
             case "pendente":      cor = 0xFFFFA000; break;
-            case "aceito":   cor = 0xFF1565C0; break;
-            case "entregue":  cor = 0xFF2E7D32; break;
-            case "cancelado": cor = 0xFFC62828; break;
-            default:          cor = 0xFF616161; break;
+            case "aceito":        cor = 0xFF1565C0; break;
+            case "entregue":      cor = 0xFF2E7D32; break;
+            case "cancelado":     cor = 0xFFC62828; break;
+            default:              cor = 0xFF616161; break;
         }
         view.getBackground().setTint(cor);
     }

@@ -1,189 +1,54 @@
 package com.example.hortlink.data.repository;
 
 import com.example.hortlink.data.model.Pedido;
-import com.example.hortlink.data.remote.SupabaseClient;
+import com.example.hortlink.service.BaseCallback;
+import com.example.hortlink.service.PedidoService;
+import com.example.hortlink.util.RetrofitClient;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class PedidoRepository {
 
-    private final SupabaseClient client = SupabaseClient.getInstance();
+    private final PedidoService api;
 
-    public interface Callback {
-        void onSuccess(String resultado);
-        void onError(String erro);
-    }
+    public PedidoRepository() { this.api = RetrofitClient.getPedidoService(); }
 
-    public interface CallbackLista {
-        void onSuccess(List<Pedido> pedidos);
-        void onError(String erro);
-    }
-
-    // ─── Criar pedido — retorna JSON com id gerado ────────────────────
-    public void inserirPedido(String compradorId, String produtorId,
-                              double total, Callback callback) {
-        new Thread(() -> {
-            try {
-                JSONObject json = new JSONObject();
-                json.put("comprador_id", compradorId);
-                json.put("produtor_id",  produtorId);
-                json.put("valor_total",  total);
-                json.put("status",       "pago");
-
-                RequestBody body = RequestBody.create(
-                        json.toString(), MediaType.parse("application/json"));
-
-                Request request = client.baseRequest("/rest/v1/pedidos")
-                        .addHeader("Prefer", "return=representation")
-                        .post(body)
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-                String respBody = lerBody(response);
-
-                if (response.isSuccessful()) callback.onSuccess(respBody);
-                else callback.onError("Erro " + response.code() + ": " + respBody);
-
-            } catch (Exception e) { callback.onError(e.getMessage()); }
-        }).start();
-    }
-
-    // ─── Inserir itens do pedido em batch ─────────────────────────────
-    public void inserirItensPedido(JSONArray itens, Callback callback) {
-        new Thread(() -> {
-            try {
-                RequestBody body = RequestBody.create(
-                        itens.toString(), MediaType.parse("application/json"));
-
-                Request request = client.baseRequest("/rest/v1/pedido_itens")
-                        .addHeader("Prefer", "return=minimal")
-                        .post(body)
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-
-                if (response.isSuccessful()) callback.onSuccess("ok");
-                else callback.onError("Erro " + response.code() + ": " + lerBody(response));
-
-            } catch (Exception e) { callback.onError(e.getMessage()); }
-        }).start();
-    }
-
-    // ─── Pedidos do COMPRADOR (com itens via join) ────────────────────
-    // Usado pelo PedidosCompradorFragment
-    public void listarPorComprador(String compradorId, CallbackLista callback) {
-        new Thread(() -> {
-            try {
-                // Join: pedidos → pedido_itens → produtos (só nome)
-                String path = "/rest/v1/pedidos"
-                        + "?comprador_id=eq." + compradorId
-                        + "&select=*,pedido_itens(quantidade,preco_unitario,produtos(nome))"
-                        + "&order=criado_em.desc";
-
-                Request request = client.baseRequest(path)
-                        .addHeader("Accept", "application/json")
-                        .get()
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-                String body = lerBody(response);
-
-                if (response.isSuccessful()) callback.onSuccess(parsePedidos(body));
-                else callback.onError("Erro " + response.code() + ": " + body);
-
-            } catch (Exception e) { callback.onError(e.getMessage()); }
-        }).start();
-    }
-
-    // ─── Pedidos do PRODUTOR (com itens via join) ─────────────────────
-    // Usado pelo PedidosProdutorFragment
-    public void listarPorProdutor(String produtorId, CallbackLista callback) {
-        new Thread(() -> {
-            try {
-                String path = "/rest/v1/pedidos"
-                        + "?produtor_id=eq." + produtorId
-                        + "&select=*,pedido_itens(quantidade,preco_unitario,produtos(nome))"
-                        + "&order=criado_em.desc";
-
-                Request request = client.baseRequest(path)
-                        .addHeader("Accept", "application/json")
-                        .get()
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-                String body = lerBody(response);
-
-                if (response.isSuccessful()) callback.onSuccess(parsePedidos(body));
-                else callback.onError("Erro " + response.code() + ": " + body);
-
-            } catch (Exception e) { callback.onError(e.getMessage()); }
-        }).start();
-    }
-
-    // ─── Atualizar status (produtor marca como enviado/entregue) ──────
-    public void atualizarStatus(String pedidoId, String novoStatus, Callback callback) {
-        new Thread(() -> {
-            try {
-                JSONObject json = new JSONObject();
-                json.put("status", novoStatus);
-
-                RequestBody body = RequestBody.create(
-                        json.toString(), MediaType.parse("application/json"));
-
-                Request request = client
-                        .baseRequest("/rest/v1/pedidos?id=eq." + pedidoId)
-                        .addHeader("Prefer", "return=minimal")
-                        .patch(body)
-                        .build();
-
-                Response response = client.getHttp().newCall(request).execute();
-
-                if (response.isSuccessful()) callback.onSuccess("ok");
-                else callback.onError("Erro " + response.code() + ": " + lerBody(response));
-
-            } catch (Exception e) { callback.onError(e.getMessage()); }
-        }).start();
-    }
-
-    // ─── Parse ────────────────────────────────────────────────────────
-    private List<Pedido> parsePedidos(String json) throws Exception {
-        JSONArray array = new JSONArray(json);
-        List<Pedido> lista = new ArrayList<>();
-
-        for (int i = 0; i < array.length(); i++) {
-            JSONObject obj = array.getJSONObject(i);
-            Pedido pedido = Pedido.fromJson(obj);
-
-            // Popula itens se o join veio junto
-            JSONArray itensJson = obj.optJSONArray("pedido_itens");
-            if (itensJson != null) {
-                List<Pedido.ItemPedido> itens = new ArrayList<>();
-                for (int j = 0; j < itensJson.length(); j++) {
-                    itens.add(Pedido.ItemPedido.fromJson(itensJson.getJSONObject(j)));
+    public void obterPedidosPorComercio(BaseCallback<List<Pedido>> callback) {
+        api.obterPedidosPorComercio().enqueue(new Callback<List<Pedido>>() {
+            @Override
+            public void onResponse(Call<List<Pedido>> call, Response<List<Pedido>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao carregar pedidos: " + response.code());
                 }
-                pedido.setItens(itens);
             }
+            @Override
+            public void onFailure(Call<List<Pedido>> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
 
-            lista.add(pedido);
-        }
-
-        return lista;
     }
 
-    private String lerBody(Response response) {
-        ResponseBody body = response.body();
-        if (body == null) return "[]";
-        try { return body.string(); }
-        catch (Exception e) { return "[]"; }
+    public void atualizarStatus(String id, String novoStatus, BaseCallback<Void> callback) {
+        api.atualizarStatus(id, novoStatus.toUpperCase()).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    callback.onSuccess(null);
+                } else {
+                    callback.onError("Erro ao atualizar status: " + response.code());
+                }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
     }
 }

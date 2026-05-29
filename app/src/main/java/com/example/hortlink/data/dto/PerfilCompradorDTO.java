@@ -1,6 +1,9 @@
 package com.example.hortlink.data.dto;
 
 public class PerfilCompradorDTO {
+
+    private String nome;
+    private String email;
     private String telefone;
     private String cep;
     private String cidade;
@@ -9,7 +12,8 @@ public class PerfilCompradorDTO {
     private String complemento;
     private String genero;
 
-    // Construtor completo para a hora de enviar (salvar)
+    public PerfilCompradorDTO() {
+    }
     public PerfilCompradorDTO(String telefone, String cep, String cidade, String estado, String bairro, String complemento, String genero) {
         this.telefone = telefone;
         this.cep = cep;
@@ -28,4 +32,6 @@ public class PerfilCompradorDTO {
     public String getBairro() { return bairro; }
     public String getComplemento() { return complemento; }
     public String getGenero() { return genero; }
+    public String getNome() { return nome; }
+    public String getEmail() { return email; }
 }

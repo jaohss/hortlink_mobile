@@ -24,7 +24,7 @@ import com.example.hortlink.data.enums.Categoria;
 import com.example.hortlink.data.enums.UnidadeMedida;
 import com.example.hortlink.data.model.Produto;
 import com.example.hortlink.data.repository.ProdutoRepository;
-import com.example.hortlink.entidades.BaseCallback;
+import com.example.hortlink.service.BaseCallback;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 

@@ -16,7 +16,7 @@ import com.example.hortlink.R;
 import com.example.hortlink.adapters.PedidoAdapter;
 import com.example.hortlink.data.model.Pedido;
 import com.example.hortlink.data.repository.PedidoRepository;
-import com.example.hortlink.util.SessionManager;
+import com.example.hortlink.service.BaseCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,12 +72,9 @@ public class PedidosProdutorFragment extends Fragment {
     }
 
     private void carregarPedidos() {
-        String uid = SessionManager.getInstance().getUid();
-        if (uid == null) return;
-
         setCarregando(true);
 
-        pedidoRepository.listarPorProdutor(uid, new PedidoRepository.CallbackLista() {
+        pedidoRepository.obterPedidosPorComercio(new BaseCallback<List<Pedido>>() {
             @Override
             public void onSuccess(List<Pedido> pedidos) {
                 if (!isAdded()) return;

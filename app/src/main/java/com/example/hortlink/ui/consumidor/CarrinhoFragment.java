@@ -20,14 +20,16 @@ import com.example.hortlink.adapters.CarrinhoAdapter;
 import com.example.hortlink.data.model.CarrinhoResponse;
 import com.example.hortlink.data.model.ItemCarrinhoResponse;
 import com.example.hortlink.data.repository.CarrinhoRepository;
+import com.example.hortlink.service.BaseCallback; // <-- Import corrigido
 import com.example.hortlink.util.SessionManager;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class CarrinhoFragment extends Fragment {
 
-    // Substituímos o modelo antigo CartItem pelo DTO gerado pelo backend
     private List<ItemCarrinhoResponse> cartItems = new ArrayList<>();
     private CarrinhoAdapter adapter;
 
@@ -37,10 +39,8 @@ public class CarrinhoFragment extends Fragment {
     private Button btnCheckout;
     private RecyclerView rvCart;
 
-    // Novo Repository substituindo o SupabaseHelper
     private CarrinhoRepository repository;
-    private Long compradorId;
-    private Double valorTotalCarrinho = 0.0; // Agora o backend nos dá esse valor
+    private Double valorTotalCarrinho = 0.0;
 
     @Nullable
     @Override
@@ -54,20 +54,15 @@ public class CarrinhoFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Inicializa o Repository
         repository = new CarrinhoRepository();
 
-        // Pega o ID numérico diretamente do SessionManager
-        compradorId = SessionManager.getInstance().getUsuarioId();
-
-        // Trava de segurança: Se retornar -1, a sessão é inválida
-        if (compradorId == -1L) {
+        // A verificação de sessão ainda é válida para garantir que o usuário está logado no app,
+        // mas não precisamos mais passar o ID para o repositório, pois o JWT cuida disso.
+        if (SessionManager.getInstance().getUsuarioId() == -1L) {
             mostrarErro("Sessão expirada. Por favor, faça login novamente.");
-            // Opcional: Redirecionar para a tela de Login aqui
             return;
         }
 
-        // Views — IDs do fragment_carrinho.xml
         layoutEmpty  = view.findViewById(R.id.layout_empty);
         layoutFooter = view.findViewById(R.id.layout_footer);
         tvTotal      = view.findViewById(R.id.tv_total);
@@ -100,31 +95,36 @@ public class CarrinhoFragment extends Fragment {
 
     // ─── Carrega da API Spring Boot ─────────────────────────────────────────
     private void carregarCarrinho() {
-        repository.obterCarrinho(compradorId, new CarrinhoRepository.CarrinhoCallback() {
+        // CORREÇÃO: Removido o compradorId e usado o BaseCallback
+        repository.obterCarrinho(new BaseCallback<CarrinhoResponse>() {
             @Override
             public void onSuccess(CarrinhoResponse carrinho) {
-                processarSucessoCarrinho(carrinho);
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> processarSucessoCarrinho(carrinho));
             }
 
             @Override
             public void onError(String erro) {
-                mostrarErro(erro);
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> mostrarErro(erro));
             }
         });
     }
 
     // ─── Remove item ─────────────────────────────────────────────────
     private void removerItem(ItemCarrinhoResponse item) {
-        // Agora passamos o ID do item diretamente para a API REST
-        repository.removerItem(compradorId, item.getId(), new CarrinhoRepository.CarrinhoCallback() {
+        // CORREÇÃO: Removido o compradorId
+        repository.removerItem(item.getId(), new BaseCallback<CarrinhoResponse>() {
             @Override
             public void onSuccess(CarrinhoResponse carrinhoAtualizado) {
-                processarSucessoCarrinho(carrinhoAtualizado);
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> processarSucessoCarrinho(carrinhoAtualizado));
             }
 
             @Override
             public void onError(String erro) {
-                mostrarErro(erro);
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> mostrarErro(erro));
             }
         });
     }
@@ -136,21 +136,23 @@ public class CarrinhoFragment extends Fragment {
             return;
         }
 
-        repository.alterarQuantidade(compradorId, item.getId(), novaQtd, new CarrinhoRepository.CarrinhoCallback() {
+        // CORREÇÃO: Removido o compradorId
+        repository.alterarQuantidade(item.getId(), novaQtd, new BaseCallback<CarrinhoResponse>() {
             @Override
             public void onSuccess(CarrinhoResponse carrinhoAtualizado) {
-                // Ao invés de alterar só localmente, deixamos o backend ser a fonte da verdade
-                processarSucessoCarrinho(carrinhoAtualizado);
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> processarSucessoCarrinho(carrinhoAtualizado));
             }
 
             @Override
             public void onError(String erro) {
-                mostrarErro(erro);
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> mostrarErro(erro));
             }
         });
     }
 
-    // ─── Método auxiliar para extrair a lógica repetida ────────────────
+    // ─── Método auxiliar ───────────────────────────────────────────────────
     private void processarSucessoCarrinho(CarrinhoResponse carrinho) {
         cartItems.clear();
 
@@ -158,23 +160,21 @@ public class CarrinhoFragment extends Fragment {
             cartItems.addAll(carrinho.getItens());
         }
 
-        // Puxa o valor total já calculado pelo Spring Boot
         valorTotalCarrinho = carrinho.getValorTotal() != null ? carrinho.getValorTotal() : 0.0;
-
         atualizarUi();
     }
 
     // ─── UI helpers ──────────────────────────────────────────────────
     private void atualizarUi() {
-        if (!isAdded()) return;
         adapter.notifyDataSetChanged();
         atualizarTotal();
         alternarEstadoVazio();
     }
 
     private void atualizarTotal() {
-        // Não precisa mais fazer o 'for' somando na mão!
-        tvTotal.setText(String.format("Total: R$ %.2f", valorTotalCarrinho));
+        // CORREÇÃO: Usando NumberFormat para garantir padrão PT-BR sem dar crash
+        NumberFormat formatoMoeda = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+        tvTotal.setText("Total: " + formatoMoeda.format(valorTotalCarrinho));
     }
 
     private void alternarEstadoVazio() {
@@ -185,7 +185,6 @@ public class CarrinhoFragment extends Fragment {
     }
 
     private void mostrarErro(String msg) {
-        if (!isAdded() || getContext() == null) return;
         Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
     }
 }

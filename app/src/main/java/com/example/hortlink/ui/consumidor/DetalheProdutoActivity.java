@@ -18,7 +18,8 @@ import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.data.dto.DetalheOfertaDTO;
 import com.example.hortlink.data.repository.OfertaRepository;
-import com.example.hortlink.entidades.BaseCallback;
+import com.example.hortlink.service.BaseCallback;
+import com.example.hortlink.ui.consumidor.PerfilProdutorActivity;
 
 public class DetalheProdutoActivity extends AppCompatActivity {
 

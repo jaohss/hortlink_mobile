@@ -42,18 +42,26 @@ public class PedidoAdapter extends RecyclerView.Adapter<PedidoAdapter.ViewHolder
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Pedido pedido = lista.get(position);
 
-        // Resumo dos itens
+        // 1. Resumo dos itens com Null Check (Proteção contra itens nulos vindos da API)
         StringBuilder resumo = new StringBuilder();
-        for (Pedido.ItemPedido item : pedido.getItens()) {
-            if (resumo.length() > 0) resumo.append(" • ");
-            resumo.append(item.quantidade).append("x ").append(item.nomeProduto);
+        if (pedido.getItens() != null) {
+            for (Pedido.ItemPedido item : pedido.getItens()) {
+                if (resumo.length() > 0) resumo.append(" • ");
+                resumo.append(item.quantidade).append("x ").append(item.nomeProduto);
+            }
         }
-        holder.txtItens.setText(resumo.length() > 0 ? resumo : "Carregando itens…");
-        holder.txtValor.setText(String.format("R$ %.2f", pedido.getValorTotal()));
-        holder.txtStatus.setText(pedido.getStatus() != null
-                ? pedido.getStatus().toUpperCase() : "");
+        holder.txtItens.setText(resumo.length() > 0 ? resumo : "Nenhum item encontrado");
 
+        // 2. Formatação segura de Moeda (Forçando padrão PT-BR)
+        java.text.NumberFormat formatoMoeda = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
+        double valor = pedido.getValorTotal() != null ? pedido.getValorTotal().doubleValue() : 0.0;
+        holder.txtValor.setText(formatoMoeda.format(valor));
+
+        // Status
+        holder.txtStatus.setText(pedido.getStatus() != null ? pedido.getStatus().toUpperCase() : "");
         aplicarCorStatus(holder.txtStatus, pedido.getStatus());
+
+        // Data
         holder.txtData.setText(formatarData(pedido.getCriadoEm()));
 
         holder.itemView.setOnClickListener(v -> {
@@ -64,7 +72,7 @@ public class PedidoAdapter extends RecyclerView.Adapter<PedidoAdapter.ViewHolder
     private void aplicarCorStatus(TextView view, String status) {
         if (status == null) return;
         int cor;
-        switch (status) {
+        switch (status.toLowerCase()) {
             case "pendente":      cor = 0xFFFFA000; break; // laranja
             case "aceito":   cor = 0xFF1565C0; break; // azul
             case "entregue":  cor = 0xFF2E7D32; break; // verde

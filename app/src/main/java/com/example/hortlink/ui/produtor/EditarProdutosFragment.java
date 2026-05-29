@@ -15,10 +15,14 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
-import com.example.hortlink.bd.SupabaseHelper;
+import com.example.hortlink.data.remote.StorageHelper;
 import com.example.hortlink.data.repository.OfertaRepository;
-import com.google.android.material.button.MaterialButton;
+import com.example.hortlink.data.repository.ProdutoRepository;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class EditarProdutosFragment extends Fragment {
 

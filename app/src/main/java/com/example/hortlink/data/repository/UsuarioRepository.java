@@ -33,7 +33,25 @@ public class UsuarioRepository {
                 if (response.isSuccessful() && response.body() != null) {
                     callback.onSuccess(response.body());
                 } else {
-                    callback.onError("Erro ao carregar carrinho: " + response.code());
+                    callback.onError("Erro ao carregar seu perfil: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PerfilCompradorDTO> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
+    }
+
+    public void obterDetalhesCliente(Long clienteId, BaseCallback<PerfilCompradorDTO> callback) {
+        api.obterDetalhesCliente(clienteId).enqueue(new Callback<PerfilCompradorDTO>() {
+            @Override
+            public void onResponse(Call<PerfilCompradorDTO> call, retrofit2.Response<PerfilCompradorDTO> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao carregar os detalhes do cliente: " + response.code());
                 }
             }
 

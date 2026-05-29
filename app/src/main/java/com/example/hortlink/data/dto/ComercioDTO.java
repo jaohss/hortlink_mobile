@@ -2,12 +2,12 @@ package com.example.hortlink.data.dto;
 
 public class ComercioDTO {
     private String nome;
-    private Double avaliacao;
+    private String avaliacao;
     private String cidade;
     private String telefone;
     private String img_url;
 
-    public ComercioDTO(String nome, Double avaliacao, String cidade, String telefone, String img_url) {
+    public ComercioDTO(String nome, String avaliacao, String cidade, String telefone, String img_url) {
         this.nome = nome;
         this.avaliacao = avaliacao;
         this.cidade = cidade;
@@ -25,11 +25,11 @@ public class ComercioDTO {
         this.nome = nome;
     }
 
-    public Double getAvaliacao() {
+    public String getAvaliacao() {
         return avaliacao;
     }
 
-    public void setAvaliacao(Double avaliacao) {
+    public void setAvaliacao(String avaliacao) {
         this.avaliacao = avaliacao;
     }
 
