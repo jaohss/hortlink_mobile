@@ -17,18 +17,20 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
-import com.example.hortlink.data.model.Usuario;
-import com.example.hortlink.data.repository.ProdutorRepository;
-import com.example.hortlink.util.SessionManager;
+import com.example.hortlink.data.dto.CompletarPerfilComercioDTO;
+import com.example.hortlink.data.dto.ViaCepResponse;
+import com.example.hortlink.data.repository.ComercioRepository;
+import com.example.hortlink.data.repository.GeoRepository;
+import com.example.hortlink.service.BaseCallback;
 
 public class CompletarPerfilProdutorActivity extends AppCompatActivity {
 
     EditText edtCidade, edtTelefone, edtDescricao, edtEstado, edtCep, edtBairro;
     Button btnConcluir, btnPular;
     ProgressBar progressBar;
-    private String uid;
 
-    private ProdutorRepository produtorRepository = new ProdutorRepository();
+    private GeoRepository geoRepository;
+    private ComercioRepository comercioRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +42,6 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
-        uid = getIntent().getStringExtra("uid");
 
         bindViews();
         configurarViaCep();
@@ -91,18 +91,30 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
     private void buscarCep(String cep){
         setCarregando(true);
 
-        ViacepService.buscar(cep, new ViacepService.Callback() {
+        geoRepository.buscarEnderecoPorCep(cep, new BaseCallback<ViaCepResponse>() {
             @Override
-            public void onSuccess(String bairro, String cidade, String estado) {
+            public void onSuccess(ViaCepResponse viaCep) {
                 runOnUiThread(() -> {
                     setCarregando(false);
-                    edtCidade.setText(cidade);
-                    edtEstado.setText(estado);
 
-                    if (!bairro.isEmpty()) {
+                    // 1. Extraímos os dados do DTO retornado pela
+                    // API
+                    // (Os nomes dos métodos dependem de como você mapeou no ViaCepResponse)
+                    String cidade = viaCep.getLocalidade(); // O ViaCEP chama cidade de "localidade"
+                    String estado = viaCep.getUf();
+                    String bairro = viaCep.getBairro();
+                    String rua = viaCep.getLogradouro(); // Se você tiver um campo de rua, pode usar também!
+
+                    // 2. Populamos os campos (com proteção contra null, pois em
+                    // cidades pequenas do interior o ViaCEP não retorna bairro/rua)
+                    if (cidade != null) edtCidade.setText(cidade);
+                    if (estado != null) edtEstado.setText(estado);
+
+                    if (bairro != null && !bairro.trim().isEmpty()) {
                         edtBairro.setText(bairro);
                         edtTelefone.requestFocus();
                     } else {
+                        edtBairro.setText(""); // Limpa se vier lixo
                         edtBairro.requestFocus();
                     }
                 });
@@ -160,46 +172,77 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
 
         setCarregando(true);
 
-        produtorRepository.completarPerfil(uid, telefone, cep, bairro, cidade, estado, descricao, new ProdutorRepository.CallbackSimples() {
-                    @Override
-                    public void onSuccess() {
-                        runOnUiThread(() -> {
-                            setCarregando(false);
-                            Toast.makeText(
-                                    CompletarPerfilProdutorActivity.this,
-                                    "Perfil completo! Bem-vindo ao Hortlink 🌱",
-                                    Toast.LENGTH_SHORT
-                            ).show();
-                            irParaHome();
-                        });
-                    }
+        // 1. Monta o DTO com os dados da tela
+        CompletarPerfilComercioDTO dto = new CompletarPerfilComercioDTO();
+        dto.setTelefone(telefone);
+        dto.setCep(cep);
+        dto.setBairro(bairro);
+        dto.setCidade(cidade);
+        dto.setEstado(estado);
+        dto.setDescricao(descricao);
+        // (Ajuste os setters acima caso a sua classe DTO use nomes diferentes)
 
-                    @Override
-                    public void onError(String erro) {
-                        runOnUiThread(() -> {
-                            setCarregando(false);
-                            Toast.makeText(
-                                    CompletarPerfilProdutorActivity.this,
-                                    "Erro ao salvar perfil: " + erro,
-                                    Toast.LENGTH_LONG
-                            ).show();
-                        });
-                    }
-                }
-        );
+        // 2. Chama o repository passando o DTO e o novo BaseCallback<Void>
+        comercioRepository.completarPerfil(dto, new BaseCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) { // Mudança para receber Void
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    Toast.makeText(
+                            CompletarPerfilProdutorActivity.this,
+                            "Perfil completo! Bem-vindo ao Hortlink 🌱",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                    irParaHome();
+                });
+            }
+
+            @Override
+            public void onError(String erro) {
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    Toast.makeText(
+                            CompletarPerfilProdutorActivity.this,
+                            "Erro ao salvar perfil: " + erro,
+                            Toast.LENGTH_LONG
+                    ).show();
+                });
+            }
+        });
     }
 
     private void preencherSeEdicao() {
         boolean modoEdicao = getIntent().getBooleanExtra("modo_edicao", false);
         if (!modoEdicao) return;
 
-        Usuario u = SessionManager.getInstance().getUsuario();
-        if (u == null) return;
+        setCarregando(true);
 
-        if (u.telefone  != null) edtTelefone.setText(u.telefone);
-        if (u.cidade    != null) edtCidade.setText(u.cidade);
-        if (u.estado    != null) edtEstado.setText(u.estado);
-        if (u.descricao != null) edtDescricao.setText(u.descricao);
+        // O seu Retrofit vai esperar receber um CompletarPerfilComercioDTO
+        comercioRepository.buscarPerfil(new BaseCallback<CompletarPerfilComercioDTO>() {
+            @Override
+            public void onSuccess(CompletarPerfilComercioDTO perfil) {
+                runOnUiThread(() -> {
+                    setCarregando(false);
+
+                    // Preenchemos todos os campos perfeitamente!
+                    if (perfil.getTelefone() != null) edtTelefone.setText(perfil.getTelefone());
+                    if (perfil.getCep() != null) edtCep.setText(perfil.getCep());
+                    if (perfil.getEstado() != null) edtEstado.setText(perfil.getEstado());
+                    if (perfil.getCidade() != null) edtCidade.setText(perfil.getCidade());
+                    if (perfil.getBairro() != null) edtBairro.setText(perfil.getBairro());
+                    if (perfil.getDescricao() != null) edtDescricao.setText(perfil.getDescricao());
+                });
+            }
+
+            @Override
+            public void onError(String erro) {
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    Toast.makeText(CompletarPerfilProdutorActivity.this,
+                            "Erro ao carregar dados antigos", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 
 

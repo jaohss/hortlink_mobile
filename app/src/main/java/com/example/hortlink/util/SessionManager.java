@@ -1,5 +1,8 @@
 package com.example.hortlink.util;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
 import com.example.hortlink.MyApplication;
 import com.example.hortlink.data.model.Usuario;
 

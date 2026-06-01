@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.produtor;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,6 +15,8 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
+import com.example.hortlink.ui.auth.CompletarPerfilProdutorActivity;
+import com.example.hortlink.ui.auth.MainActivity;
 import com.example.hortlink.util.SessionManager;
 
 public class PerfilFragment extends Fragment {
@@ -67,6 +69,13 @@ public class PerfilFragment extends Fragment {
             // 2. Volta para a tela de Login limpando o histórico (para não voltar com o botão "Voltar" do Android)
             Intent intent = new Intent(getActivity(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        });
+
+        // ── Seção: Catálogo ────────────────────────────────────────
+        LinearLayout btnCatalogo = view.findViewById(R.id.btnMeuCatalogo);
+        btnCatalogo.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), GerenciarProdutosActivity.class);
             startActivity(intent);
         });
 

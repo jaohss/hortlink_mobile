@@ -14,7 +14,7 @@ public class OfertaDTO {
     public String vendedorUid;
     public boolean status = true;
 
-    public OfertaDTO(Long id, String nome, double preco, String categoria, String descricao, String imagemUri, String unidade, String vendedorUid, boolean status, int imagem, Produtor produtor, Long comercioId) {
+    public OfertaDTO(Long id, String nome, double preco, String categoria, String descricao, String imagemUri, String unidade, String vendedorUid, boolean status, int imagem, Long comercioId) {
         this.id = id;
         this.nome = nome;
         this.preco = preco;
@@ -25,13 +25,11 @@ public class OfertaDTO {
         this.vendedorUid = vendedorUid;
         this.status = status;
         this.imagem = imagem;
-        this.produtor = produtor;
         this.comercioId = comercioId;
     }
 
     // campos legados — mantidos para não quebrar outras telas
     public int imagem = 0;
-    public Produtor produtor = null;
     public Long comercioId;
 
     public OfertaDTO() {}
@@ -95,12 +93,6 @@ public class OfertaDTO {
     }
     public void setImagem(int imagem) {
         this.imagem = imagem;
-    }
-    public Produtor getProdutor() {
-        return produtor;
-    }
-    public void setProdutor(Produtor produtor) {
-        this.produtor = produtor;
     }
     public boolean isStatus() {
         return status;

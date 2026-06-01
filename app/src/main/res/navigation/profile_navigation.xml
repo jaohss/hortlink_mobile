@@ -14,7 +14,7 @@
         android:id="@+id/gerenciarProdutosFragment"
         android:name="com.example.hortlink.ui.produtor.GerenciarProdutosFragment"
         android:label="fragment_gerenciar_produtos"
-        tools:layout="@layout/fragment_gerenciar_produtos" >
+        tools:layout="@layout/activity_gerenciar_produtos" >
         <action
             android:id="@+id/action_gerenciarProdutosFragment_to_editarProdutosFragment"
             app:destination="@id/editarProdutosFragment" />

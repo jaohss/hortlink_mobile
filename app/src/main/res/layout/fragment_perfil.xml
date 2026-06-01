@@ -215,7 +215,6 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground">
-                <!-- Nota: Crie um drawable 'bg_botao_destaque' (ex: um fundo verde muito claro #F2F8EC com borda verde) para dar mais ênfase que os outros botões -->
 
                 <LinearLayout
                     android:layout_width="36dp"
