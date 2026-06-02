@@ -44,7 +44,7 @@ public class ProdutoAdapter extends RecyclerView.Adapter<ProdutoAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Produto produto = lista.get(position);
+        ProdutoListaDTO produto = lista.get(position);
 
         holder.txtNome.setText(produto.getNome());
 

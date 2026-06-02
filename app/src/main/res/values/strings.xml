@@ -9,4 +9,6 @@
     <string name="perfil">perfil</string>
     <string name="status_ativo">Ativo</string>
     <string name="status_inativo">Inativo</string>
+    <string name="title_activity_minha_vitrine">MinhaVitrine</string>
+    <string name="title_activity_main">MainActivity</string>
 </resources>

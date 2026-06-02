@@ -1,5 +1,6 @@
 package com.example.hortlink.data.repository;
 
+import com.example.hortlink.data.dto.ProdutoListaDTO;
 import com.example.hortlink.util.RetrofitClient;
 import com.example.hortlink.data.dto.NovoProdutoDTO;
 import com.example.hortlink.data.model.Produto;
@@ -8,6 +9,7 @@ import com.example.hortlink.service.ProdutoService;
 import com.google.gson.Gson;
 
 import java.io.File;
+import java.util.List;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -87,6 +89,42 @@ public class ProdutoRepository {
 
             @Override
             public void onFailure(Call<Produto> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
+    }
+
+    public void listarMeusProdutos(BaseCallback<List<ProdutoListaDTO>> callback) {
+        api.listarPorComercio().enqueue(new Callback<List<ProdutoListaDTO>>() {
+            @Override
+            public void onResponse(Call<List<ProdutoListaDTO>> call, Response<List<ProdutoListaDTO>> response){
+                if(response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao buscar Produtos: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ProdutoListaDTO>> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
+    }
+
+    public void obterMeusProdutosSemOferta(BaseCallback<List<ProdutoListaDTO>> callback) {
+        api.obterProdutosSemOfertaAtiva().enqueue(new Callback<List<ProdutoListaDTO>>() {
+            @Override
+            public void onResponse(Call<List<ProdutoListaDTO>> call, Response<List<ProdutoListaDTO>> response){
+                if(response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao buscar Produtos: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ProdutoListaDTO>> call, Throwable t) {
                 callback.onError("Falha na rede: " + t.getMessage());
             }
         });

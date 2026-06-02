@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.hortlink.R;
+import com.example.hortlink.data.dto.ProdutoListaDTO;
 import com.example.hortlink.data.model.Produto;
 import com.example.hortlink.data.repository.ProdutoRepository;
 import com.example.hortlink.service.BaseCallback;
@@ -29,7 +30,7 @@ public class GerenciarProdutosActivity extends AppCompatActivity {
     private View layoutVazio;
 
     private final ProdutoRepository repository = new ProdutoRepository();
-    private final List<Produto> listaProdutos = new ArrayList<>();
+    private final List<ProdutoListaDTO> listaProdutos = new ArrayList<>();
 
     // ─── O "Ouvinte" que espera a tela de Adicionar fechar ───
     private final ActivityResultLauncher<Intent> formProdutoLauncher =
@@ -76,9 +77,9 @@ public class GerenciarProdutosActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         recyclerProdutos.setVisibility(View.GONE);
 
-        repository.listarMeusProdutos(new BaseCallback<List<Produto>>() {
+        repository.listarMeusProdutos(new BaseCallback<List<ProdutoListaDTO>>() {
             @Override
-            public void onSuccess(List<Produto> produtos) {
+            public void onSuccess(List<ProdutoListaDTO> produtos) {
                 runOnUiThread(() -> {
                     progressBar.setVisibility(View.GONE);
                     listaProdutos.clear();

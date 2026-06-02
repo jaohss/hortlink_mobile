@@ -1,4 +1,4 @@
-package com.example.hortlink.activities;
+package com.example.hortlink.ui.consumidor;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,6 +17,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
 import com.example.hortlink.data.dto.DetalheOfertaDTO;
+import com.example.hortlink.data.model.CarrinhoResponse;
+import com.example.hortlink.data.repository.CarrinhoRepository;
 import com.example.hortlink.data.repository.OfertaRepository;
 import com.example.hortlink.service.BaseCallback;
 import com.example.hortlink.ui.consumidor.PerfilProdutorActivity;
@@ -31,7 +33,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
     private ConstraintLayout cardProdutor;
 
     private OfertaRepository ofertaRepository;
-    // private CarrinhoRepository carrinhoRepository; // Para substituir o Supabase no carrinho
+    private CarrinhoRepository carrinhoRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +48,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
         });
 
         ofertaRepository = new OfertaRepository();
-        // carrinhoRepository = new CarrinhoRepository();
+        carrinhoRepository = new CarrinhoRepository();
 
         // Fazendo os binds (findViewById)
         txtNome        = findViewById(R.id.txtNome);
@@ -64,7 +66,7 @@ public class DetalheProdutoActivity extends AppCompatActivity {
         findViewById(R.id.btnVoltar).setOnClickListener(v -> finish());
 
         // 1. Recebe os dados que vieram do HomeFragment
-        long ofertaId = getIntent().getLongExtra("produto_id", -1);
+        long ofertaId = getIntent().getLongExtra("oferta_id", -1);
         String imagemUrl = getIntent().getStringExtra("imagem_url");
 
         if (ofertaId == -1) {
@@ -128,28 +130,29 @@ public class DetalheProdutoActivity extends AppCompatActivity {
     // ─── 2. Adiciona ao carrinho (Via Spring Boot) ─────────────────────
     private void adicionarAoCarrinho(Long idOferta) {
         btnCarrinho.setEnabled(false);
+        btnCarrinho.setText("Adicionando...");
 
-        // ATENÇÃO: Você não precisa mais pegar o ID do usuário (Firebase).
-        // O seu Spring Boot vai saber quem está adicionando ao carrinho através do token JWT!
-
-        /* // Exemplo de como ficará quando você criar o CarrinhoRepository:
-        carrinhoRepository.adicionarItem(idOferta, 1, new BaseCallback<Void>() {
+        // Chama o repositório enviando quantidade = 1
+        carrinhoRepository.adicionarItem(idOferta, 1, new BaseCallback<CarrinhoResponse>() {
             @Override
-            public void onSuccess(Void unused) {
-                btnCarrinho.setEnabled(true);
-                Toast.makeText(DetalheProdutoActivity.this, "Adicionado ao carrinho ✓", Toast.LENGTH_SHORT).show();
+            public void onSuccess(CarrinhoResponse resposta) {
+                runOnUiThread(() -> {
+                    btnCarrinho.setEnabled(true);
+                    btnCarrinho.setText("Adicionar ao Carrinho");
+                    Toast.makeText(DetalheProdutoActivity.this, "Produto adicionado ao carrinho! 🛒", Toast.LENGTH_SHORT).show();
+
+                });
             }
 
             @Override
             public void onError(String erro) {
-                btnCarrinho.setEnabled(true);
-                Toast.makeText(DetalheProdutoActivity.this, "Erro ao adicionar: " + erro, Toast.LENGTH_LONG).show();
+                runOnUiThread(() -> {
+                    btnCarrinho.setEnabled(true);
+                    btnCarrinho.setText("Adicionar ao Carrinho");
+                    Toast.makeText(DetalheProdutoActivity.this, "Erro: " + erro, Toast.LENGTH_LONG).show();
+                });
             }
         });
-        */
 
-        // Temporário até você implementar o endpoint do carrinho no Spring:
-        Toast.makeText(this, "Funcionalidade de carrinho em construção para a nova API", Toast.LENGTH_SHORT).show();
-        btnCarrinho.setEnabled(true);
     }
 }

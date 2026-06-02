@@ -7,15 +7,26 @@ public class NovaOfertaDTO {
     private Long produtoId;
     private BigDecimal preco;
     private Integer estoqueAtual;
-    private Long comercioId;
-    private LocalDate dataColheita;
+    private String dataColheita;
+    private Boolean disponivelParaVenda;
 
-    public NovaOfertaDTO(Long produtoId, BigDecimal preco, Integer estoqueAtual, Long comercioId, LocalDate dataColheita) {
+    public NovaOfertaDTO(Long produtoId, BigDecimal preco, Integer estoqueAtual, String dataColheita, Boolean disponivelParaVenda) {
         this.produtoId = produtoId;
         this.preco = preco;
         this.estoqueAtual = estoqueAtual;
-        this.comercioId = comercioId;
         this.dataColheita = dataColheita;
+        this.disponivelParaVenda = disponivelParaVenda;
+    }
+
+    public NovaOfertaDTO() {
+    }
+
+    public Boolean getDisponivelParaVenda() {
+        return disponivelParaVenda;
+    }
+
+    public void setDisponivelParaVenda(Boolean disponivelParaVenda) {
+        this.disponivelParaVenda = disponivelParaVenda;
     }
 
     public Long getProdutoId() {
@@ -42,19 +53,11 @@ public class NovaOfertaDTO {
         this.estoqueAtual = estoqueAtual;
     }
 
-    public Long getComercioId() {
-        return comercioId;
-    }
-
-    public void setComercioId(Long comercioId) {
-        this.comercioId = comercioId;
-    }
-
-    public LocalDate getDataColheita() {
+    public String getDataColheita() {
         return dataColheita;
     }
 
-    public void setDataColheita(LocalDate dataColheita) {
+    public void setDataColheita(String dataColheita) {
         this.dataColheita = dataColheita;
     }
 }

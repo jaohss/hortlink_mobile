@@ -1,105 +1,25 @@
 package com.example.hortlink.data.model;
 
+import com.example.hortlink.data.enums.Categoria;
+import com.example.hortlink.data.enums.UnidadeMedida;
 import com.google.gson.annotations.SerializedName;
 
+import java.math.BigDecimal;
+
 public class OfertaDTO {
-    public Long id;        // era int (SQLite), agora String (UUID do Supabase)
-    public String nome;
-    public double preco;
-    public String categoria;
-    public String descricao;
-    @SerializedName("fotoUrl")
-    public String imagemUri; // mantido — agora recebe a URL pública do Supabase Storage
-    public String unidade;
-    public String vendedorUid;
-    public boolean status = true;
+    private Long id;
+    private String nomeProduto;
+    private BigDecimal preco;
+    private Categoria categoria;
 
-    public OfertaDTO(Long id, String nome, double preco, String categoria, String descricao, String imagemUri, String unidade, String vendedorUid, boolean status, int imagem, Long comercioId) {
-        this.id = id;
-        this.nome = nome;
-        this.preco = preco;
-        this.categoria = categoria;
-        this.descricao = descricao;
-        this.imagemUri = imagemUri;
-        this.unidade = unidade;
-        this.vendedorUid = vendedorUid;
-        this.status = status;
-        this.imagem = imagem;
-        this.comercioId = comercioId;
-    }
+    private String imagemUrl;
+    private UnidadeMedida unidade;
+    private Integer quantidadeEstoque;
+    private boolean ativo;
+    private Double latitude;
+    private Double longitude;
+    private Double distanciaKm;
 
-    // campos legados — mantidos para não quebrar outras telas
-    public int imagem = 0;
-    public Long comercioId;
-
-    public OfertaDTO() {}
-
-    // Construtor do Supabase
-
-    // Construtor legado — mantido para não quebrar nada que já usa
-    public OfertaDTO(String nome, double preco, String categoria,
-                     String imagemUri, String descricao) {
-        this.nome      = nome;
-        this.preco     = preco;
-        this.categoria = categoria;
-        this.imagemUri = imagemUri;
-        this.descricao = descricao;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-    public double getPreco() {
-        return preco;
-    }
-    public void setPreco(double preco) {
-        this.preco = preco;
-    }
-    public String getDescricao() {
-        return descricao;
-    }
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
-    public String getCategoria() {
-        return categoria;
-    }
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
-    }
-    public String getImagemUri() {
-        return imagemUri;
-    }
-    public void setImagemUri(String imagemUri) {
-        this.imagemUri = imagemUri;
-    }
-    public String getUnidade() {
-        return unidade;
-    }
-    public void setUnidade(String unidade) {
-        this.unidade = unidade;
-    }
-    public String getVendedorUid() {
-        return vendedorUid;
-    }
-    public void setVendedorUid(String vendedorUid) {
-        this.vendedorUid = vendedorUid;
-    }
-    public int getImagem() {
-        return imagem;
-    }
-    public void setImagem(int imagem) {
-        this.imagem = imagem;
-    }
-    public boolean isStatus() {
-        return status;
-    }
-    public void setStatus(boolean status) {
-        this.status = status;
-    }
     public Long getId() {
         return id;
     }
@@ -108,11 +28,83 @@ public class OfertaDTO {
         this.id = id;
     }
 
-    public Long getComercioId() {
-        return comercioId;
+    public String getNomeProduto() {
+        return nomeProduto;
     }
 
-    public void setComercioId(Long comercioId) {
-        this.comercioId = comercioId;
+    public void setNomeProduto(String nomeProduto) {
+        this.nomeProduto = nomeProduto;
+    }
+
+    public BigDecimal getPreco() {
+        return preco;
+    }
+
+    public void setPreco(BigDecimal preco) {
+        this.preco = preco;
+    }
+
+    public Categoria getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
+    }
+
+    public String getImagemUrl() {
+        return imagemUrl;
+    }
+
+    public void setImagemUrl(String imagemUrl) {
+        this.imagemUrl = imagemUrl;
+    }
+
+    public UnidadeMedida getUnidade() {
+        return unidade;
+    }
+
+    public void setUnidade(UnidadeMedida unidade) {
+        this.unidade = unidade;
+    }
+
+    public Integer getQuantidadeEstoque() {
+        return quantidadeEstoque;
+    }
+
+    public void setQuantidadeEstoque(Integer quantidadeEstoque) {
+        this.quantidadeEstoque = quantidadeEstoque;
+    }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Double getDistanciaKm() {
+        return distanciaKm;
+    }
+
+    public void setDistanciaKm(Double distanciaKm) {
+        this.distanciaKm = distanciaKm;
     }
 }

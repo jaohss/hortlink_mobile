@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" >
-    <uses-permission android:name="android.permission.INTERNET"/>
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
@@ -16,6 +17,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LoginScreen"
         android:usesCleartextTraffic="true">
+        <activity
+            android:name=".FormularioOferta"
+            android:exported="false" />
+        <activity
+            android:name=".ui.produtor.MinhaVitrine"
+            android:exported="false" />
+        <activity
+            android:name=".ui.produtor.MainActivity"
+            android:exported="false"
+            android:label="@string/title_activity_main"
+            android:theme="@style/Theme.LoginScreen" />
+        <activity
+            android:name=".MinhaVitrine"
+            android:exported="false"
+            android:label="@string/title_activity_minha_vitrine"
+            android:theme="@style/Theme.LoginScreen" />
         <activity
             android:name=".util.BotpressActivity"
             android:exported="false" />
@@ -51,7 +68,7 @@
             android:exported="false" />
         <activity
             android:name=".ui.auth.MainActivity"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

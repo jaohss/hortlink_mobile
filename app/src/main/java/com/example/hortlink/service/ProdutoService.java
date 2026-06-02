@@ -1,5 +1,6 @@
 package com.example.hortlink.service;
 
+import com.example.hortlink.data.dto.ProdutoListaDTO;
 import com.example.hortlink.data.model.OfertaDTO;
 import com.example.hortlink.data.model.Produto;
 
@@ -16,8 +17,6 @@ import retrofit2.http.Part;
 import retrofit2.http.Path;
 
 public interface ProdutoService {
-    @GET("produto")
-    Call<List<OfertaDTO>> getProdutos();
 
     @Multipart
     @POST("produto/salvar")
@@ -31,4 +30,10 @@ public interface ProdutoService {
 
     @GET("produto/{id}")
     Call<Produto> buscarPorId(@Path("id") Long idProduto);
+
+    @GET("produto")
+    Call<List<ProdutoListaDTO>> listarPorComercio();
+
+    @GET("produtos/sem-oferta")
+    Call<List<ProdutoListaDTO>> obterProdutosSemOfertaAtiva();
 }
