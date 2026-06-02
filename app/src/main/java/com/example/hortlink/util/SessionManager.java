@@ -32,6 +32,12 @@ public class SessionManager {
         return instance;
     }
 
+    // ─── VERIFICAÇÃO DE LOGIN ───
+    public boolean estaLogado() {
+        String token = getToken();
+        return token != null && !token.isEmpty();
+    }
+
     // ─── SALVA OS DADOS APÓS O LOGIN ───
     public void init(Usuario usuario, String tokenJwt) {
         SharedPreferences.Editor editor = prefs.edit();
@@ -53,8 +59,8 @@ public class SessionManager {
         }
 
         // Salva ID do Comércio (se houver)
-        if (usuario.getComercioProfileId() != null) {
-            editor.putLong(KEY_COMERCIO_ID, usuario.getComercioProfileId());
+        if (usuario.getComercioId() != null) {
+            editor.putLong(KEY_COMERCIO_ID, usuario.getComercioId());
         } else {
             editor.remove(KEY_COMERCIO_ID);
         }

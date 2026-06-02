@@ -1,5 +1,7 @@
 package com.example.hortlink.data.repository;
 
+import android.util.Log;
+
 import com.example.hortlink.data.dto.AuthRequest;
 import com.example.hortlink.data.dto.AuthResponse;
 import com.example.hortlink.data.dto.RegistroDTO;
@@ -35,6 +37,8 @@ public class AuthRepository {
                     AuthResponse authResponse = response.body();
                     Usuario usuarioLogado = authResponse.getUsuario(); // <-- Use UsuarioDTO
                     String tokenJwt = authResponse.getToken();
+
+                    Log.w("TESTE_ROLE", "A role que chegou no Java é: " + authResponse.getUsuario().getRole());
 
                     // MÁGICA AQUI: Não precisa mais passar 'context'
                     SessionManager.getInstance().init(usuarioLogado, tokenJwt);

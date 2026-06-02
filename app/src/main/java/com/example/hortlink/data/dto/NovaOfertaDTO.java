@@ -1,16 +1,15 @@
 package com.example.hortlink.data.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 public class NovaOfertaDTO {
     private Long produtoId;
     private BigDecimal preco;
-    private Integer estoqueAtual;
+    private BigDecimal estoqueAtual;
     private String dataColheita;
     private Boolean disponivelParaVenda;
 
-    public NovaOfertaDTO(Long produtoId, BigDecimal preco, Integer estoqueAtual, String dataColheita, Boolean disponivelParaVenda) {
+    public NovaOfertaDTO(Long produtoId, BigDecimal preco, BigDecimal estoqueAtual, String dataColheita, Boolean disponivelParaVenda) {
         this.produtoId = produtoId;
         this.preco = preco;
         this.estoqueAtual = estoqueAtual;
@@ -24,11 +23,9 @@ public class NovaOfertaDTO {
     public Boolean getDisponivelParaVenda() {
         return disponivelParaVenda;
     }
-
     public void setDisponivelParaVenda(Boolean disponivelParaVenda) {
         this.disponivelParaVenda = disponivelParaVenda;
     }
-
     public Long getProdutoId() {
         return produtoId;
     }
@@ -45,11 +42,11 @@ public class NovaOfertaDTO {
         this.preco = preco;
     }
 
-    public Integer getEstoqueAtual() {
+    public BigDecimal getEstoqueAtual() {
         return estoqueAtual;
     }
 
-    public void setEstoqueAtual(Integer estoqueAtual) {
+    public void setEstoqueAtual(BigDecimal estoqueAtual) {
         this.estoqueAtual = estoqueAtual;
     }
 

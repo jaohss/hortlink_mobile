@@ -15,8 +15,9 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
-import com.example.hortlink.data.model.Usuario;
+import com.example.hortlink.data.dto.PerfilCompradorDTO;
 import com.example.hortlink.data.repository.UsuarioRepository;
+import com.example.hortlink.service.BaseCallback;
 import com.example.hortlink.ui.auth.CompletarPerfilCompradorActivity;
 import com.example.hortlink.ui.auth.MainActivity;
 import com.example.hortlink.util.SessionManager;
@@ -43,21 +44,13 @@ public class PerfilCompradorFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         bindViews(view);
         configurarBotoes(view);
-
-        // Exibe dados do SessionManager imediatamente (sem esperar rede)
-        preencherComSessao();
-
-        // Refresca do banco em background
-        String uid = SessionManager.getInstance().getUid();
-        if (uid != null) carregarPerfil(uid);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Recarrega ao voltar da tela de edição
-        String uid = SessionManager.getInstance().getUid();
-        if (uid != null) carregarPerfil(uid);
+        // Chama a API toda vez que a tela volta a ficar visível (ex: após fechar a edição)
+        carregarPerfil();
     }
 
     // ─── Bind ─────────────────────────────────────────────────────────
@@ -69,48 +62,32 @@ public class PerfilCompradorFragment extends Fragment {
         imgPerfil = view.findViewById(R.id.imgPerfilComprador);
     }
 
-    // ─── Sessão local ─────────────────────────────────────────────────
-
-    private void preencherComSessao() {
-        Usuario u = SessionManager.getInstance().getUsuario();
-        if (u == null) return;
-        txtNome.setText(u.nome != null ? u.nome : "");
-        txtEmail.setText(u.email != null ? u.email : "");
-        txtCidade.setText(montarLocalidade(u));
-    }
-
     // ─── Rede ─────────────────────────────────────────────────────────
 
-    private void carregarPerfil(String uid) {
-        usuarioRepository.buscarPorId(uid, new UsuarioRepository.Callback() {
+    private void carregarPerfil() {
+        usuarioRepository.obterPerfil(new BaseCallback<PerfilCompradorDTO>() {
 
             @Override
-            public void onSuccess(Usuario usuario) {
+            public void onSuccess(PerfilCompradorDTO dto) {
                 if (!isAdded()) return;
 
-                // Atualiza sessão com dados frescos
-                SessionManager.getInstance().setUsuario(usuario);
-
                 requireActivity().runOnUiThread(() -> {
-                    txtNome.setText(usuario.nome);
-                    txtEmail.setText(usuario.email);
-                    txtCidade.setText(montarLocalidade(usuario));
+                    txtNome.setText(dto.getNome() != null ? dto.getNome() : "Sem nome");
+                    txtEmail.setText(dto.getEmail() != null ? dto.getEmail() : "Sem e-mail");
+                    txtCidade.setText(montarLocalidade(dto));
 
-                    if (usuario.fotoUrl != null
-                            && !usuario.fotoUrl.isEmpty()
-                            && !usuario.fotoUrl.equals("null")) {
-                        Glide.with(requireContext())
-                                .load(usuario.fotoUrl)
-                                .placeholder(R.drawable.hortlink_logo)
-                                .circleCrop()
-                                .into(imgPerfil);
-                    }
+                    // Carrega apenas o placeholder estático por enquanto
+                    Glide.with(requireContext())
+                            .load((String) null) // Passar null força o Glide a exibir o placeholder
+                            .placeholder(R.drawable.hortlink_logo)
+                            .circleCrop()
+                            .into(imgPerfil);
                 });
             }
 
             @Override
             public void onError(String erro) {
-                // Falha silenciosa — sessão já exibida
+                // Falha silenciosa — sessão já exibida ou manter os dados do cache
             }
         });
     }
@@ -128,13 +105,10 @@ public class PerfilCompradorFragment extends Fragment {
                         .addToBackStack(null)
                         .commit());
 
-        // Editar perfil — reaproveita CompletarPerfilCompradorActivity em modo edição
+        // Editar perfil
         LinearLayout btnEditarPerfil = view.findViewById(R.id.btnEditarPerfil);
         btnEditarPerfil.setOnClickListener(v -> {
-            String uid = SessionManager.getInstance().getUid();
-            if (uid == null) return;
             Intent intent = new Intent(getActivity(), CompletarPerfilCompradorActivity.class);
-            intent.putExtra("uid", uid);
             intent.putExtra("modo_edicao", true);
             startActivity(intent);
         });
@@ -146,8 +120,10 @@ public class PerfilCompradorFragment extends Fragment {
 
         // Sair
         view.findViewById(R.id.itemSair).setOnClickListener(v -> {
-            usuarioRepository.logout();
-            SessionManager.getInstance().limpar();
+            // Limpa o token e todos os dados do SharedPreferences
+            SessionManager.getInstance().clear();
+
+            // Redireciona para a MainActivity limpando a pilha de navegação
             Intent intent = new Intent(getActivity(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -156,9 +132,10 @@ public class PerfilCompradorFragment extends Fragment {
 
     // ─── Helper ───────────────────────────────────────────────────────
 
-    private String montarLocalidade(Usuario u) {
-        String cidade = u.cidade != null ? u.cidade : "";
-        String estado = u.estado != null ? u.estado : "";
+    private String montarLocalidade(PerfilCompradorDTO dto) {
+        String cidade = dto.getCidade() != null ? dto.getCidade() : "";
+        String estado = dto.getEstado() != null ? dto.getEstado() : "";
+
         if (!cidade.isEmpty() && !estado.isEmpty()) return cidade + ", " + estado;
         if (!cidade.isEmpty()) return cidade;
         return "Localização não informada";

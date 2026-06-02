@@ -4,6 +4,7 @@ public class CompletarPerfilComercioDTO {
     private Long comercioId;
     private String nomeComercio;
     private String telefone;
+    private Double avaliacao;
     private String cep;
     private String cidade;
     private String bairro;
@@ -99,5 +100,13 @@ public class CompletarPerfilComercioDTO {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    public Double getAvaliacao() {
+        return avaliacao;
+    }
+
+    public void setAvaliacao(Double avaliacao) {
+        this.avaliacao = avaliacao;
     }
 }

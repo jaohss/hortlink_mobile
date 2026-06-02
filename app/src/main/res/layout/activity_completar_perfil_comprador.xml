@@ -135,15 +135,15 @@
                     android:textColorHint="@color/black_soft"
                     android:layout_marginBottom="10dp"/>
 
-                <!-- Referência -->
+                <!-- Complemento -->
                 <EditText
-                    android:id="@+id/edtReferencia"
+                    android:id="@+id/edtComplemento"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:background="@drawable/custom_edittext"
                     android:drawableLeft="@drawable/baseline_person_24"
                     android:drawablePadding="8dp"
-                    android:hint="Ponto de referência (opcional)"
+                    android:hint="Complemento (opcional)"
                     android:inputType="textCapSentences"
                     android:padding="8dp"
                     android:textColor="@color/black"
@@ -172,28 +172,6 @@
                     android:inputType="phone"
                     android:padding="8dp"
                     android:textColor="@color/black"
-                    android:layout_marginBottom="20dp"/>
-
-                <!-- ── GÊNERO ── -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="GÊNERO"
-                    android:textColor="#AAAAAA"
-                    android:textSize="11sp"
-                    android:letterSpacing="0.1"
-                    android:layout_marginBottom="8dp"/>
-
-                <!--
-                    Spinner com fundo custom_edittext para manter consistência visual.
-                    O adapter é configurado na Activity com os valores de Usuario.GENERO_*.
-                -->
-                <Spinner
-                    android:id="@+id/spinnerGenero"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:background="@drawable/custom_edittext"
-                    android:padding="8dp"
                     android:layout_marginBottom="24dp"/>
 
                 <!-- Botão concluir -->

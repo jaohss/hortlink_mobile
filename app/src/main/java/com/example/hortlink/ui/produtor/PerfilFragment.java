@@ -18,6 +18,7 @@ import com.example.hortlink.R;
 import com.example.hortlink.ui.auth.CompletarPerfilProdutorActivity;
 import com.example.hortlink.ui.auth.MainActivity;
 import com.example.hortlink.util.SessionManager;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class PerfilFragment extends Fragment {
 
@@ -75,8 +76,20 @@ public class PerfilFragment extends Fragment {
         // ── Seção: Catálogo ────────────────────────────────────────
         LinearLayout btnCatalogo = view.findViewById(R.id.btnMeuCatalogo);
         btnCatalogo.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), GerenciarProdutosActivity.class);
-            startActivity(intent);
+            // Se estiver dentro da HomeProdutorActivity, pedimos para trocar o fragmento
+            if (getActivity() instanceof HomeProdutorActivity) {
+                // Seleciona visualmente o item de produtos na BottomNav
+                BottomNavigationView nav = getActivity().findViewById(R.id.bottomNavigation);
+                if (nav != null) {
+                    nav.setSelectedItemId(R.id.nav_prod_produtos);
+                }
+
+                // O setSelectedItemId acima já dispara o listener da Home
+                // que carrega o GerenciarProdutosFragment automaticamente.
+            } else {
+                // Caso de segurança (se o fragmento for usado em outro lugar)
+                Toast.makeText(getContext(), "Navegação não disponível", Toast.LENGTH_SHORT).show();
+            }
         });
 
         // Carrega as informações na tela

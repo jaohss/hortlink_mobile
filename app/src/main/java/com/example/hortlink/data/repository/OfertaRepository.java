@@ -1,12 +1,13 @@
 package com.example.hortlink.data.repository;
 
-import com.example.hortlink.util.RetrofitClient;
 import com.example.hortlink.data.dto.DetalheOfertaDTO;
 import com.example.hortlink.data.dto.NovaOfertaDTO;
+import com.example.hortlink.data.dto.OfertaEdicaoDTO;
 import com.example.hortlink.data.model.OfertaDTO;
 import com.example.hortlink.data.remote.SupabaseClient;
 import com.example.hortlink.service.BaseCallback;
 import com.example.hortlink.service.OfertaService;
+import com.example.hortlink.util.RetrofitClient;
 
 import org.json.JSONObject;
 
@@ -70,6 +71,25 @@ public class OfertaRepository {
             }
         });
 
+    }
+
+    //ATUALIZAR OFERTA
+    public void atualizarOferta(Long idOferta, NovaOfertaDTO dto, BaseCallback<OfertaDTO> callback) {
+        api.atualizarOferta(idOferta, dto).enqueue(new Callback<OfertaDTO>() {
+            @Override
+            public void onResponse(Call<OfertaDTO> call, Response<OfertaDTO> response) {
+                if(response.isSuccessful()){
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao salvar oferta: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<OfertaDTO> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
     }
 
     // EXCLUIR OFERTA PELO ID
@@ -143,6 +163,25 @@ public class OfertaRepository {
                 callback.onError("Falha na rede: " + t.getMessage());
             }
         });
+    }
+
+    public void buscarOfertaEdicaoPorId(Long idOferta, BaseCallback<OfertaEdicaoDTO> callback) {
+        api.buscarOfertaEdicaoPorId(idOferta).enqueue(new Callback<OfertaEdicaoDTO>() {
+            @Override
+            public void onResponse(Call<OfertaEdicaoDTO> call, Response<OfertaEdicaoDTO> response){
+                if(response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao buscar oferta: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<OfertaEdicaoDTO> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
+
     }
 
 

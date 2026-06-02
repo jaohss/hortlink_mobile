@@ -18,12 +18,14 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
 import com.example.hortlink.data.dto.CheckoutRequestDTO;
+import com.example.hortlink.data.repository.CarrinhoRepository;
 import com.example.hortlink.data.repository.PedidoRepository;
 import com.example.hortlink.service.BaseCallback;
 
 public class CheckoutActivity extends AppCompatActivity {
 
     private final PedidoRepository pedidoRepository = new PedidoRepository();
+    private final CarrinhoRepository carrinhoRepository = new CarrinhoRepository();
 
     private ProgressBar spinner;
     private TextView tvMsg;
@@ -72,15 +74,13 @@ public class CheckoutActivity extends AppCompatActivity {
 
         CheckoutRequestDTO dto = new CheckoutRequestDTO(formaPagtoEscolhida, enderecoId, observacoes);
 
-        pedidoRepository.finalizarCheckout(dto, new BaseCallback<Void>() {
+        carrinhoRepository.realizarCheckout(dto, new BaseCallback<Void>() {
             @Override
             public void onSuccess(Void unused) {
                 runOnUiThread(() -> {
                     spinner.setVisibility(View.GONE);
                     Toast.makeText(CheckoutActivity.this, "Pedido realizado com sucesso!", Toast.LENGTH_LONG).show();
 
-                    // Como não temos mais o CartManager, é só navegar para a Home!
-                    // O Spring Boot já limpou o carrinho no banco.
                     navegarParaHome();
                 });
             }

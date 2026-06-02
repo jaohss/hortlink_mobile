@@ -64,7 +64,6 @@
                     android:gravity="top"
                     android:layout_marginTop="-36dp">
 
-                    <!-- Avatar circular -->
                     <ImageView
                         android:id="@+id/imgFazenda"
                         android:layout_width="72dp"
@@ -74,7 +73,6 @@
                         android:background="@drawable/bg_redondo"
                         android:clipToOutline="true"/>
 
-                    <!-- Nome + localização -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -92,9 +90,8 @@
                             android:textStyle="bold"
                             android:textColor="#1A1A1A"/>
 
-                        <!-- Cidade, UF -->
                         <LinearLayout
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
@@ -114,8 +111,28 @@
                                 android:textSize="12sp"
                                 android:textColor="#777777"
                                 android:layout_marginStart="4dp"/>
-                        </LinearLayout>
 
+                            <Space
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1" />
+
+                            <ImageView
+                                android:layout_width="14dp"
+                                android:layout_height="14dp"
+                                android:src="@android:drawable/star_on"
+                                app:tint="#FFC107"
+                                android:layout_marginEnd="4dp"/>
+
+                            <TextView
+                                android:id="@+id/txtAvaliacao"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="4.5"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#1A1A1A"/>
+                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
 

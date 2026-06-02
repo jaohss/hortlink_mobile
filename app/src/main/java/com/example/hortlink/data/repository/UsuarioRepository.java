@@ -8,15 +8,6 @@ import com.example.hortlink.util.RetrofitClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 
-/**
- * Responsabilidades:
- *  - login e cadastro (Firebase Auth + Supabase)
- *  - busca e atualização de perfil
- *  - upload de foto
- *
- * Nenhuma Activity ou Fragment deve chamar SupabaseHelper diretamente
- * para operações relacionadas a usuário — tudo passa por aqui.
- */
 public class UsuarioRepository {
 
     private final UsuarioService api;
@@ -69,7 +60,7 @@ public class UsuarioRepository {
                 if (response.isSuccessful()) {
                     callback.onSuccess(null);
                 } else {
-                    callback.onError("Erro ao remover item: " + response.code());
+                    callback.onError("Erro ao atualizar seu perfil: " + response.code());
                 }
             }
 

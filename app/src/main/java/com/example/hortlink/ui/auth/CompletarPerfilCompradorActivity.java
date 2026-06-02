@@ -5,11 +5,9 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -19,20 +17,16 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hortlink.R;
+import com.example.hortlink.data.dto.PerfilCompradorDTO;
 import com.example.hortlink.data.dto.ViaCepResponse;
-import com.example.hortlink.data.model.Usuario;
 import com.example.hortlink.data.repository.GeoRepository;
 import com.example.hortlink.data.repository.UsuarioRepository;
 import com.example.hortlink.service.BaseCallback;
-import com.example.hortlink.util.SessionManager;
-
-import org.json.JSONObject;
 
 public class CompletarPerfilCompradorActivity extends AppCompatActivity {
 
     // ─── Views ────────────────────────────────────────────────────────
-    private EditText edtCep, edtCidade, edtEstado ,edtBairro, edtReferencia, edtTelefone;
-    private Spinner spinnerGenero;
+    private EditText edtCep, edtCidade, edtEstado ,edtBairro, edtComplemento, edtTelefone;
     private Button btnConcluir;
     private Button btnPular;
     private ProgressBar progressBar;
@@ -41,9 +35,6 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
     private final UsuarioRepository usuarioRepository = new UsuarioRepository();
     private final GeoRepository geoRepository = new GeoRepository();
 
-    // ─── Estado ───────────────────────────────────────────────────────
-    private String uid;
-
     // ─── Lifecycle ────────────────────────────────────────────────────
 
     @Override
@@ -51,32 +42,29 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_completar_perfil_comprador);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        uid = getIntent().getStringExtra("uid");
-
         bindViews();
-        configurarSpinnerGenero();
         configurarViaCep();
         preencherSeEdicao();
         configurarBotoes();
     }
 
     private void bindViews() {
-        edtCep        = findViewById(R.id.edtCep);
-        edtCidade     = findViewById(R.id.edtCidade);
-        edtEstado     = findViewById(R.id.edtEstado);
-        edtBairro     = findViewById(R.id.edtBairro);
-        edtReferencia = findViewById(R.id.edtReferencia);
-        edtTelefone   = findViewById(R.id.edtTelefone);
-        spinnerGenero = findViewById(R.id.spinnerGenero);
-        btnConcluir   = findViewById(R.id.btnConcluir);
-        btnPular      = findViewById(R.id.btnPular);
-        progressBar   = findViewById(R.id.progressBar);
+        edtCep         = findViewById(R.id.edtCep);
+        edtCidade      = findViewById(R.id.edtCidade);
+        edtEstado      = findViewById(R.id.edtEstado);
+        edtBairro      = findViewById(R.id.edtBairro);
+        edtComplemento = findViewById(R.id.edtComplemento);
+        edtTelefone    = findViewById(R.id.edtTelefone);
+        btnConcluir    = findViewById(R.id.btnConcluir);
+        btnPular       = findViewById(R.id.btnPular);
+        progressBar    = findViewById(R.id.progressBar);
 
         progressBar.setVisibility(View.GONE);
 
@@ -85,35 +73,10 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
         edtEstado.setEnabled(true);
     }
 
-    // ─── Spinner de gênero ────────────────────────────────────────────
-    //
-    // Usa as constantes de Usuario para não duplicar os valores em string.
-    // O primeiro item é um placeholder não selecionável — força o usuário
-    // a fazer uma escolha consciente sem deixar o campo vazio por engano.
-
-    private void configurarSpinnerGenero() {
-        String[] opcoes = {
-                "Selecione...",
-                Usuario.GENERO_MASCULINO,
-                Usuario.GENERO_FEMININO,
-                Usuario.GENERO_NAO_INFORMAR
-        };
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                opcoes
-        );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerGenero.setAdapter(adapter);
-        spinnerGenero.setSelection(0); // começa no placeholder
-    }
-
     // ─── ViaCEP ───────────────────────────────────────────────────────
 
     private void configurarViaCep() {
         edtCep.addTextChangedListener(new TextWatcher() {
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
@@ -138,14 +101,10 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
             public void onSuccess(ViaCepResponse endereco) {
                 runOnUiThread(() -> {
                     setCarregando(false);
-
-                    // Puxamos os dados diretamente do DTO ViaCepResponse
                     edtCidade.setText(endereco.getLocalidade());
                     edtEstado.setText(endereco.getUf());
                     edtBairro.setText(endereco.getBairro());
-
-                    // Foca na referência, já que o bairro foi preenchido
-                    edtReferencia.requestFocus();
+                    edtComplemento.requestFocus(); // Foco vai para o complemento após o auto-preenchimento
                 });
             }
 
@@ -164,7 +123,7 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
         });
     }
 
-    // ─── Botões ───────────────────────────────────────────────────────
+    // ─── Botões e Salvamento ──────────────────────────────────────────
 
     private void configurarBotoes() {
         btnConcluir.setOnClickListener(v -> tentarSalvar());
@@ -172,18 +131,12 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
     }
 
     private void tentarSalvar() {
-        String cep       = edtCep.getText().toString().trim();
-        String cidade    = edtCidade.getText().toString().trim();
-        String estado    = edtEstado.getText().toString().trim();
-        String bairro    = edtBairro.getText().toString().trim();
-        String referencia = edtReferencia.getText().toString().trim();
-        String telefone  = edtTelefone.getText().toString().trim();
-
-        // Gênero: posição 0 é o placeholder "Selecione..."
-        int posicaoGenero = spinnerGenero.getSelectedItemPosition();
-        String genero = posicaoGenero > 0
-                ? spinnerGenero.getSelectedItem().toString()
-                : "";
+        String cep         = edtCep.getText().toString().trim();
+        String cidade      = edtCidade.getText().toString().trim();
+        String estado      = edtEstado.getText().toString().trim();
+        String bairro      = edtBairro.getText().toString().trim();
+        String complemento = edtComplemento.getText().toString().trim();
+        String telefone    = edtTelefone.getText().toString().trim();
 
         // ── Validações ────────────────────────────────────────────────
         if (telefone.isEmpty()) {
@@ -191,95 +144,99 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
             edtTelefone.requestFocus();
             return;
         }
-
         if (cidade.isEmpty()) {
             edtCidade.setError("Informe sua cidade");
             edtCidade.requestFocus();
             return;
         }
-
         if (estado.isEmpty()) {
             edtEstado.setError("Informe seu estado");
             edtEstado.requestFocus();
             return;
         }
-
         if (bairro.isEmpty()) {
             edtBairro.setError("Informe seu bairro");
             edtBairro.requestFocus();
             return;
         }
 
-        // Gênero é opcional — "Prefiro não informar" já é uma escolha válida,
-        // mas o placeholder "Selecione..." indica que o usuário não tocou no campo.
-        // Não bloqueamos o cadastro por isso, apenas salvamos vazio se não escolheu.
-
         setCarregando(true);
 
-        try {
-            JSONObject campos = new JSONObject();
-            campos.put("telefone",   telefone);
-            campos.put("cep",        cep);
-            campos.put("cidade",     cidade);
-            campos.put("estado",     estado);
-            campos.put("bairro",     bairro);
-            campos.put("referencia", referencia); // pode ser vazio — campo opcional
-            campos.put("genero",     genero);     // vazio se não selecionou
+        // Substituição do JSONObject pelo DTO tipado
+        PerfilCompradorDTO dto = new PerfilCompradorDTO();
+        dto.setTelefone(telefone);
+        dto.setCep(cep);
+        dto.setCidade(cidade);
+        dto.setEstado(estado);
+        dto.setBairro(bairro);
+        dto.setComplemento(complemento.isEmpty() ? null : complemento); // Atualizado aqui
 
-            usuarioRepository.atualizarPerfil(uid, campos, new UsuarioRepository.CallbackSimples() {
+        // Chamada atualizada do novo Repositório
+        usuarioRepository.atualizarPerfil(dto, new BaseCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    Toast.makeText(
+                            CompletarPerfilCompradorActivity.this,
+                            "Perfil atualizado com sucesso!",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                    irParaHome();
+                });
+            }
 
-                @Override
-                public void onSuccess() {
-                    runOnUiThread(() -> {
-                        setCarregando(false);
-                        Toast.makeText(
-                                CompletarPerfilCompradorActivity.this,
-                                "Perfil completo! Bem-vindo ao Hortlink 🛒",
-                                Toast.LENGTH_SHORT
-                        ).show();
-                        irParaHome();
-                    });
-                }
-
-                @Override
-                public void onError(String erro) {
-                    runOnUiThread(() -> {
-                        setCarregando(false);
-                        Toast.makeText(
-                                CompletarPerfilCompradorActivity.this,
-                                "Erro ao salvar perfil: " + erro,
-                                Toast.LENGTH_LONG
-                        ).show();
-                    });
-                }
-            });
-
-        } catch (Exception e) {
-            setCarregando(false);
-            Toast.makeText(this, "Erro inesperado: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
+            @Override
+            public void onError(String erro) {
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    Toast.makeText(
+                            CompletarPerfilCompradorActivity.this,
+                            "Erro ao salvar perfil: " + erro,
+                            Toast.LENGTH_LONG
+                    ).show();
+                });
+            }
+        });
     }
+
+    // ─── Preenchimento Automático via API ─────────────────────────────
 
     private void preencherSeEdicao() {
         boolean modoEdicao = getIntent().getBooleanExtra("modo_edicao", false);
         if (!modoEdicao) return;
 
-        Usuario u = SessionManager.getInstance().getUsuario();
-        if (u == null) return;
+        setCarregando(true);
+        btnPular.setVisibility(View.GONE); // No modo edição, geralmente não faz sentido "Pular"
 
-        if (u.telefone != null) edtTelefone.setText(u.telefone);
-        if (u.cidade   != null) edtCidade.setText(u.cidade);
-        if (u.estado   != null) edtEstado.setText(u.estado);
+        // Busca os dados reais e atualizados do backend
+        usuarioRepository.obterPerfil(new BaseCallback<PerfilCompradorDTO>() {
+            @Override
+            public void onSuccess(PerfilCompradorDTO perfil) {
+                runOnUiThread(() -> {
+                    setCarregando(false);
 
-        // Gênero: encontra a posição do valor salvo no spinner
-        if (u.genero != null && !u.genero.isEmpty()) {
-            for (int i = 0; i < spinnerGenero.getCount(); i++) {
-                if (spinnerGenero.getItemAtPosition(i).toString().equals(u.genero)) {
-                    spinnerGenero.setSelection(i);
-                    break;
-                }
+                    if (perfil.getTelefone() != null) edtTelefone.setText(perfil.getTelefone());
+                    if (perfil.getCep() != null) edtCep.setText(perfil.getCep());
+                    if (perfil.getCidade() != null) edtCidade.setText(perfil.getCidade());
+                    if (perfil.getEstado() != null) edtEstado.setText(perfil.getEstado());
+                    if (perfil.getBairro() != null) edtBairro.setText(perfil.getBairro());
+                    if (perfil.getComplemento() != null) edtComplemento.setText(perfil.getComplemento()); // Atualizado aqui
+                });
             }
-        }
+
+            @Override
+            public void onError(String erro) {
+                runOnUiThread(() -> {
+                    setCarregando(false);
+                    Toast.makeText(
+                            CompletarPerfilCompradorActivity.this,
+                            "Erro ao carregar seus dados: " + erro,
+                            Toast.LENGTH_SHORT
+                    ).show();
+                });
+            }
+        });
     }
 
     // ─── Helpers de UI ────────────────────────────────────────────────
@@ -289,11 +246,15 @@ public class CompletarPerfilCompradorActivity extends AppCompatActivity {
         btnConcluir.setEnabled(!carregando);
         btnPular.setEnabled(!carregando);
         edtCep.setEnabled(!carregando);
+        edtTelefone.setEnabled(!carregando);
+        edtCidade.setEnabled(!carregando);
+        edtEstado.setEnabled(!carregando);
+        edtBairro.setEnabled(!carregando);
+        edtComplemento.setEnabled(!carregando);
     }
 
     private void irParaHome() {
         startActivity(new Intent(this, RoleRouterActivity.class));
         finish();
     }
-
 }

@@ -16,8 +16,43 @@ public class ComercioRepository {
 
     private final ComercioService api = RetrofitClient.getComercioService();
 
+    public void obterPerfilBase(BaseCallback<ComercioDTO> callback) {
+        api.obterPerfilBase().enqueue(new Callback<ComercioDTO>() {
+            @Override
+            public void onResponse(Call<ComercioDTO> call, Response<ComercioDTO> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao buscar o perfil: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ComercioDTO> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
+    }
+
+    public void obterDadosComercio(Long comercioId, BaseCallback<ComercioDTO> callback) {
+        api.obterDadosComercio(comercioId).enqueue(new Callback<ComercioDTO>() {
+            @Override
+            public void onResponse(Call<ComercioDTO> call, Response<ComercioDTO> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Erro ao buscar os dados do comércio: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ComercioDTO> call, Throwable t) {
+                callback.onError("Falha na rede: " + t.getMessage());
+            }
+        });
+    }
     public void buscarPerfil(BaseCallback<CompletarPerfilComercioDTO> callback) {
-        api.buscarPerfil().enqueue(new Callback<CompletarPerfilComercioDTO>() {
+        api.buscarPerfilForm().enqueue(new Callback<CompletarPerfilComercioDTO>() {
             @Override
             public void onResponse(Call<CompletarPerfilComercioDTO> call, Response<CompletarPerfilComercioDTO> response) {
                 if(response.isSuccessful() && response.body() != null) {

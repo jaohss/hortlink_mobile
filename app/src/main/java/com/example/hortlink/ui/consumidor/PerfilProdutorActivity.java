@@ -16,7 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
-import com.example.hortlink.adapters.ProdutoAdapter;
+// Substituído ProdutoAdapter por OfertaAdapter
+import com.example.hortlink.adapters.OfertaAdapter;
 import com.example.hortlink.data.dto.ComercioDTO;
 import com.example.hortlink.data.model.OfertaDTO;
 import com.example.hortlink.data.repository.ComercioRepository;
@@ -25,20 +26,12 @@ import com.example.hortlink.service.BaseCallback;
 
 import java.util.List;
 
-/**
- * Tela pública do produtor — aberta quando o comprador clica num produtor.
- *
- *  - ProdutorRepository.buscarPorId()  → cabeçalho do perfil
- *  - ProdutoRepository.listarProdutosPorProdutor() → lista horizontal de produtos
- */
-
 public class PerfilProdutorActivity extends AppCompatActivity {
 
     private TextView txtNome, txtCidade, txtContato, txtDescricao, txtAvaliacao;
     private ImageView imgFazenda;
     private RecyclerView recyclerProdutosPerfil;
 
-    // Instanciando os novos Repositórios
     private final OfertaRepository ofertaRepository = new OfertaRepository();
     private final ComercioRepository comercioRepository = new ComercioRepository();
 
@@ -59,7 +52,7 @@ public class PerfilProdutorActivity extends AppCompatActivity {
         txtCidade    = findViewById(R.id.txtCidadeProd);
         txtContato   = findViewById(R.id.txtContatoProd);
         txtDescricao = findViewById(R.id.txtDescricao);
-        txtAvaliacao = findViewById(R.id.txtAvaliacao);
+        txtAvaliacao = findViewById(R.id.txtAvaliacao); // Agora existe no XML!
         imgFazenda   = findViewById(R.id.imgFazenda);
 
         recyclerProdutosPerfil = findViewById(R.id.recyclerProdutosPerfil);
@@ -68,31 +61,27 @@ public class PerfilProdutorActivity extends AppCompatActivity {
 
         findViewById(R.id.btnVoltar).setOnClickListener(v -> finish());
 
-        // Recebe o ID do comércio passado pela tela de Detalhes
         long comercioId = getIntent().getLongExtra("comercio_id", -1);
         if (comercioId == -1) {
             finish();
             return;
         }
 
-        // Chama as duas requisições na API
         carregarPerfilProdutor(comercioId);
         carregarProdutosDoProdutor(comercioId);
     }
 
-    // ─── Dados do produtor ───────────────────────────────────────
     private void carregarPerfilProdutor(Long comercioId) {
-        comercioRepository.buscarPorId(comercioId, new BaseCallback<ComercioDTO>() {
+        comercioRepository.obterDadosComercio(comercioId, new BaseCallback<ComercioDTO>() {
             @Override
             public void onSuccess(ComercioDTO comercio) {
                 txtNome.setText(comercio.getNome());
                 txtCidade.setText(comercio.getCidade());
                 txtContato.setText(comercio.getTelefone());
 
-                // Formata a avaliação para ter apenas 1 casa decimal (ex: "4.5")
-                txtAvaliacao.setText(comercio.getAvaliacao());
+                // Prevenção contra nulos na avaliação
+                txtAvaliacao.setText(comercio.getAvaliacao() != null ? comercio.getAvaliacao() : "Novo");
 
-                // Carrega a foto do comércio (se houver)
                 String fotoUrl = comercio.getImg_url();
                 Glide.with(PerfilProdutorActivity.this)
                         .load(fotoUrl != null && !fotoUrl.isEmpty() ? fotoUrl : null)
@@ -104,27 +93,25 @@ public class PerfilProdutorActivity extends AppCompatActivity {
 
             @Override
             public void onError(String erro) {
-
                 Toast.makeText(PerfilProdutorActivity.this, "Erro: " + erro, Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // ─── Produtos do produtor na lista horizontal ────────────────
     private void carregarProdutosDoProdutor(Long comercioId) {
         ofertaRepository.buscarOfertasPorComercioId(comercioId, new BaseCallback<List<OfertaDTO>>() {
             @Override
             public void onSuccess(List<OfertaDTO> lista) {
 
-                // Cria o adapter passando a lista pronta
-                ProdutoAdapter adapter = new ProdutoAdapter(lista, produto -> {
-                    Intent intent = new Intent(PerfilProdutorActivity.this, com.example.hortlink.activities.DetalheProdutoActivity.class);
+                // Utilizando OfertaAdapter e tratando o objeto corretamente como 'oferta'
+                OfertaAdapter adapter = new OfertaAdapter(lista, oferta -> {
+                    Intent intent = new Intent(PerfilProdutorActivity.this, DetalheProdutoActivity.class);
 
-                    // Passa o ID da oferta clicada
-                    intent.putExtra("produto_id", produto.getId());
+                    // A tela de detalhes precisa do ID da oferta, não do produto genérico
+                    intent.putExtra("oferta_id", oferta.getId());
 
-                    // Aplica a nossa estratégia Ninja: manda a foto para carregar instantaneamente
-                    intent.putExtra("imagem_url", produto.getImagemUri());
+                    // Puxando a URL da imagem da oferta
+                    intent.putExtra("imagem_url", oferta.getImagemUrl());
 
                     startActivity(intent);
                 });
@@ -134,7 +121,6 @@ public class PerfilProdutorActivity extends AppCompatActivity {
 
             @Override
             public void onError(String erro) {
-                // Falha silenciosa ou avisa o usuário
                 Toast.makeText(PerfilProdutorActivity.this, "Erro ao buscar produtos", Toast.LENGTH_SHORT).show();
             }
         });

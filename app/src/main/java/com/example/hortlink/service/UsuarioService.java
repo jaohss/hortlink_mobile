@@ -13,7 +13,7 @@ public interface UsuarioService {
     @GET("usuarios/perfil")
     Call<PerfilCompradorDTO> obterPerfil();
 
-    @PUT("usuarios/perfil")
+    @PUT("usuarios/perfil/atualizar")
     Call<Void> atualizarPerfil(@Body PerfilCompradorDTO dto);
 
     @GET("perfil/detalhes-cliente/{clienteId}")

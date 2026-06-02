@@ -1,61 +1,15 @@
-package com.example.hortlink.data.model;
+package com.example.hortlink.data.dto;
 
 import com.example.hortlink.data.enums.Categoria;
 import com.example.hortlink.data.enums.UnidadeMedida;
 
-public class Produto {
-    
+public class ProdutoEdicaoDTO {
     private Long id;
     private String nome;
     private String descricao;
+    private String imagemUrl;
     private Categoria categoria;
     private UnidadeMedida unidadeMedida;
-    private String imagemUrl;
-    public double distanciaKm = Double.MAX_VALUE;
-    public Long vendedorId;
-
-    public Produto(Long id, String nome, String descricao, Categoria categoria, UnidadeMedida unidadeMedida, String imagemUrl) {
-        this.id = id;
-        this.nome = nome;
-        this.descricao = descricao;
-        this.categoria = categoria;
-        this.unidadeMedida = unidadeMedida;
-        this.imagemUrl = imagemUrl;
-    }
-
-    public String getImagemUrl() {
-        return imagemUrl;
-    }
-
-    public void setImagemUrl(String imagemUrl) {
-        this.imagemUrl = imagemUrl;
-    }
-
-    
-
-    public double getDistanciaKm() {
-        return distanciaKm;
-    }
-
-
-
-    public void setDistanciaKm(double distanciaKm) {
-        this.distanciaKm = distanciaKm;
-    }
-
-
-
-    public Long getVendedorId() {
-        return vendedorId;
-    }
-
-
-
-    public void setVendedorId(Long vendedorId) {
-        this.vendedorId = vendedorId;
-    }
-
-
 
     public Long getId() {
         return id;
@@ -81,6 +35,14 @@ public class Produto {
         this.descricao = descricao;
     }
 
+    public String getImagemUrl() {
+        return imagemUrl;
+    }
+
+    public void setImagemUrl(String imagemUrl) {
+        this.imagemUrl = imagemUrl;
+    }
+
     public Categoria getCategoria() {
         return categoria;
     }
@@ -96,5 +58,4 @@ public class Produto {
     public void setUnidadeMedida(UnidadeMedida unidadeMedida) {
         this.unidadeMedida = unidadeMedida;
     }
-
 }

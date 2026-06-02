@@ -23,6 +23,14 @@ public class ProdutoRepository {
     private final ProdutoService api = RetrofitClient.getProdutoService();
 
     public void cadastrarProduto(NovoProdutoDTO novoProduto, File arquivoImagem, BaseCallback<Produto> callback) {
+        enviarProduto(null, novoProduto, arquivoImagem, callback);
+    }
+
+    public void atualizarProduto(Long id, NovoProdutoDTO novoProduto, File arquivoImagem, BaseCallback<Produto> callback) {
+        enviarProduto(id, novoProduto, arquivoImagem, callback);
+    }
+
+    private void enviarProduto(Long id, NovoProdutoDTO novoProduto, File arquivoImagem, BaseCallback<Produto> callback) {
         Gson gson = new Gson();
         String dtoJson = gson.toJson(novoProduto);
         RequestBody produtoData = RequestBody.create(
@@ -30,18 +38,27 @@ public class ProdutoRepository {
                 dtoJson
         );
 
-        RequestBody requestFile = RequestBody.create(
-                MediaType.parse("image/*"),
-                arquivoImagem
-        );
+        MultipartBody.Part imagem = null;
+        if (arquivoImagem != null) {
+            RequestBody requestFile = RequestBody.create(
+                    MediaType.parse("image/*"),
+                    arquivoImagem
+            );
+            imagem = MultipartBody.Part.createFormData(
+                    "imagem",
+                    arquivoImagem.getName(),
+                    requestFile
+            );
+        }
 
-        MultipartBody.Part imagem = MultipartBody.Part.createFormData(
-                "imagem",
-                arquivoImagem.getName(),
-                requestFile
-        );
+        Call<Produto> call;
+        if (id == null) {
+            call = api.cadastrarProduto(produtoData, imagem);
+        } else {
+            call = api.atualizarProduto(id, produtoData, imagem);
+        }
 
-        api.cadastrarProduto(produtoData, imagem).enqueue(new Callback<Produto>() {
+        call.enqueue(new Callback<Produto>() {
             @Override
             public void onResponse(Call<Produto> call, Response<Produto> response) {
                 if(response.isSuccessful()) {

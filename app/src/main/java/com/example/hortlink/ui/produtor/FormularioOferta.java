@@ -1,5 +1,6 @@
 package com.example.hortlink.ui.produtor;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -15,10 +16,10 @@ import androidx.cardview.widget.CardView;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
-import com.example.hortlink.data.dto.DetalheOfertaDTO;
+import com.example.hortlink.data.dto.NovaOfertaDTO;
+import com.example.hortlink.data.dto.OfertaEdicaoDTO;
 import com.example.hortlink.data.dto.ProdutoListaDTO;
-// Importe seus DTOs de NovoOfertaDTO e DetalheOfertaDTO (ou similares)
-// Importe o OfertaRepository e ProdutoRepository
+import com.example.hortlink.data.model.OfertaDTO;
 import com.example.hortlink.data.repository.OfertaRepository;
 import com.example.hortlink.data.repository.ProdutoRepository;
 import com.example.hortlink.service.BaseCallback;
@@ -26,6 +27,8 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.math.BigDecimal;
+import java.util.Calendar;
 import java.util.List;
 
 public class FormularioOferta extends AppCompatActivity {
@@ -35,7 +38,9 @@ public class FormularioOferta extends AppCompatActivity {
     private CardView cardInformacoesProduto;
     private ImageView imgProdutoCard;
     private TextView txtNomeProdutoCard, txtUnidadeMedidaCard;
-    private TextInputEditText edtPreco;
+
+    // Adicionados os novos campos editáveis
+    private TextInputEditText edtPreco, edtEstoque, edtDataColheita;
     private SwitchMaterial switchAtivo;
     private Button btnSalvar;
     private ProgressBar progressBar;
@@ -43,7 +48,6 @@ public class FormularioOferta extends AppCompatActivity {
     private Long idOfertaEditada = -1L;
     private Long idProdutoSelecionado = -1L;
 
-    // Repositórios
     private OfertaRepository ofertaRepository;
     private ProdutoRepository produtoRepository;
 
@@ -62,10 +66,12 @@ public class FormularioOferta extends AppCompatActivity {
         if (idOfertaEditada != -1L) {
             configurarModoEdicao();
         } else {
-            configurarModoCricao();
+            configurarModoCriacao();
         }
 
         btnSalvar.setOnClickListener(v -> tentarSalvar());
+
+        edtDataColheita.setOnClickListener(v -> abrirCalendario());
     }
 
     private void bindViews() {
@@ -75,14 +81,18 @@ public class FormularioOferta extends AppCompatActivity {
         imgProdutoCard = findViewById(R.id.imgProdutoCard);
         txtNomeProdutoCard = findViewById(R.id.txtNomeProdutoCard);
         txtUnidadeMedidaCard = findViewById(R.id.txtUnidadeMedidaCard);
+
         edtPreco = findViewById(R.id.edtPreco);
+        edtEstoque = findViewById(R.id.edtEstoque);
+        edtDataColheita = findViewById(R.id.edtDataColheita);
+
         switchAtivo = findViewById(R.id.switchAtivo);
         btnSalvar = findViewById(R.id.btnSalvarOferta);
         progressBar = findViewById(R.id.progressBarOferta);
     }
 
     // ─── MODO CRIAÇÃO ────────────────────────────────────────────────────────
-    private void configurarModoCricao() {
+    private void configurarModoCriacao() {
         layoutSelecaoProduto.setVisibility(View.VISIBLE);
         cardInformacoesProduto.setVisibility(View.GONE);
 
@@ -121,7 +131,6 @@ public class FormularioOferta extends AppCompatActivity {
                 });
             }
         });
-
     }
 
     // ─── MODO EDIÇÃO ─────────────────────────────────────────────────────────
@@ -131,18 +140,26 @@ public class FormularioOferta extends AppCompatActivity {
         setTitle("Editar Oferta");
         btnSalvar.setText("Atualizar Oferta");
 
-
         setCarregando(true);
-        ofertaRepository.buscarOfertaDetalhadaPorId(idOfertaEditada, new BaseCallback<DetalheOfertaDTO>() {
+
+        // Utilizando o método novo e esperando o OfertaEdicaoDTO
+        ofertaRepository.buscarOfertaEdicaoPorId(idOfertaEditada, new BaseCallback<OfertaEdicaoDTO>() {
             @Override
-            public void onSuccess(DetalheOfertaDTO oferta) {
+            public void onSuccess(OfertaEdicaoDTO oferta) {
                 runOnUiThread(() -> {
                     setCarregando(false);
-                    preencherCardProduto(oferta.getNome(), oferta.getUnidade(), oferta.getImagemUrl());
 
-                    edtPreco.setText(String.valueOf(oferta.getValor()));
-                    switchAtivo.setChecked(oferta.isDisponivelParaVenda());
+                    // Preenche o cabeçalho bloqueado
+                    preencherCardProduto(oferta.getNomeProduto(), oferta.getUnidadeSimbolo(), oferta.getImagemUrl());
 
+                    // Preenche os campos editáveis
+                    edtPreco.setText(oferta.getPreco() != null ? oferta.getPreco().toString() : "");
+                    edtEstoque.setText(oferta.getEstoqueAtual() != null ? oferta.getEstoqueAtual().toString() : "");
+                    edtDataColheita.setText(oferta.getDataColheita() != null ? oferta.getDataColheita() : "");
+
+                    if (oferta.getDisponivelParaVenda() != null) {
+                        switchAtivo.setChecked(oferta.getDisponivelParaVenda());
+                    }
                 });
             }
 
@@ -155,7 +172,6 @@ public class FormularioOferta extends AppCompatActivity {
                 });
             }
         });
-
     }
 
     // ─── FUNÇÕES DE APOIO ────────────────────────────────────────────────────
@@ -178,24 +194,79 @@ public class FormularioOferta extends AppCompatActivity {
         }
 
         String precoStr = edtPreco.getText().toString().trim();
+        String estoqueStr = edtEstoque.getText().toString().trim();
+        String dataColheitaStr = edtDataColheita.getText().toString().trim();
+
         if (precoStr.isEmpty()) {
             edtPreco.setError("Informe o preço");
             edtPreco.requestFocus();
             return;
         }
 
-        double preco = Double.parseDouble(precoStr.replace(",", "."));
+        if (estoqueStr.isEmpty()) {
+            edtEstoque.setError("Informe o estoque");
+            edtEstoque.requestFocus();
+            return;
+        }
+
+        // Conversão exata utilizando BigDecimal
+        BigDecimal preco = new BigDecimal(precoStr.replace(",", "."));
+        BigDecimal estoque = new BigDecimal(estoqueStr.replace(",", "."));
         boolean ativo = switchAtivo.isChecked();
 
-        // setCarregando(true);
+        // Na edição, o idProduto é irrelevante para a API de PUT, então enviamos nulo.
+        // Na criação, enviamos o ID do produto selecionado no dropdown.
+        Long idProdutoParaEnvio = (idOfertaEditada != -1L) ? null : idProdutoSelecionado;
+
+        // Monta o payload único de envio (Request)
+        NovaOfertaDTO payload = new NovaOfertaDTO(
+                idProdutoParaEnvio,
+                preco,
+                estoque,
+                dataColheitaStr,
+                ativo
+        );
+
+        setCarregando(true);
 
         if (idOfertaEditada != -1L) {
-            // CHAMAR API DE PUT (Atualizar Oferta)
-            Toast.makeText(this, "Simulando Atualização...", Toast.LENGTH_SHORT).show();
+            ofertaRepository.atualizarOferta(idOfertaEditada, payload, new BaseCallback<OfertaDTO>() {
+                @Override
+                public void onSuccess(OfertaDTO response) {
+                    runOnUiThread(() -> {
+                        setCarregando(false);
+                        Toast.makeText(FormularioOferta.this, "Oferta atualizada com sucesso!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    });
+                }
+
+                @Override
+                public void onError(String erro) {
+                    runOnUiThread(() -> {
+                        setCarregando(false);
+                        Toast.makeText(FormularioOferta.this, "Erro ao atualizar: " + erro, Toast.LENGTH_SHORT).show();
+                    });
+                }
+            });
         } else {
-            // CHAMAR API DE POST (Criar Nova Oferta)
-            // Lembre-se de enviar o idProdutoSelecionado no DTO
-            Toast.makeText(this, "Simulando Criação...", Toast.LENGTH_SHORT).show();
+            ofertaRepository.criarOferta(payload, new BaseCallback<OfertaDTO>() {
+                @Override
+                public void onSuccess(OfertaDTO response) {
+                    runOnUiThread(() -> {
+                        setCarregando(false);
+                        Toast.makeText(FormularioOferta.this, "Oferta criada com sucesso!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    });
+                }
+
+                @Override
+                public void onError(String erro) {
+                    runOnUiThread(() -> {
+                        setCarregando(false);
+                        Toast.makeText(FormularioOferta.this, "Erro ao criar: " + erro, Toast.LENGTH_SHORT).show();
+                    });
+                }
+            });
         }
     }
 
@@ -204,6 +275,25 @@ public class FormularioOferta extends AppCompatActivity {
         btnSalvar.setEnabled(!carregando);
         layoutSelecaoProduto.setEnabled(!carregando);
         edtPreco.setEnabled(!carregando);
+        edtEstoque.setEnabled(!carregando);
+        edtDataColheita.setEnabled(!carregando);
         switchAtivo.setEnabled(!carregando);
+    }
+
+    private void abrirCalendario() {
+        // Pega a data atual para o calendário abrir no dia de hoje
+        Calendar calendar = Calendar.getInstance();
+        int ano = calendar.get(Calendar.YEAR);
+        int mes = calendar.get(Calendar.MONTH);
+        int dia = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                (view, year, month, dayOfMonth) -> {
+                    // Formata a data para o padrão ISO que o Spring Boot exige: YYYY-MM-DD
+                    String dataFormatada = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth);
+                    edtDataColheita.setText(dataFormatada);
+                }, ano, mes, dia);
+
+        datePickerDialog.show();
     }
 }

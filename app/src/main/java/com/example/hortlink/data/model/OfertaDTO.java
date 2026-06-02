@@ -2,7 +2,6 @@ package com.example.hortlink.data.model;
 
 import com.example.hortlink.data.enums.Categoria;
 import com.example.hortlink.data.enums.UnidadeMedida;
-import com.google.gson.annotations.SerializedName;
 
 import java.math.BigDecimal;
 
@@ -14,7 +13,7 @@ public class OfertaDTO {
 
     private String imagemUrl;
     private UnidadeMedida unidade;
-    private Integer quantidadeEstoque;
+    private BigDecimal quantidadeEstoque;
     private boolean ativo;
     private Double latitude;
     private Double longitude;
@@ -68,11 +67,11 @@ public class OfertaDTO {
         this.unidade = unidade;
     }
 
-    public Integer getQuantidadeEstoque() {
+    public BigDecimal getQuantidadeEstoque() {
         return quantidadeEstoque;
     }
 
-    public void setQuantidadeEstoque(Integer quantidadeEstoque) {
+    public void setQuantidadeEstoque(BigDecimal quantidadeEstoque) {
         this.quantidadeEstoque = quantidadeEstoque;
     }
 

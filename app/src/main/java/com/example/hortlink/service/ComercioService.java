@@ -15,7 +15,13 @@ import retrofit2.http.Path;
 public interface ComercioService {
 
     @GET("comercio")
-    Call<CompletarPerfilComercioDTO> buscarPerfil();
+    Call<ComercioDTO> obterPerfilBase();
+
+    @GET("comercio/{id}")
+    Call<ComercioDTO> obterDadosComercio(@Path("id") Long idComercio);
+
+    @GET("comercio/detalhes")
+    Call<CompletarPerfilComercioDTO> buscarPerfilForm();
 
     @DELETE("comercio/{id}")
     Call<Void> deletarComercio(@Path("id") Long idComercio);

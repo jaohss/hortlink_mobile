@@ -1,5 +1,7 @@
 package com.example.hortlink.data.model;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Mapeamento 1:1 com a tabela `usuarios` no Supabase.
  * É um POJO puro — sem lógica de UI, sem dependência de Android.
@@ -27,7 +29,8 @@ public class Usuario {
     private String nome;
     private String email;
     private String role;
-    private Long comercioProfileId;
+    @SerializedName("commerceId")
+    private Long comercioId;
     private Boolean cadastroIncompleto;
     private String urlFotoPerfil;
 
@@ -36,7 +39,7 @@ public class Usuario {
     public String getNome() { return nome; }
     public String getEmail() { return email; }
     public String getRole() { return role; }
-    public Long getComercioProfileId() { return comercioProfileId; }
+    public Long getComercioId() { return comercioId; }
     public Boolean getCadastroIncompleto() { return cadastroIncompleto; }
     public String getUrlFotoPerfil() { return urlFotoPerfil; }
 }
