@@ -10,8 +10,10 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.hortlink.R;
+import com.example.hortlink.ui.consumidor.HomeFragment;
 import com.example.hortlink.util.BotpressActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
 
 public class HomeProdutorActivity extends AppCompatActivity {
 
@@ -28,23 +30,24 @@ public class HomeProdutorActivity extends AppCompatActivity {
 
         BottomNavigationView bottomNav = findViewById(R.id.bottomNavigation);
 
-        // Fragment inicial
-        carregarFragment(new GerenciarProdutosFragment());
+        // Fragment inicial (Agora é a Vitrine de Ofertas)
+        carregarFragment(new MinhaVitrineFragment());
 
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
 
-            if (id == R.id.nav_prod_produtos) {
-                carregarFragment(new GerenciarProdutosFragment());
+            if (id == R.id.nav_prod_vitrine) {
+                carregarFragment(new MinhaVitrineFragment());
+
+            } else if (id == R.id.nav_prod_catalogo) {
+                carregarFragment(new CatalogoFragment());
 
             } else if (id == R.id.nav_prod_pedidos) {
                 carregarFragment(new PedidosProdutorFragment());
 
-            } else if (id == R.id.nav_prod_adicionar) {
-                startActivity(new Intent(this, AdicionarProdutosActivity.class));
-                // Mantém o item selecionado atual visualmente
-                bottomNav.setSelectedItemId(R.id.nav_prod_produtos);
-                return true;
+            } else if (id == R.id.nav_prod_mercado) {
+                // A mágica acontece aqui: carrega a visão do consumidor!
+                carregarFragment(new HomeFragment());
 
             } else if (id == R.id.nav_prod_perfil) {
                 carregarFragment(new PerfilFragment());
@@ -53,6 +56,7 @@ public class HomeProdutorActivity extends AppCompatActivity {
             return true;
         });
 
+        // Suporte via Botpress mantido
         findViewById(R.id.fabSuporte).setOnClickListener(v ->
                 startActivity(new Intent(this, BotpressActivity.class)));
     }

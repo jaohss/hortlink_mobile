@@ -19,7 +19,6 @@ import com.example.hortlink.R;
 import com.example.hortlink.data.model.Usuario;
 import com.example.hortlink.data.repository.AuthRepository;
 import com.example.hortlink.service.BaseCallback;
-import com.example.hortlink.ui.consumidor.Homec;
 import com.example.hortlink.util.SessionManager;
 
 public class MainActivity extends AppCompatActivity {
@@ -36,9 +35,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // ─── AUTO-LOGIN (Agora vai DIRETO para a Home!) ───
+        // ─── AUTO-LOGIN (Aponta para o Router!) ───
         if (SessionManager.getInstance().getToken() != null) {
-            startActivity(new Intent(this, Homec.class));
+            startActivity(new Intent(this, RoleRouterActivity.class));
             finish();
             return;
         }
@@ -79,9 +78,8 @@ public class MainActivity extends AppCompatActivity {
                 public void onSuccess(Usuario usuarioLogado) {
                     setCarregando(false);
 
-                    // Removido o IF do cadastro incompleto. Vai direto para a Home!
-                    Toast.makeText(MainActivity.this, "Bem-vindo, " + usuarioLogado.getNome(), Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(MainActivity.this, Homec.class));
+                    // ─── SUCESSO (Aponta para o Router!) ───
+                    startActivity(new Intent(MainActivity.this, RoleRouterActivity.class));
                     finish();
                 }
 
@@ -93,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
             });
         });
 
-        // ─── RECUPERAR SENHA E CADASTRO ... (mantidos iguais) ───
+        // ─── RECUPERAR SENHA E CADASTRO ───
         resetPass.setOnClickListener(v -> {
             String email = username.getText().toString().trim();
             if (email.isEmpty()) {

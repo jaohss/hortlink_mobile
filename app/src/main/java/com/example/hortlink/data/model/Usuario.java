@@ -34,6 +34,19 @@ public class Usuario {
     private Boolean cadastroIncompleto;
     private String urlFotoPerfil;
 
+    @Override
+    public String toString() {
+        return "Usuario{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", email='" + email + '\'' +
+                ", role='" + role + '\'' +
+                ", comercioId=" + comercioId +
+                ", cadastroIncompleto=" + cadastroIncompleto +
+                ", urlFotoPerfil='" + urlFotoPerfil + '\'' +
+                '}';
+    }
+
     // Getters
     public Long getId() { return id; }
     public String getNome() { return nome; }

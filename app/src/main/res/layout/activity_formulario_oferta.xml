@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#F4F6FA">
+    android:background="#F5F5F5">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,19 +13,33 @@
         android:orientation="vertical"
         android:padding="20dp">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Produto Base"
+            android:textColor="#2E7D32"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layoutSelecaoProduto"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Selecione o Produto">
+            app:boxBackgroundColor="#FFFFFF">
 
             <AutoCompleteTextView
                 android:id="@+id/spinnerProdutos"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="none" />
+                android:background="@color/white"
+                android:hint="Selecione o Produto"
+                android:textColorHint="@color/black_soft"
+                android:textColor="@color/black_soft"
+                android:inputType="none"
+                android:focusable="false"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <androidx.cardview.widget.CardView
@@ -36,6 +50,7 @@
             android:visibility="gone"
             app:cardCornerRadius="12dp"
             app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/white"
             tools:visibility="visible">
 
             <LinearLayout
@@ -64,7 +79,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="#1E1E1E"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         tools:text="Tomate Carmem" />
 
@@ -72,7 +87,8 @@
                         android:id="@+id/txtUnidadeMedidaCard"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="2dp"
+                        android:textSize="13sp"
                         android:textColor="#757575"
                         tools:text="Vendido por: Kg" />
                 </LinearLayout>
@@ -82,78 +98,156 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Detalhes da Oferta"
-            android:textColor="#1E1E1E"
-            android:textStyle="bold" />
+            android:text="Preço (R$)"
+            android:textColor="#2E7D32"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Preço (R$)">
+            app:boxBackgroundColor="#FFFFFF"
+            app:prefixText="R$ ">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edtPreco"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:hint="0,00"
+                android:textColorHint="@color/black_soft"
+                android:textColor="@color/black_soft"
                 android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Estoque Disponível"
+            android:textColor="#2E7D32"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Quantidade em Estoque">
+            app:boxBackgroundColor="#FFFFFF">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edtEstoque"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:hint="Ex: 50"
+                android:textColorHint="@color/black_soft"
+                android:textColor="@color/black_soft"
                 android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Data da Colheita (Opcional)"
+            android:textColor="#2E7D32"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:hint="Data da Colheita (Opcional)">
+            android:layout_marginBottom="20dp"
+            app:boxBackgroundColor="#FFFFFF"
+            app:endIconDrawable="@android:drawable/ic_menu_today"
+            app:endIconMode="custom">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edtDataColheita"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:hint="DD/MM/AAAA"
+                android:textColorHint="@color/black_soft"
+                android:textColor="@color/black_soft"
                 android:focusable="false"
+                android:cursorVisible="false"
                 android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchAtivo"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:checked="true"
-            android:text="Oferta disponível para venda"
-            android:textSize="16sp" />
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardElevation="0dp"
+            app:cardCornerRadius="8dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#E0E0E0">
 
-        <Button
-            android:id="@+id/btnSalvarOferta"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:backgroundTint="#2E7D32"
-            android:text="Salvar Oferta"
-            android:textSize="16sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Oferta ativa para venda"
+                    android:textColor="#1E1E1E"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchAtivo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    app:useMaterialThemeColors="true"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <ProgressBar
             android:id="@+id/progressBarOferta"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="16dp"
-            android:visibility="gone" />
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            android:indeterminateTint="#2E7D32"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSalvarOferta"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Salvar Oferta"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="#2E7D32"
+            app:cornerRadius="12dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancelar"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Cancelar"
+            android:textColor="#2E7D32"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp"
+            app:backgroundTint="@android:color/transparent"
+            app:strokeColor="#2E7D32"
+            app:strokeWidth="1.5dp"
+            app:cornerRadius="12dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
     </LinearLayout>
 </ScrollView>

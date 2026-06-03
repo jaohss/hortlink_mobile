@@ -38,6 +38,11 @@ public class SessionManager {
         return token != null && !token.isEmpty();
     }
 
+    // ─── ATUALIZAÇÃO DE STATUS ───
+    public void setCadastroCompleto() {
+        prefs.edit().putBoolean(KEY_CADASTRO_INCOMPLETO, false).apply();
+    }
+
     // ─── SALVA OS DADOS APÓS O LOGIN ───
     public void init(Usuario usuario, String tokenJwt) {
         SharedPreferences.Editor editor = prefs.edit();

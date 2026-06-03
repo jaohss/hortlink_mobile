@@ -80,9 +80,6 @@ public class PerfilFragment extends Fragment {
             if (getActivity() instanceof HomeProdutorActivity) {
                 // Seleciona visualmente o item de produtos na BottomNav
                 BottomNavigationView nav = getActivity().findViewById(R.id.bottomNavigation);
-                if (nav != null) {
-                    nav.setSelectedItemId(R.id.nav_prod_produtos);
-                }
 
                 // O setSelectedItemId acima já dispara o listener da Home
                 // que carrega o GerenciarProdutosFragment automaticamente.

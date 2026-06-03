@@ -25,8 +25,7 @@ public class AuthRepository {
     }
 
     // ─── LOGIN ──────────────────────────────────────────────────────────
-    // Note que agora o Callback retorna o UsuarioDTO
-    public void login(String email, String senha, BaseCallback<Usuario> callback) { // <-- Use UsuarioDTO
+    public void login(String email, String senha, BaseCallback<Usuario> callback) {
         AuthRequest request = new AuthRequest(email, senha);
 
         api.login(request).enqueue(new Callback<AuthResponse>() {
@@ -38,7 +37,7 @@ public class AuthRepository {
                     Usuario usuarioLogado = authResponse.getUsuario(); // <-- Use UsuarioDTO
                     String tokenJwt = authResponse.getToken();
 
-                    Log.w("TESTE_ROLE", "A role que chegou no Java é: " + authResponse.getUsuario().getRole());
+                    Log.i("LOGIN_TESTE", "Usuário logado: " + usuarioLogado.toString());
 
                     // MÁGICA AQUI: Não precisa mais passar 'context'
                     SessionManager.getInstance().init(usuarioLogado, tokenJwt);

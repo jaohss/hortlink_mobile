@@ -18,21 +18,8 @@
         android:theme="@style/Theme.LoginScreen"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".FormularioOferta"
+            android:name=".ui.produtor.FormularioOferta"
             android:exported="false" />
-        <activity
-            android:name=".ui.produtor.MinhaVitrine"
-            android:exported="false" />
-        <activity
-            android:name=".ui.produtor.MainActivity"
-            android:exported="false"
-            android:label="@string/title_activity_main"
-            android:theme="@style/Theme.LoginScreen" />
-        <activity
-            android:name=".MinhaVitrine"
-            android:exported="false"
-            android:label="@string/title_activity_minha_vitrine"
-            android:theme="@style/Theme.LoginScreen" />
         <activity
             android:name=".util.BotpressActivity"
             android:exported="false" />

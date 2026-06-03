@@ -12,7 +12,7 @@ import retrofit2.http.Query;
 public interface GeoService {
 
     // Rota 1: Busca o endereço pelo CEP
-    @GET("https://viacep.com.br/ws/{cep}/json/")
+    @GET("{cep}/json/")
     Call<ViaCepResponse> buscarCep(@Path("cep") String cep);
 
     // Rota 2: Busca as coordenadas (Parâmetros fixos ficam na URL e no Header)

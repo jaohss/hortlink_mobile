@@ -23,14 +23,14 @@ import com.example.hortlink.data.dto.ViaCepResponse;
 import com.example.hortlink.data.repository.ComercioRepository;
 import com.example.hortlink.data.repository.GeoRepository;
 import com.example.hortlink.service.BaseCallback;
+import com.example.hortlink.util.SessionManager;
 
 public class CompletarPerfilProdutorActivity extends AppCompatActivity {
 
     EditText edtCidade, edtTelefone, edtDescricao, edtEstado, edtCep, edtBairro;
-    Button btnConcluir, btnPular;
+    Button btnConcluir;
     ProgressBar progressBar;
 
-    // Inicializando os repositórios para evitar NullPointerException!
     private final GeoRepository geoRepository = new GeoRepository();
     private final ComercioRepository comercioRepository = new ComercioRepository();
 
@@ -59,8 +59,9 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
         edtDescricao = findViewById(R.id.edtDescricaoProd);
         edtBairro = findViewById(R.id.edtBairro);
         btnConcluir = findViewById(R.id.btnConcluir);
-        btnPular = findViewById(R.id.btnPular);
         progressBar = findViewById(R.id.progressBar);
+
+        // btnPular = findViewById(R.id.btnPular); // Comentado/Removido
 
         progressBar.setVisibility(View.GONE);
 
@@ -130,10 +131,9 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
 
     private void configurarBotoes() {
         btnConcluir.setOnClickListener(v -> tentarSalvar());
-        btnPular.setOnClickListener(v -> irParaHome());
+        // btnPular.setOnClickListener(v -> irParaHome()); // Removido
     }
 
-    // ─── A NOVA LÓGICA DO MAESTRO ──────────────────────────────────────
     private void tentarSalvar() {
         String bairro = edtBairro.getText().toString().trim();
         String cep = edtCep.getText().toString().trim();
@@ -158,9 +158,8 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
             return;
         }
 
-        // Agora o CEP passa a ser obrigatório, pois não podemos calcular GPS sem ele!
         if (cep.isEmpty()) {
-            edtCep.setError("Informe seu CEP para localizarmos sua fazenda/comércio");
+            edtCep.setError("Informe seu CEP");
             edtCep.requestFocus();
             return;
         }
@@ -176,26 +175,30 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
         dto.setEstado(estado);
         dto.setDescricao(descricao);
 
-        // 2. Transforma o CEP em Lat/Lng antes de enviar
-        geoRepository.buscarCoordenadas(cep, new BaseCallback<CoordenadasDTO>() {
+        // Cria a string exata para o Nominatim baseada nos dados limpos da tela
+        // Exemplo: "Área Rural, Salto de Pirapora, SP, Brasil"
+        String queryNominatim = String.format("%s, %s, %s, Brasil", bairro, cidade, estado);
+
+        // 2. Tenta buscar as coordenadas exatas
+        geoRepository.buscarCoordenadas(queryNominatim, new BaseCallback<CoordenadasDTO>() {
             @Override
             public void onSuccess(CoordenadasDTO coordenadas) {
-                // 3. Sucesso! Injeta as coordenadas no DTO
+                // 3a. Sucesso! O Nominatim achou o lugar. Injeta as coordenadas.
                 dto.setLatitude(coordenadas.getLat());
                 dto.setLongitude(coordenadas.getLng());
 
-                // 4. Manda o DTO recheado para o Spring Boot
+                // Manda para o Spring Boot
                 enviarDTOCompletoParaAPI(dto);
             }
 
             @Override
             public void onError(String erro) {
-                runOnUiThread(() -> {
-                    setCarregando(false);
-                    // Opcional: Se o Nominatim falhar, você quer deixar ele salvar sem GPS ou bloquear o cadastro?
-                    // No HortiLink, o foco é na proximidade, então bloqueamos e avisamos:
-                    Toast.makeText(CompletarPerfilProdutorActivity.this, "Erro de geolocalização: " + erro, Toast.LENGTH_LONG).show();
-                });
+                // 3b. Falha / Array Vazio! O Nominatim não sabe onde fica.
+                // REGRA MVP: Nós SALVAMOS mesmo assim, apenas ignoramos o GPS (vai como null).
+                // Logamos o erro no console só para monitoramento, mas o app segue em frente.
+                System.out.println("Aviso Geolocation: Não foi possível calcular coordenadas para " + queryNominatim);
+
+                enviarDTOCompletoParaAPI(dto);
             }
         });
     }
@@ -211,6 +214,10 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
                             "Perfil completo! Bem-vindo ao Hortlink 🌱",
                             Toast.LENGTH_SHORT
                     ).show();
+
+                    SessionManager.getInstance().setCadastroCompleto();
+
+                    // ATENÇÃO: Aqui usamos o router para que o app recalcule as rotas (e o login).
                     irParaHome();
                 });
             }
@@ -228,8 +235,6 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
             }
         });
     }
-
-    // ─── Helpers Finais ───────────────────────────────────────────────
 
     private void preencherSeEdicao() {
         boolean modoEdicao = getIntent().getBooleanExtra("modo_edicao", false);
@@ -265,7 +270,6 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
     private void setCarregando(boolean carregando) {
         progressBar.setVisibility(carregando ? View.VISIBLE : View.GONE);
         btnConcluir.setEnabled(!carregando);
-        btnPular.setEnabled(!carregando);
         edtCep.setEnabled(!carregando);
     }
 

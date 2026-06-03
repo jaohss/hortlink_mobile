@@ -2,9 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/nav_prod_produtos"
-        android:icon="@drawable/home"
-        android:title="Produtos"/>
+        android:id="@+id/nav_prod_vitrine"
+        android:icon="@drawable/ic_vitrine"
+        android:title="Vitrine"/>
+
+    <item
+        android:id="@+id/nav_prod_catalogo"
+        android:icon="@drawable/ic_catalogo"
+        android:title="Catálogo"/>
 
     <item
         android:id="@+id/nav_prod_pedidos"
@@ -12,9 +17,9 @@
         android:title="Pedidos"/>
 
     <item
-        android:id="@+id/nav_prod_adicionar"
-        android:icon="@drawable/btn_add_cinza"
-        android:title="Adicionar"/>
+        android:id="@+id/nav_prod_mercado"
+        android:icon="@drawable/ic_mercado"
+        android:title="Mercado"/>
 
     <item
         android:id="@+id/nav_prod_perfil"

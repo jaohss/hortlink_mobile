@@ -19,16 +19,19 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
 
     private static final String BASE_URL = "http://10.0.2.2:8081/";
-    private static Retrofit retrofit = null;
+    //private static final String BASE_URL = "https://hortlink-api.ashymushroom-34804de4.brazilsouth.azurecontainerapps.io/";
+    private static final String BASE_URL_VIACEP = "https://viacep.com.br/ws/"; // <-- URL do ViaCEP adicionada
 
-    // Removemos o parâmetro Context daqui!
+    private static Retrofit retrofit = null;
+    private static Retrofit retrofitViaCep = null; // <-- Instância separada para o ViaCEP
+
+    // ─── CLIENTE DO SEU BACKEND (COM TOKEN) ───
     private static Retrofit getClient() {
         if (retrofit == null) {
 
             Interceptor authInterceptor = chain -> {
                 Request originalRequest = chain.request();
 
-                // MÁGICA AQUI: O Retrofit pega o Context sozinho e pede o Token!
                 String token = SessionManager.getInstance().getToken();
 
                 if (token != null && !token.isEmpty()) {
@@ -40,15 +43,12 @@ public class RetrofitClient {
                 return chain.proceed(originalRequest);
             };
 
-            // 1. Cria o espião de logs
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-            // LEVEL.BODY mostra TUDO: cabeçalhos, rotas e o JSON de resposta
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            // 2. Adiciona ele no construtor do OkHttp
             OkHttpClient client = new OkHttpClient.Builder()
-                    .addInterceptor(authInterceptor) // O seu interceptor de Token que já fizemos
-                    .addInterceptor(loggingInterceptor) // <--- ADICIONE ESTA LINHA AQUI
+                    .addInterceptor(authInterceptor)
+                    .addInterceptor(loggingInterceptor)
                     .build();
 
             retrofit = new Retrofit.Builder()
@@ -60,7 +60,29 @@ public class RetrofitClient {
         return retrofit;
     }
 
-    // ─── TUDO VOLTA A SER LIMPO E SIMPLES ───
+    // ─── CLIENTE DO VIACEP (SEM TOKEN) ───
+    private static Retrofit getViaCepClient() {
+        if (retrofitViaCep == null) {
+
+            // Mantemos o log para você poder debugar, mas NÃO adicionamos o authInterceptor
+            HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+            OkHttpClient clientLimpo = new OkHttpClient.Builder()
+                    .addInterceptor(loggingInterceptor)
+                    .build();
+
+            retrofitViaCep = new Retrofit.Builder()
+                    .baseUrl(BASE_URL_VIACEP)
+                    .client(clientLimpo)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return retrofitViaCep;
+    }
+
+
+    // ─── SERVIÇOS DO SEU BACKEND ───
 
     public static OfertaService getOfertaService() {
         return getClient().create(OfertaService.class);
@@ -86,11 +108,13 @@ public class RetrofitClient {
         return getClient().create(PedidoService.class);
     }
 
-    public static GeoService getGeoService() {
-        return getClient().create(GeoService.class);
-    }
-
     public static AuthService getAuthService() {
         return getClient().create(AuthService.class);
+    }
+
+    // ─── SERVIÇO EXTERNO (VIACEP) ───
+
+    public static GeoService getGeoService() {
+        return getViaCepClient().create(GeoService.class);
     }
 }

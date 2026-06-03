@@ -16,13 +16,30 @@ public class RoleRouterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         // Sem layout — só redireciona
 
-        if (!SessionManager.getInstance().estaLogado()) {
+        SessionManager session = SessionManager.getInstance();
+
+        // 1. Barreira de Segurança: Não está logado? Volta pro Login.
+        if (!session.estaLogado()) {
             startActivity(new Intent(this, MainActivity.class));
             finish();
             return;
         }
 
-        Class<?> destino = SessionManager.getInstance().isProdutor()
+        // 2. Regra de Cadastro Incompleto: Trava o usuário até ele preencher tudo
+        if (session.isCadastroIncompleto()) {
+            if (session.isProdutor()) {
+                // Vai para a tela de completar perfil do vendedor/produtor
+                startActivity(new Intent(this, CompletarPerfilProdutorActivity.class));
+            } else {
+                // Vai para a tela de completar perfil do consumidor
+                startActivity(new Intent(this, CompletarPerfilCompradorActivity.class));
+            }
+            finish();
+            return; // Encerra o fluxo aqui
+        }
+
+        // 3. Fluxo Normal: Cadastro 100% completo, libera o acesso às Homes
+        Class<?> destino = session.isProdutor()
                 ? HomeProdutorActivity.class
                 : Homec.class;
 
