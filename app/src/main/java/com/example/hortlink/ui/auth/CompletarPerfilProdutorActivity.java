@@ -27,7 +27,7 @@ import com.example.hortlink.util.SessionManager;
 
 public class CompletarPerfilProdutorActivity extends AppCompatActivity {
 
-    EditText edtCidade, edtTelefone, edtDescricao, edtEstado, edtCep, edtBairro;
+    EditText edtNomeComercio, edtCidade, edtTelefone, edtDescricao, edtEstado, edtCep, edtBairro;
     Button btnConcluir;
     ProgressBar progressBar;
 
@@ -52,6 +52,7 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
     }
 
     private void bindViews(){
+        edtNomeComercio = findViewById(R.id.edtNomeComercio); // Novo campo
         edtCep = findViewById(R.id.edtCep);
         edtEstado = findViewById(R.id.edtEstado);
         edtCidade = findViewById(R.id.edtCidade);
@@ -61,12 +62,7 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
         btnConcluir = findViewById(R.id.btnConcluir);
         progressBar = findViewById(R.id.progressBar);
 
-        // btnPular = findViewById(R.id.btnPular); // Comentado/Removido
-
         progressBar.setVisibility(View.GONE);
-
-        edtCidade.setEnabled(true);
-        edtEstado.setEnabled(true);
     }
 
     private void configurarViaCep(){
@@ -78,52 +74,35 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
                     buscarCep(cepLimpo);
                 }
             }
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
         });
     }
 
     private void buscarCep(String cep){
         setCarregando(true);
-
         geoRepository.buscarEnderecoPorCep(cep, new BaseCallback<ViaCepResponse>() {
             @Override
             public void onSuccess(ViaCepResponse viaCep) {
                 runOnUiThread(() -> {
                     setCarregando(false);
-
-                    String cidade = viaCep.getLocalidade();
-                    String estado = viaCep.getUf();
-                    String bairro = viaCep.getBairro();
-
-                    if (cidade != null) edtCidade.setText(cidade);
-                    if (estado != null) edtEstado.setText(estado);
-
-                    if (bairro != null && !bairro.trim().isEmpty()) {
-                        edtBairro.setText(bairro);
+                    if (viaCep.getLocalidade() != null) edtCidade.setText(viaCep.getLocalidade());
+                    if (viaCep.getUf() != null) edtEstado.setText(viaCep.getUf());
+                    if (viaCep.getBairro() != null && !viaCep.getBairro().isEmpty()) {
+                        edtBairro.setText(viaCep.getBairro());
                         edtTelefone.requestFocus();
                     } else {
-                        edtBairro.setText("");
                         edtBairro.requestFocus();
                     }
                 });
             }
-
             @Override
             public void onError(String motivo) {
                 runOnUiThread(() -> {
                     setCarregando(false);
-                    Toast.makeText(
-                            CompletarPerfilProdutorActivity.this,
-                            motivo + "\nPreencha cidade e estado manualmente.",
-                            Toast.LENGTH_LONG
-                    ).show();
-                    edtCidade.requestFocus();
+                    Toast.makeText(CompletarPerfilProdutorActivity.this, motivo, Toast.LENGTH_LONG).show();
                 });
             }
         });
@@ -131,10 +110,10 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
 
     private void configurarBotoes() {
         btnConcluir.setOnClickListener(v -> tentarSalvar());
-        // btnPular.setOnClickListener(v -> irParaHome()); // Removido
     }
 
     private void tentarSalvar() {
+        String nome = edtNomeComercio.getText().toString().trim();
         String bairro = edtBairro.getText().toString().trim();
         String cep = edtCep.getText().toString().trim();
         String cidade = edtCidade.getText().toString().trim();
@@ -142,6 +121,11 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
         String telefone = edtTelefone.getText().toString().trim();
         String descricao = edtDescricao.getText().toString().trim();
 
+        if (nome.isEmpty()) {
+            edtNomeComercio.setError("Informe o nome da propriedade");
+            edtNomeComercio.requestFocus();
+            return;
+        }
         if (telefone.isEmpty()) {
             edtTelefone.setError("Informe seu telefone");
             edtTelefone.requestFocus();
@@ -152,22 +136,11 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
             edtCidade.requestFocus();
             return;
         }
-        if (estado.isEmpty()) {
-            edtEstado.setError("Informe seu estado");
-            edtEstado.requestFocus();
-            return;
-        }
-
-        if (cep.isEmpty()) {
-            edtCep.setError("Informe seu CEP");
-            edtCep.requestFocus();
-            return;
-        }
 
         setCarregando(true);
 
-        // 1. Monta o DTO Base
         CompletarPerfilComercioDTO dto = new CompletarPerfilComercioDTO();
+        dto.setNomeComercio(nome); // Novo campo
         dto.setTelefone(telefone);
         dto.setCep(cep);
         dto.setBairro(bairro);
@@ -175,29 +148,17 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
         dto.setEstado(estado);
         dto.setDescricao(descricao);
 
-        // Cria a string exata para o Nominatim baseada nos dados limpos da tela
-        // Exemplo: "Área Rural, Salto de Pirapora, SP, Brasil"
         String queryNominatim = String.format("%s, %s, %s, Brasil", bairro, cidade, estado);
 
-        // 2. Tenta buscar as coordenadas exatas
         geoRepository.buscarCoordenadas(queryNominatim, new BaseCallback<CoordenadasDTO>() {
             @Override
             public void onSuccess(CoordenadasDTO coordenadas) {
-                // 3a. Sucesso! O Nominatim achou o lugar. Injeta as coordenadas.
                 dto.setLatitude(coordenadas.getLat());
                 dto.setLongitude(coordenadas.getLng());
-
-                // Manda para o Spring Boot
                 enviarDTOCompletoParaAPI(dto);
             }
-
             @Override
             public void onError(String erro) {
-                // 3b. Falha / Array Vazio! O Nominatim não sabe onde fica.
-                // REGRA MVP: Nós SALVAMOS mesmo assim, apenas ignoramos o GPS (vai como null).
-                // Logamos o erro no console só para monitoramento, mas o app segue em frente.
-                System.out.println("Aviso Geolocation: Não foi possível calcular coordenadas para " + queryNominatim);
-
                 enviarDTOCompletoParaAPI(dto);
             }
         });
@@ -209,28 +170,16 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
             public void onSuccess(Void unused) {
                 runOnUiThread(() -> {
                     setCarregando(false);
-                    Toast.makeText(
-                            CompletarPerfilProdutorActivity.this,
-                            "Perfil completo! Bem-vindo ao Hortlink 🌱",
-                            Toast.LENGTH_SHORT
-                    ).show();
-
+                    Toast.makeText(CompletarPerfilProdutorActivity.this, "Perfil atualizado! 🌱", Toast.LENGTH_SHORT).show();
                     SessionManager.getInstance().setCadastroCompleto();
-
-                    // ATENÇÃO: Aqui usamos o router para que o app recalcule as rotas (e o login).
                     irParaHome();
                 });
             }
-
             @Override
             public void onError(String erro) {
                 runOnUiThread(() -> {
                     setCarregando(false);
-                    Toast.makeText(
-                            CompletarPerfilProdutorActivity.this,
-                            "Erro ao salvar perfil: " + erro,
-                            Toast.LENGTH_LONG
-                    ).show();
+                    Toast.makeText(CompletarPerfilProdutorActivity.this, "Erro: " + erro, Toast.LENGTH_LONG).show();
                 });
             }
         });
@@ -240,13 +189,11 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
         boolean modoEdicao = getIntent().getBooleanExtra("modo_edicao", false);
         if (!modoEdicao) return;
 
-        setCarregando(true);
-
         comercioRepository.buscarPerfil(new BaseCallback<CompletarPerfilComercioDTO>() {
             @Override
             public void onSuccess(CompletarPerfilComercioDTO perfil) {
                 runOnUiThread(() -> {
-                    setCarregando(false);
+                    if (perfil.getNomeComercio() != null) edtNomeComercio.setText(perfil.getNomeComercio());
                     if (perfil.getTelefone() != null) edtTelefone.setText(perfil.getTelefone());
                     if (perfil.getCep() != null) edtCep.setText(perfil.getCep());
                     if (perfil.getEstado() != null) edtEstado.setText(perfil.getEstado());
@@ -255,22 +202,14 @@ public class CompletarPerfilProdutorActivity extends AppCompatActivity {
                     if (perfil.getDescricao() != null) edtDescricao.setText(perfil.getDescricao());
                 });
             }
-
             @Override
-            public void onError(String erro) {
-                runOnUiThread(() -> {
-                    setCarregando(false);
-                    Toast.makeText(CompletarPerfilProdutorActivity.this,
-                            "Erro ao carregar dados antigos", Toast.LENGTH_SHORT).show();
-                });
-            }
+            public void onError(String erro) {}
         });
     }
 
     private void setCarregando(boolean carregando) {
         progressBar.setVisibility(carregando ? View.VISIBLE : View.GONE);
         btnConcluir.setEnabled(!carregando);
-        edtCep.setEnabled(!carregando);
     }
 
     private void irParaHome() {

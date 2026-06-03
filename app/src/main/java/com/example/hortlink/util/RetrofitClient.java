@@ -18,8 +18,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
 
-    private static final String BASE_URL = "http://10.0.2.2:8081/";
-    //private static final String BASE_URL = "https://hortlink-api.ashymushroom-34804de4.brazilsouth.azurecontainerapps.io/";
+    //private static final String BASE_URL = "http://10.0.2.2:8081/";
+    private static final String BASE_URL = "https://hortlink-api.ashymushroom-34804de4.brazilsouth.azurecontainerapps.io/";
     private static final String BASE_URL_VIACEP = "https://viacep.com.br/ws/"; // <-- URL do ViaCEP adicionada
 
     private static Retrofit retrofit = null;

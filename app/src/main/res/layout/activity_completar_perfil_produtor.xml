@@ -59,6 +59,27 @@
                     android:textSize="13sp"
                     android:layout_marginBottom="24dp"/>
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="NOME DA PROPRIEDADE"
+                    android:textColor="#AAAAAA"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp"/>
+
+                <EditText
+                    android:id="@+id/edtNomeComercio"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:background="@drawable/custom_edittext"
+                    android:hint="Ex: Sítio São José"
+                    android:inputType="textCapWords"
+                    android:padding="8dp"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/black_soft"
+                    android:layout_marginBottom="16dp"/>
+
                 <!-- ── LOCALIZAÇÃO ── -->
                 <TextView
                     android:layout_width="match_parent"

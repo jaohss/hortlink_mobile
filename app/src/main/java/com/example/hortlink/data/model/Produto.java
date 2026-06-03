@@ -31,7 +31,19 @@ public class Produto {
         this.imagemUrl = imagemUrl;
     }
 
-    
+    @Override
+    public String toString() {
+        return "Produto{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", descricao='" + descricao + '\'' +
+                ", categoria=" + categoria +
+                ", unidadeMedida=" + unidadeMedida +
+                ", imagemUrl='" + imagemUrl + '\'' +
+                ", distanciaKm=" + distanciaKm +
+                ", vendedorId=" + vendedorId +
+                '}';
+    }
 
     public double getDistanciaKm() {
         return distanciaKm;

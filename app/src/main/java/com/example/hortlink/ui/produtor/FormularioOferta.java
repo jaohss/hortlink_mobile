@@ -42,7 +42,7 @@ public class FormularioOferta extends AppCompatActivity {
     // Adicionados os novos campos editáveis
     private TextInputEditText edtPreco, edtEstoque, edtDataColheita;
     private SwitchMaterial switchAtivo;
-    private Button btnSalvar;
+    private Button btnSalvar, btnCancelar; // Adicione o btnCancelar aqui
     private ProgressBar progressBar;
 
     private Long idOfertaEditada = -1L;
@@ -70,11 +70,13 @@ public class FormularioOferta extends AppCompatActivity {
         }
 
         btnSalvar.setOnClickListener(v -> tentarSalvar());
+        btnCancelar.setOnClickListener(v -> finish());
 
         edtDataColheita.setOnClickListener(v -> abrirCalendario());
     }
 
     private void bindViews() {
+        btnCancelar = findViewById(R.id.btnCancelar);
         layoutSelecaoProduto = findViewById(R.id.layoutSelecaoProduto);
         spinnerProdutos = findViewById(R.id.spinnerProdutos);
         cardInformacoesProduto = findViewById(R.id.cardInformacoesProduto);
@@ -294,6 +296,7 @@ public class FormularioOferta extends AppCompatActivity {
                     edtDataColheita.setText(dataFormatada);
                 }, ano, mes, dia);
 
+        datePickerDialog.getDatePicker().setMaxDate(calendar.getTimeInMillis());
         datePickerDialog.show();
     }
 }

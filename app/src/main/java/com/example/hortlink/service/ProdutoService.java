@@ -42,6 +42,6 @@ public interface ProdutoService {
     @GET("produto")
     Call<List<ProdutoListaDTO>> listarPorComercio();
 
-    @GET("produtos/sem-oferta")
+    @GET("produto/sem-oferta")
     Call<List<ProdutoListaDTO>> obterProdutosSemOfertaAtiva();
 }

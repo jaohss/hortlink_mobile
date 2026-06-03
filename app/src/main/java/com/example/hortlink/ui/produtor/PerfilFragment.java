@@ -15,6 +15,9 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.example.hortlink.R;
+import com.example.hortlink.data.dto.ComercioDTO;
+import com.example.hortlink.data.repository.ComercioRepository;
+import com.example.hortlink.service.BaseCallback;
 import com.example.hortlink.ui.auth.CompletarPerfilProdutorActivity;
 import com.example.hortlink.ui.auth.MainActivity;
 import com.example.hortlink.util.SessionManager;
@@ -24,6 +27,8 @@ public class PerfilFragment extends Fragment {
 
     private TextView txtNome, txtAvaliacao, txtCidade;
     private ImageView imgFazenda;
+
+    private final ComercioRepository comercioRepository  = new ComercioRepository();
 
     public PerfilFragment() {}
 
@@ -37,59 +42,37 @@ public class PerfilFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // ── Views do perfil ─────────────────────────────────────
         txtNome      = view.findViewById(R.id.txtNomeProd);
         txtCidade    = view.findViewById(R.id.txtCidadeProd);
         txtAvaliacao = view.findViewById(R.id.txtAvaliacao);
         imgFazenda   = view.findViewById(R.id.imgFazenda);
 
-        // ── Seção: Conta ────────────────────────────────────────
-        LinearLayout btnEditarPerfil = view.findViewById(R.id.btnEditarPerfil);
-        btnEditarPerfil.setOnClickListener(v -> {
-            // Pegando o ID do nosso SessionManager ao invés do Firebase
+        // ── Seção: Conta (Mantida) ──────────────────────────────
+        view.findViewById(R.id.btnEditarPerfil).setOnClickListener(v -> {
             Long usuarioId = SessionManager.getInstance().getUsuarioId();
-
             Intent intent = new Intent(getActivity(), CompletarPerfilProdutorActivity.class);
             intent.putExtra("usuario_id", usuarioId);
             intent.putExtra("modo_edicao", true);
             startActivity(intent);
         });
 
-        LinearLayout btnDashboard = view.findViewById(R.id.btnDashboard);
-        btnDashboard.setOnClickListener(v ->
+        // ── Seção: Utilitários (Mantida) ────────────────────────
+        view.findViewById(R.id.btnDashboard).setOnClickListener(v ->
                 Toast.makeText(getContext(), "Em breve: dashboard", Toast.LENGTH_SHORT).show());
 
         view.findViewById(R.id.itemConfiguracoes).setOnClickListener(v ->
                 Toast.makeText(getContext(), "Em breve: configurações", Toast.LENGTH_SHORT).show());
 
-        // ── BOTÃO DE LOGOUT ─────────────────────────────────────
+        // ── BOTÃO DE LOGOUT (Mantido) ──────────────────────────
         view.findViewById(R.id.itemSair).setOnClickListener(v -> {
-            // 1. Apaga o Token JWT e os dados do usuário do SharedPreferences
             SessionManager.getInstance().clear();
-
-            // 2. Volta para a tela de Login limpando o histórico (para não voltar com o botão "Voltar" do Android)
             Intent intent = new Intent(getActivity(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         });
 
-        // ── Seção: Catálogo ────────────────────────────────────────
-        LinearLayout btnCatalogo = view.findViewById(R.id.btnMeuCatalogo);
-        btnCatalogo.setOnClickListener(v -> {
-            // Se estiver dentro da HomeProdutorActivity, pedimos para trocar o fragmento
-            if (getActivity() instanceof HomeProdutorActivity) {
-                // Seleciona visualmente o item de produtos na BottomNav
-                BottomNavigationView nav = getActivity().findViewById(R.id.bottomNavigation);
+        // O código do btnCatalogo foi removido daqui!
 
-                // O setSelectedItemId acima já dispara o listener da Home
-                // que carrega o GerenciarProdutosFragment automaticamente.
-            } else {
-                // Caso de segurança (se o fragmento for usado em outro lugar)
-                Toast.makeText(getContext(), "Navegação não disponível", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        // Carrega as informações na tela
         carregarPerfilLocal();
     }
 
@@ -99,29 +82,41 @@ public class PerfilFragment extends Fragment {
         carregarPerfilLocal();
     }
 
-    // ─── Carrega dados de forma instantânea da Sessão ────────────
     private void carregarPerfilLocal() {
-        // Puxa os dados que o AuthRepository salvou na hora do Login
-        String nome = SessionManager.getInstance().getNomeUsuario();
-        String fotoUrl = SessionManager.getInstance().getUrlFoto();
-        String role = SessionManager.getInstance().getRole();
+        comercioRepository.obterPerfilBase(new BaseCallback<ComercioDTO>() {
+            @Override
+            public void onSuccess(ComercioDTO perfil) {
+                if (!isAdded()) return; // Proteção contra fragmento destruído
 
-        // Atualiza a UI
-        txtNome.setText(nome != null ? nome : "Usuário");
+                requireActivity().runOnUiThread(() -> {
+                    // Atualiza os campos com os dados da API
+                    txtNome.setText(perfil.getNome());
+                    txtCidade.setText(perfil.getCidade() != null ? perfil.getCidade() : "Localização não informada");
 
-        // Como ainda não puxamos o endereço da nova API, mostramos a Role do usuário
-        txtCidade.setText(role != null ? role : "Perfil do HortiLink");
+                    // Formata a avaliação (se precisar de prefixo)
+                    String avaliacao = (perfil.getAvaliacao() != null) ? perfil.getAvaliacao() : "5.0";
+                    txtAvaliacao.setText("⭐ " + avaliacao);
 
-        txtAvaliacao.setText("⭐ 5.0"); // Fictício até criarmos a rota de avaliações
+                    // Carrega a imagem com Glide
+                    if (perfil.getImg_url() != null && !perfil.getImg_url().isEmpty()) {
+                        Glide.with(requireContext())
+                                .load(perfil.getImg_url())
+                                .placeholder(R.drawable.hortlink_logo)
+                                .circleCrop()
+                                .into(imgFazenda);
+                    } else {
+                        imgFazenda.setImageResource(R.drawable.hortlink_logo);
+                    }
+                });
+            }
 
-        if (fotoUrl != null && !fotoUrl.isEmpty()) {
-            Glide.with(requireContext())
-                    .load(fotoUrl)
-                    .placeholder(R.drawable.hortlink_logo)
-                    .circleCrop()
-                    .into(imgFazenda);
-        } else {
-            imgFazenda.setImageResource(R.drawable.hortlink_logo);
-        }
+            @Override
+            public void onError(String erro) {
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> {
+                    Toast.makeText(getContext(), "Não foi possível carregar o perfil.", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 }

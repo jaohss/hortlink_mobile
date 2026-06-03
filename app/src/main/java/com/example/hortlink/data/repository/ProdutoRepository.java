@@ -1,5 +1,7 @@
 package com.example.hortlink.data.repository;
 
+import android.util.Log;
+
 import com.example.hortlink.data.dto.ProdutoListaDTO;
 import com.example.hortlink.util.RetrofitClient;
 import com.example.hortlink.data.dto.NovoProdutoDTO;
@@ -62,6 +64,9 @@ public class ProdutoRepository {
             @Override
             public void onResponse(Call<Produto> call, Response<Produto> response) {
                 if(response.isSuccessful()) {
+                    Produto produto = response.body();
+
+                    Log.d("ProdutoRepository", produto.toString());
                     callback.onSuccess(response.body());
                 } else {
                     callback.onError("Erro ao salvar Produto: " + response.code());

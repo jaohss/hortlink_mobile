@@ -12,6 +12,10 @@ public class ProdutoListaDTO {
     private UnidadeMedida unidadeMedida;
     private boolean ativo;
 
+    @Override
+    public String toString() {
+        return this.nome;
+    }
 
     public Long getId() {
         return id;
