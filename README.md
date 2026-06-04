@@ -84,7 +84,7 @@ Primeira versão funcional desenvolvida para validação da ideia e prototipaç�
 
 ## Versão 2 — Backend Próprio com Spring Boot
 
-Com a evolução do projeto foi iniciado o desenvolvimento de uma arquitetura baseada em backend próprio, proporcionando maior controle sobre regras de negócio, autenticação e escalabilidade.
+Com a evolução do projeto foi implementado o desenvolvimento de uma arquitetura baseada em backend próprio, proporcionando maior controle sobre regras de negócio, autenticação e escalabilidade.
 
 ### Recursos Implementados
 
@@ -99,10 +99,8 @@ Com a evolução do projeto foi iniciado o desenvolvimento de uma arquitetura ba
 * Integração completa entre aplicativo e backend
 * Gerenciamento avançado de produtores e consumidores
 * Catálogo completo de produtos
-* Integração com chatbot
-* Dashboard administrativo
 
-> Esta arquitetura representa a evolução técnica do projeto e encontra-se em desenvolvimento.
+> Esta arquitetura representa a evolução técnica do projeto e encontra-se em desenvolvimento funcional.
 
 ---
 
